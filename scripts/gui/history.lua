@@ -243,23 +243,32 @@ local function update_tab(gui_id)
 
         })
       end
-      local prototype = history_data.train.front_stock.prototype
+      local prototype
+      local sprite = "warning-white"
+      local train_id = ""
+      local tooltip = {"vtm.train-removed"}
+      if history_data.train.valid then
+        prototype = history_data.train.front_stock.prototype
+        sprite = "item/" .. gui_util.signal_for_entity(history_data.train.front_stock).name
+        train_id = tostring(history_data.train.id)
+        tooltip = prototype.localised_name
+      end
       local runtime = gui_util.ticks_to_timestring(history_data.last_change - history_data.started_at)
       local finished = gui_util.ticks_to_timestring(game.tick - history_data.last_change)
 
       gui.update(row, {
         { {
           elem_mods = {
-            sprite = "item/" .. gui_util.signal_for_entity(history_data.train.front_stock).name,
-            tooltip = prototype.localised_name,
+            sprite = sprite,
+            tooltip = tooltip,
           },
           actions = {
-            on_click = { type = "trains", action = "open-train", train_id = history_data.train.id },
+            on_click = { type = "trains", action = "open-train", train_id = train_id },
 
           },
           {
             elem_mods = {
-              caption = tostring(history_data.train.id)
+              caption = train_id
             }
           },
         } },

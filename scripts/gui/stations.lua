@@ -121,10 +121,16 @@ local function update_tab(gui_id)
           style = "vtm_table_row_frame",
           -- style = " vtm_table_row_frame_" .. color,
           {
+            type = "sprite-button",
+            style = "transparent_slot",
+            sprite = "vtm_train",
+            tooltip = { "vtm.open-station-gui-tooltip" },
+          },
+          {
             type = "label",
             style = "vtm_clickable_semibold_label",
             style_mods = { width = width.name },
-            tooltip = "vtm.open_station_gui_tooltip",
+            tooltip = { "vtm.show-station-on-map-tooltip" },
           },
           {
             type = "flow",
@@ -161,14 +167,23 @@ local function update_tab(gui_id)
         in_transit_data = read_inbound_trains(station_data)
       end
       local since = ""
+      local prototype = station_data.station.prototype
       -- if station_data.opened then
       --   since = misc.ticks_to_timestring(game.tick - station_data.opened)
       -- end
       gui.update(row, {
+        { -- Station button
+          elem_mods = {
+            sprite = "item/" .. gui_util.signal_for_entity(station_data.station).name,
+          },
+          actions = {
+            on_click = { type = "stations", action = "open-station", station_id = station_data.station.unit_number },
+          },
+        },
         { -- name
           elem_mods = { caption = station_data.station.backer_name },
           actions = {
-            on_click = { type = "stations", action = "open-station", station_id = station_data.station.unit_number },
+            on_click = { type = "stations", action = "position", position = station_data.station.position },
           },
         },
         { --status
@@ -222,6 +237,12 @@ local function build_gui(gui_id)
         style = "subheader_frame",
         direction = "horizontal",
         style_mods = { horizontally_stretchable = true },
+        {
+          type = "label",
+          style = "subheader_caption_label",
+          -- caption = { "vtm.table-header-name" },
+          style_mods = { width = width.icon },
+        },
         {
           type = "label",
           style = "subheader_caption_label",

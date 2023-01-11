@@ -26,13 +26,14 @@ constants.gui = {
   trains = {
     train_id = 60,
     status = 374,
-    since = 60,
+    since = 70,
     composition = 180,
     cargo = 36 * 4,
     cargo_columns = 4,
     appendix = 17,
   },
   stations = {
+    icon=40,
     name = 283,
     status = 53,
     since = 50,

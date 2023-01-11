@@ -195,7 +195,7 @@ function trains.update_tab(gui_id)
           elem_mods = {
             sprite = "item/" .. gui_util.signal_for_entity(train_data.train.front_stock).name,
             -- number = train_data.train.id,
-            tooltip = prototype.localised_name,
+            -- tooltip = prototype.localised_name,
           },
           {
             elem_mods = {

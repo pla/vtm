@@ -3,6 +3,7 @@ Version: 0.0.16
 Date: 2023-01-11
   Changes:
     - Fixed Search
+    - Fixed History tab crash on invalid train
 ---------------------------------------------------------------------------------------------------
 Version: 0.0.15
 Date: 2023-01-10
