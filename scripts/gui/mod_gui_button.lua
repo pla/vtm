@@ -1,0 +1,26 @@
+-- local mod_gui = require("__core__.lualib.mod-gui")
+
+-- local function add_mod_gui_button(player)
+--     local flow = mod_gui.get_button_flow(player)
+--     if flow.vtm_button then
+--         return
+--     end
+--     flow.add {
+--         type = "sprite-button",
+--         name = "vtm_button",
+--         style = "slot_button",
+--         sprite = "vtm_vtm-logo-48",
+--         tags = {
+--             [script.mod_name] = {
+--                 flib = {
+--                     on_click = { type = "generic", action = "open-vtm" }
+--                 }
+--             }
+--         },
+--         tooltip = { "vtm.mod-gui-tooltip" }
+--     }
+-- end
+
+-- return {
+--     add_mod_gui_button = add_mod_gui_button
+-- }
