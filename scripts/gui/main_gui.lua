@@ -71,7 +71,7 @@ local function create_gui(player)
     {
       type = "frame",
       direction = "vertical",
-      style_mods = {},
+      style_mods = { minimal_width = constants.gui_window_min_width },
       ref = { "window" },
       actions = {
         on_closed = { type = "generic", action = "window_closed", gui_id = gui_id }
@@ -139,10 +139,41 @@ local function create_gui(player)
 
 end
 
+local function toggle_auto_refresh(gui_id, to_state)
+  local vtm_gui = global.guis[gui_id]
+  local settings = global.settings[vtm_gui.player.index]
+  if to_state ~= nil then
+    if to_state == "off" then
+      settings.gui_refresh = ""
+    elseif to_state == "auto" then
+      settings.gui_refresh = "auto"
+    end
+  else
+    -- toggle
+    if settings.gui_refresh == "auto" then
+      settings.gui_refresh = ""
+    else
+      settings.gui_refresh = "auto"
+    end
+  end
+
+  if settings.gui_refresh == "auto" then
+    -- vtm_gui.gui.titlebar.refresh_button.tooltip = { "gui.close" }
+    vtm_gui.gui.titlebar.refresh_button.sprite = "vtm_refresh_black"
+    vtm_gui.gui.titlebar.refresh_button.style = "flib_selected_frame_action_button"
+    vtm_gui.player.print({ "vtm.auto-refresh-on" })
+  else
+    -- vtm_gui.gui.titlebar.refresh_button.tooltip = { "gui.close-instruction" }
+    vtm_gui.gui.titlebar.refresh_button.sprite = "vtm_refresh_white"
+    vtm_gui.gui.titlebar.refresh_button.style = "frame_action_button"
+    vtm_gui.player.print({ "vtm.auto-refresh-off" })
+  end
+end
+
 local function open_gui(gui_id)
   local vtm_gui = global.guis[gui_id]
   vtm_gui.gui.window.visible = true
-  global.guis[gui_id].state = "open"
+  vtm_gui.state = "open"
   if not vtm_gui.pinned then
     vtm_gui.player.opened = vtm_gui.gui.window
   end
@@ -151,10 +182,14 @@ end
 
 local function close_gui(gui_id)
   local vtm_gui = global.guis[gui_id]
+  if vtm_gui.state == "closed" then return end
   vtm_gui.gui.window.visible = false
-  global.guis[gui_id].state = "closed"
-  -- TODO : pribt the auto refresh message
-  global.settings[global.guis[gui_id].player.index].gui_refresh = ""
+  vtm_gui.state = "closed"
+  if global.settings[vtm_gui.player.index].gui_refresh == "auto" then
+    toggle_auto_refresh(gui_id, "off")
+  end
+  vtm_gui.player.opened = nil
+
 end
 
 local function destroy_gui(gui_id)
@@ -207,17 +242,19 @@ end
 local function dispatch_refresh(event, action)
   local gui_id = gui_util.get_gui_id(event.player_index)
   local player = game.get_player(event.player_index)
+  local settings = global.settings[event.player_index]
   if gui_id == nil then
     return --no gui
   end
   if event.control and event.button == defines.mouse_button_type.left then
-    if global.settings[event.player_index].gui_refresh == "" then
-      global.settings[event.player_index].gui_refresh = "auto"
-      if player then player.print({ "vtm.auto-refresh-on" }) end
-    else
-      global.settings[event.player_index].gui_refresh = ""
-      if player then player.print({ "vtm.auto-refresh-off" }) end
-    end
+    toggle_auto_refresh(gui_id)
+    -- if settings.gui_refresh == "" then
+    --   settings.gui_refresh = "auto"
+    --   if player then player.print({ "vtm.auto-refresh-on" }) end
+    -- else
+    --   settings.gui_refresh = ""
+    --   if player then player.print({ "vtm.auto-refresh-off" }) end
+    -- end
   end
   if action then
     -- gui_id = action.gui_id
@@ -244,7 +281,7 @@ local function dispatch_refresh(event, action)
 end
 
 local function handle_action(action, event)
-  if action.action == "close-window" then
+  if action.action == "close-window" then -- x button
     close_gui(action.gui_id)
   elseif action.action == "window_closed" then
     if global.guis[action.gui_id].pinned then
@@ -280,8 +317,6 @@ gui.hook_events(function(event)
       stations.handle_action(action, event)
     elseif action.type == "depots" then
       depots.handle_action(action, event)
-      -- elseif action.type == "table" then
-      --   events_table.handle_action(action, event)
     elseif action.type == "searchbar" then
       searchbar.handle_action(action, event)
     end

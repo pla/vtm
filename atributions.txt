@@ -1,1 +1,0 @@
-Parts of the code is from "Train Log" and "LTN Manager"

@@ -7,7 +7,7 @@ local match = require("scripts.match")
 local constants = require("scripts.constants")
 local vtm_logic = require("scripts.vtm_logic")
 
-local function status_color(station)
+local function status_color(station_data)
   -- FIXME: actually do something
   return "green"
 end
@@ -69,19 +69,35 @@ local function station_limit(station_data)
   if limit == constants.MAX_LIMIT then
     limit = 1
   end
-  return inbound .. "/" .. limit
+  local limit_text = inbound .. "/" .. limit
+  local color = "green"
+  if station_data.type == "R" then
+    if inbound > 0 then
+      color = "blue"
+    elseif limit > 0 and inbound == 0 then
+      color = "yellow"
+    end
+  else
+    if limit == 0 and inbound > 0 then
+      color = "yellow"
+    elseif limit > 0 and inbound > 0 then
+      color = "green"
+    end
+  end
+
+  return limit_text, color
+
 end
 
 local function update_tab(gui_id)
   local vtm_gui = global.guis[gui_id]
   local stations = {}
-
+  local nd_stations = 0
   local table_index = 0
   local filters = {
     item = vtm_gui.gui.filter.item.elem_value,
     fluid = vtm_gui.gui.filter.fluid.elem_value,
     search_field = vtm_gui.gui.filter.search_field.text:lower(),
-    -- time_period = game.tick - time_filter.ticks(vtm_gui.gui.filter.time_period.selected_index)
   }
 
   if not next(global.stations) then
@@ -93,22 +109,31 @@ local function update_tab(gui_id)
             station_data.type == "P")
     then
       if match.filter_stations(station_data, filters) then
-
-        table.insert(stations, station_data)
+        if station_data.station.valid then
+          table.insert(stations, station_data)
+          -- only valid stations from here
+        end
       end
+    elseif station_data.force_index == vtm_gui.player.force.index and
+        station_data.type == "ND"
+    then
+      nd_stations = nd_stations + 1
     end
   end
-  -- TODO filter contents
-
 
   local scroll_pane = vtm_gui.gui.stations.scroll_pane
   local children = scroll_pane.children
   local width = constants.gui.stations
 
+  --sorting by name
+
+  table.sort(stations, function(a, b) return a.station.backer_name < b.station.backer_name end)
+
   for _, station_data in pairs(stations) do
 
     if station_data.station.valid then
       table_index = table_index + 1
+      vtm_gui.gui.stations.warning.visible = false
       -- get or create gui row
       -- name,status,since,avg,type,stock,intransit
       -- limit manual or circuit,type(PR),group
@@ -142,17 +167,18 @@ local function update_tab(gui_id)
           {
             type = "label",
             style = "vtm_semibold_label",
-            style_mods = { width = width.since },
+            style_mods = { width = width.since, horizontal_align = "right" },
           },
           {
             type = "label",
             style = "vtm_semibold_label",
-            style_mods = { width = width.avg },
+            style_mods = { width = width.avg, horizontal_align = "right" },
           },
           {
             type = "label",
             style = "vtm_semibold_label",
-            style_mods = { width = width.type, },
+            style_mods = { width = width.type, horizontal_align = "center" },
+            tooltip = { "type-tooltip" },
           },
           gui_util.slot_table(width, "light", "stock"),
           gui_util.slot_table(width, "light", "in_transit"),
@@ -171,6 +197,7 @@ local function update_tab(gui_id)
       -- if station_data.opened then
       --   since = misc.ticks_to_timestring(game.tick - station_data.opened)
       -- end
+      local limit_text, color = station_limit(station_data)
       gui.update(row, {
         { -- Station button
           elem_mods = {
@@ -186,9 +213,9 @@ local function update_tab(gui_id)
             on_click = { type = "stations", action = "position", position = station_data.station.position },
           },
         },
-        { --status
-          { elem_mods = { sprite = "flib_indicator_" .. status_color(station_data.station) } },
-          { elem_mods = { caption = station_limit(station_data) } },
+        { --status: InTransit =blue, open yellow, TODO : open for too long red
+          { elem_mods = { sprite = "flib_indicator_" .. color } },
+          { elem_mods = { caption = limit_text } },
         },
         { elem_mods = {
           caption = since
@@ -201,8 +228,15 @@ local function update_tab(gui_id)
     end
 
   end
+  vtm_gui.gui.tabs.stations_tab.badge_text = table_index or 0
   if table_index > 0 then
-    vtm_gui.gui.tabs.stations_tab.badge_text = table_index
+    if nd_stations > 10 then
+      vtm_gui.gui.stations.warning.visible = true
+      vtm_gui.gui.stations.warning_label.caption = { "vtm.station-warning", nd_stations }
+    end
+
+  else
+    vtm_gui.gui.stations.warning.visible = true
   end
   for child_index = table_index + 1, #children do
     children[child_index].destroy()
@@ -210,8 +244,6 @@ local function update_tab(gui_id)
 end
 
 local function build_gui(gui_id)
-  -- local vtm_gui = global.guis[gui_id]
-  -- local tabs = vtm_gui.gui.tabs
   local width = constants.gui.stations
 
   -- name,status,since,avg,type,stock,intransit
@@ -258,13 +290,13 @@ local function build_gui(gui_id)
         {
           type = "label",
           style = "subheader_caption_label",
-          caption = { "vtm.table-header-since" },
+          -- caption = { "vtm.table-header-since" },
           style_mods = { width = width.since },
         },
         {
           type = "label",
           style = "subheader_caption_label",
-          caption = { "vtm.table-header-avg" },
+          -- caption = { "vtm.table-header-avg" },
           style_mods = { width = width.avg },
         },
         {
@@ -295,6 +327,24 @@ local function build_gui(gui_id)
         horizontal_scroll_policy = "never",
         -- style_mods = {  },
       },
+      {
+        type = "frame",
+        direction = "horizontal",
+        style = "negative_subheader_frame",
+        ref = { "stations", "warning" },
+        visible = true,
+        {
+          type = "flow",
+          style = "centering_horizontal_flow",
+          style_mods = { horizontally_stretchable = true },
+          {
+            type = "label",
+            style = "bold_label",
+            caption = { "", "[img=warning-white] ", { "gui-trains.no-stations" } },
+            ref = { "stations", "warning_label" },
+          },
+        },
+      },
     },
   }
 end
@@ -305,9 +355,6 @@ local function handle_action(action, event)
       local station = global.stations[action.station_id].station --[[@as LuaEntity]]
       gui_util.open_gui(event.player_index, station)
     end
-  elseif action.action == "refresh" then
-    local player = game.players[event.player_index]
-
   elseif action.action == "position" then
     local player = game.players[event.player_index]
     player.zoom_to_world(action.position, 0.5)

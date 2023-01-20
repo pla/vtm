@@ -5,21 +5,55 @@ local gui_util = require("scripts.gui.util")
 local match = require("scripts.match")
 local vtm_logic = require("scripts.vtm_logic")
 
-local function status_color(station)
-  -- FIXME: actually do something
-  return "green"
-end
-
 local function depot_limit(station_data)
   local limit = station_data.limit
   local inbound = station_data.inbound
-  return inbound .. "/" .. limit
+  local limit_text = inbound .. "/" .. limit
+  local color = "green"
+  if limit == inbound or limit - 1 == inbound then
+    color = "red"
+  elseif inbound > limit - 5 then
+    color = "yellow"
+  end
+  return limit_text, color
+end
+
+local function add_stock(stock, all_stock)
+  for item, amount in pairs(stock.items or {}) do
+    if all_stock[item] then
+      all_stock[item].count = all_stock[item].count + amount
+    else
+      all_stock[item] = { type = "item", name = item, count = amount, color = nil }
+    end
+  end
+
+  for item, amount in pairs(stock.fluids or {}) do
+    if all_stock[item] then
+      all_stock[item].count = all_stock[item].count + amount
+    else
+      all_stock[item] = { type = "fluid", name = item, count = amount, color = nil }
+    end
+  end
+
+end
+
+local function read_depot_cargo(station_data)
+  local station_stock = {}
+  if not station_data.station.valid then return {} end
+  local trains = station_data.station.get_train_stop_trains()
+  for _, t in pairs(trains) do
+    local stock = {}
+    stock.items = t.get_contents()
+    stock.fluids = t.get_fluid_contents()
+    add_stock(stock, station_stock)
+  end
+  return station_stock
 end
 
 local function update_tab(gui_id)
   local vtm_gui = global.guis[gui_id]
-  local stations = {}
   local depots_compact = {}
+  local depots = {}
   local limit
   local table_index = 0
   local filters = {
@@ -55,23 +89,36 @@ local function update_tab(gui_id)
             type = station_data.type,
             inbound = station_data.station.trains_count,
             limit = limit,
+            sort_prio=station_data.sort_prio,
+            stock = {}
           }
         end
       end
     end
   end
-
+  -- only valid stations from here
   local scroll_pane = vtm_gui.gui.depots.scroll_pane
   local children = scroll_pane.children
   local width = constants.gui.depots
+  -- new table to make sorting possible
+  for _, value in pairs(depots_compact) do
+    table.insert(depots,value)
+  end
+  -- TODO make special sort for TCS icons, depots always first
+  --sorting by name and type
+  -- table.sort(depots, function(a, b) return a.type < b.type end)
+  table.sort(depots, function(a, b) return a.name < b.name end)
+  if game.active_mods["Train_Control_Signals"] then
+    table.sort(depots, function(a, b) return a.sort_prio < b.sort_prio end)
+  end
 
-  for _, station_data in pairs(depots_compact) do
+  for _, station_data in pairs(depots) do
 
     if station_data.station.valid then
       table_index = table_index + 1
+      vtm_gui.gui.depots.warning.visible = false
       -- get or create gui row
       local row = children[table_index]
-      local color = table_index % 2 == 0 and "dark" or "light"
       if not row then
         row = gui.add(scroll_pane, {
           type = "frame",
@@ -82,7 +129,7 @@ local function update_tab(gui_id)
             type = "label",
             style = "vtm_clickable_semibold_label",
             style_mods = { width = width.name },
-            tooltip = "vtm.open_station_gui_tooltip",
+            tooltip = { "vtm.show-station-on-map-tooltip" },
           },
           {
             type = "flow",
@@ -96,16 +143,22 @@ local function update_tab(gui_id)
             style = "vtm_semibold_label",
             style_mods = { width = width.type },
           },
-          {
-            type = "empty-widget",
-            style = "flib_horizontal_pusher",
-            style_mods = { height = 20, },
-          },
+          -- {
+          --   type = "empty-widget",
+          --   style = "flib_horizontal_pusher",
+          --   style_mods = { height = 20, },
+          -- },
           gui_util.slot_table(width, "light", "stock"),
         })
       end
-      -- insert data
+      -- read cargo from trains parking at depot
+      local station_stock = {}
+      if station_data.inbound > 0 then
+        station_stock = read_depot_cargo(station_data)
+      end
+      local limit_text, color = depot_limit(station_data)
 
+      -- insert data
       gui.update(row, {
         { -- name
           elem_mods = { caption = station_data.name },
@@ -114,17 +167,18 @@ local function update_tab(gui_id)
           },
         },
         { --status
-          { elem_mods = { sprite = "flib_indicator_" .. status_color(station_data) } },
-          { elem_mods = { caption = depot_limit(station_data) } },
+          { elem_mods = { sprite = "flib_indicator_" .. color } },
+          { elem_mods = { caption = limit_text } },
         },
         { elem_mods = { caption = station_data.type } }, --type
-        {}, --pusher
+        -- {}, --pusher
+        gui_util.slot_table_update(row.stock_table, station_stock, vtm_gui.gui_id)
       })
     end
-
   end
-  if table_index > 0 then
-    vtm_gui.gui.tabs.depots_tab.badge_text = table_index
+  vtm_gui.gui.tabs.depots_tab.badge_text = table_index
+  if table_index == 0 then
+    vtm_gui.gui.depots.warning.visible = true
   end
   for child_index = table_index + 1, #children do
     children[child_index].destroy()
@@ -173,19 +227,15 @@ local function build_gui(gui_id)
           style_mods = { width = width.type },
           tooltip = "vtm.type-tooltip",
         },
-        {
-          type = "empty-widget",
-          style = "flib_horizontal_pusher",
-        },
+        -- {
+        --   type = "empty-widget",
+        --   style = "flib_horizontal_pusher",
+        -- },
         {
           type = "label",
           style = "subheader_caption_label",
           caption = { "vtm.table-header-stock" },
-          style_mods = { width = width.stock, right_padding = width.appendix },
-        },
-        {
-          type = "empty-widget",
-          style_mods = { width = width.appendix }
+          style_mods = { width = width.stock },
         },
       },
       {
@@ -194,6 +244,24 @@ local function build_gui(gui_id)
         ref = { "depots", "scroll_pane" },
         vertical_scroll_policy = "always",
         horizontal_scroll_policy = "auto",
+      },
+      {
+        type = "frame",
+        direction = "horizontal",
+        style = "negative_subheader_frame",
+        ref = { "depots", "warning" },
+        visible = true,
+        {
+          type = "flow",
+          style = "centering_horizontal_flow",
+          style_mods = { horizontally_stretchable = true },
+          {
+            type = "label",
+            style = "bold_label",
+            caption = { "", "[img=warning-white] ", { "gui-trains.no-stations" } },
+            ref = { "depots", "warning_label" },
+          },
+        },
       },
     },
   }

@@ -44,10 +44,9 @@ function util.slot_table(widths, color, name)
       -- horizontal_spacing = 4,
       -- vertical_spacing = 4,
       cell_padding = 2,
-      -- padding = 4,
+      left_padding = 8,
     },
     column_count = widths[name .. "_columns"]
-
   }
 end
 
@@ -169,10 +168,11 @@ end
 function util.slot_table_update_train(icon_table, sources, gui_id)
   local new_table = {}
   for k, y in pairs(sources) do
-    local row = {}
 
-    row.type = k == "items" and "item" or "fluid"
+    local type = k == "items" and "item" or "fluid"
     for name, count in pairs(y) do
+      local row = {}
+      row.type = type
       row.name = name
       row.count = count
       row.color = nil

@@ -1,27 +1,12 @@
 local constants = {}
 
 constants.gui_content_frame_height = 700
-constants.gui_content_frame_min_width = 900
+constants.gui_window_min_width = 990
 constants.refresh_event=nil
+constants.MAX_LIMIT = 4294967295
 
--- constants.tabs = {
---   ["trains"] = {id=1,refresh="trains.update_tab"},
---   ["stations"] = {id=2,refresh="stations.update_tab"},
---   ["history"] = {id=3,refresh="trains.update_tab"},
---   ["summary"] ={id=4,refresh="trains.update_tab"},
--- }
--- local tab_order ={"trains", "stations","depots","history","statistic","events","summary"}
--- constants.tabs = {
---   ["trains"] = 1,
---   ["stations"] = 2,
---   ["depots"] = 3,
---   ["history"] = 4,
---   ["statistic"] = 5,
---   ["events"] = 6,
---   ["summary"] = 7,
--- }
 constants.tabs = {}
--- content row width = 910, cant get stretch to work
+
 constants.gui = {
   trains = {
     train_id = 60,
@@ -51,18 +36,19 @@ constants.gui = {
     trains = 200,
     type = 50,
     filler = 132,
-    stock = 36 * 5,
-    stock_columns = 5,
+    stock = 36 * 8,
+    stock_columns = 8,
     colapse = 50,
     appendix = 17,
   },
   history = {
     train_id = 60,
-    route = 292+160,
+    route = 454,
     depot = 160,
     runtime = 68,
     finished = 68,
-    shipment = (36 * 6),
+    shipment = (36 * 5),
+    shipment_columns = 5,
     shipment_checkbox_stretchy = true,
   },
   alerts = {
@@ -125,5 +111,4 @@ constants.state_description2 = {
   { defines.train_state.destination_full, { "vtm.train_state-destination_full" } },
 }
 
-constants.MAX_LIMIT = 4294967295
 return constants

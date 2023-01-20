@@ -55,12 +55,11 @@ local function load_guess_pattern()
   depot_pattern = split(settings.global["vtm-depot-names"].value, ",")
   requester_pattern = split(settings.global["vtm-requester-names"].value, ",")
   provider_pattern = split(settings.global["vtm-provider-names"].value, ",")
-  -- if game.active_mods["Train_Control_Signals"] then
-  --   refuel_pattern = { "[virtual-signal=refuel-signal]" }
-  --   depot_pattern = { "[virtual-signal=depot-signal]" }
-  -- end
 end
 
+---comment Try to guess the station type: Requester, Provider, Depot or Refuel
+---@param station LuaEntity
+---@return string
 local function guess_station_type(station)
   load_guess_pattern()
   local station_type = "ND"
@@ -107,6 +106,26 @@ local function guess_station_type(station)
   return station_type
 end
 
+---comment extra sort criteria to sort depots tab
+---@param backer_name string
+---@return integer
+local function get_TCS_prio(backer_name)
+  if game.active_mods["Train_Control_Signals"] then
+    local tcs_refuel = "[virtual-signal=refuel-signal]"
+    local tcs_depot = "[virtual-signal=depot-signal]"
+    -- local tcs_skip = "[virtual-signal=skip-signal]"
+    local is_depot = string.find(string.lower(backer_name), tcs_depot, 1, true) or false
+    if is_depot then
+      return 1
+    end
+    local is_refuel = string.find(string.lower(backer_name), tcs_refuel, 1, true) or false
+    if is_refuel then
+      return 2
+    end
+  end
+  return 9
+end
+
 local function new_station(station)
   return {
     -- TODO: refine me, limit, avg
@@ -116,11 +135,12 @@ local function new_station(station)
     last_changed = game.tick,
     opened = "",
     closed = "",
-    avg = 0,
+    avg = 0, --TODO : calculate on finish log
     train_front_rail = nil,
     type = guess_station_type(station), -- one of P R D F or ND
-    stock = {}, -- currently dynamic
-    in_transit = {} -- [train_id] = {"type/item",count},
+    sort_prio = get_TCS_prio(station.backer_name),
+    stock = {},
+    in_transit = {},
   }
 end
 
@@ -131,6 +151,7 @@ local function updated_station(station)
     station = station,
     last_changed = game.tick,
     type = guess_station_type(station) or "", -- one of P R D F or ND
+    sort_prio = get_TCS_prio(station.backer_name),
     -- stock = {},
     -- events = {}
   }
@@ -360,10 +381,6 @@ local function on_train_changed_state(event)
       log.contents = train_data.contents.items
       log.fluids = train_data.contents.fluids
       log.station = train.station
-      -- save front_rail to station, connected rail and front/back rail does not match
-      if global.stations[train.station.unit_number] then
-        global.stations[train.station.unit_number].train_front_rail = train.front_rail.unit_number
-      end
     end
   end
   if event.old_state == defines.train_state.destination_full and
@@ -379,9 +396,6 @@ local function on_train_changed_state(event)
   end
   add_log(train_data, log)
 
-  -- if train.state == defines.train_state.wait_station and train.schedule.current == find_first_stop(train.schedule) then
-  --   finish_current_log(train, train_id, train_data)
-  -- end
 end
 
 local function on_trainstop_build(event)
@@ -403,7 +417,7 @@ local function on_trainstop_renamed(event)
     load_guess_pattern()
     if station_data then
       station_data.type = updated_station(event.entity).type
-      -- global.stations[event.entity.unit_number] = updated_station(event.entity)
+        station_data.sort_prio = get_TCS_prio(event.entity.backer_name)
     else
       global.stations[event.entity.unit_number] = new_station(event.entity)
     end
@@ -414,8 +428,8 @@ local function on_trainstop_renamed(event)
       event = event,
       player_index = event.player_index
     })
-
-    game.print("trainstop renamed " .. event.entity.backer_name)
+    local force = event.entity.last_user.force
+    force.print("Trainstop renamed " .. event.entity.backer_name)
   end
 
 end
@@ -432,7 +446,9 @@ local function on_train_schedule_changed(event)
   --   schedule = train.schedule,
   --   changed_by = event.player_index
   -- })
-  -- TODO trigger station refresh from train path_end_stop
+  -- TODO trigger station refresh from train path_end_stop :/
+  -- worth nothing if there is nothing ready to deliver
+  -- better make that available in a different way
 
 end
 

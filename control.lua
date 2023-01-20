@@ -102,11 +102,11 @@ local function on_configuration_changed(event)
 end
 
 local function on_tick(event)
-  for _, task in pairs(on_tick_n.retrieve(event.tick) or {}) do
-    -- if task == "init_vtm_gui" then
-    -- elseif task == "update_trains_tab" then
-    -- end
-  end
+  -- for _, task in pairs(on_tick_n.retrieve(event.tick) or {}) do
+  --   -- if task == "init_vtm_gui" then
+  --   -- elseif task == "update_trains_tab" then
+  --   -- end
+  -- end
 
   -- station data refresh
   if global.station_k then
@@ -161,7 +161,7 @@ script.on_event(defines.events.on_gui_opened, function(event)
 end)
 -- script.on_event(defines.events.on_gui_closed, function(event)
 
---   if event.element and event.element.name == "ugg_main_frame" then
+--   if event.element and event.element.name == "vtm_main_frame" then
 
 --   end
 --   if event.entity and event.entity.type == "train-stop" then

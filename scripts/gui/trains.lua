@@ -70,7 +70,7 @@ local function train_status_message(train_data)
     if train.station ~= nil then
       msg = { desc[train.state], train.station.backer_name }
     else
-      -- TODO: should this be an error?
+      -- Temp Stop
       local station = nil
       station = select_station_from_schedule(train)
       if station ~= nil then
@@ -139,6 +139,7 @@ function trains.update_tab(gui_id)
     if train_data.train.valid then
       --filter trains by cargo
       table_index = table_index + 1
+      vtm_gui.gui.trains.warning.visible = false
       -- get or create gui row
       local row = children[table_index]
       local color = table_index % 2 == 0 and "dark" or "light"
@@ -195,7 +196,7 @@ function trains.update_tab(gui_id)
           elem_mods = {
             sprite = "item/" .. gui_util.signal_for_entity(train_data.train.front_stock).name,
             -- number = train_data.train.id,
-            -- tooltip = prototype.localised_name,
+            tooltip = prototype.localised_name,
           },
           {
             elem_mods = {
@@ -204,7 +205,7 @@ function trains.update_tab(gui_id)
             actions = {
               on_click = { type = "trains", action = "open-train", train_id = train_data.train.id },
             },
-            tooltip = { "gui-trains.open-train" },
+            tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", tostring(train_data.train.id) },
           },
         } },
         { --status
@@ -219,11 +220,11 @@ function trains.update_tab(gui_id)
         }
       })
       gui_util.slot_table_update_train(row.cargo_table, train_data.contents, vtm_gui.gui_id)
-
     end
   end
-  if table_index > 0 then
-    vtm_gui.gui.tabs.trains_tab.badge_text = table_index
+  vtm_gui.gui.tabs.trains_tab.badge_text = table_index
+  if table_index == 0 then
+    vtm_gui.gui.trains.warning.visible = true
   end
   for child_index = table_index + 1, #children do
     children[child_index].destroy()
@@ -295,6 +296,24 @@ function trains.build_gui()
         vertical_scroll_policy = "always",
         horizontal_scroll_policy = "never",
         -- style_mods = { vertically_stretchable = true},
+      },
+      {
+        type = "frame",
+        direction = "horizontal",
+        style = "negative_subheader_frame",
+        ref = { "trains", "warning" },
+        visible = true,
+        {
+          type = "flow",
+          style = "centering_horizontal_flow",
+          style_mods = { horizontally_stretchable = true },
+          {
+            type = "label",
+            style = "bold_label",
+            caption = { "", "[img=warning-white] ", { "gui-trains.no-trains" } },
+            ref = { "trains", "warning_label" },
+          },
+        },
       },
     }
   }

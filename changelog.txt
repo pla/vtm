@@ -1,9 +1,11 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.0.16
-Date: 2023-01-11
+Date: 2023-01-20
   Changes:
     - Fixed Search
     - Fixed History tab crash on invalid train
+    - Added Depot stock data from trains
+    - Added priority sorting for TCS signals
 ---------------------------------------------------------------------------------------------------
 Version: 0.0.15
 Date: 2023-01-10
