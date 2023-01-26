@@ -22,33 +22,6 @@ local function split(inputstr, sep)
   return t
 end
 
-local function read_station_network(station, return_virtual)
-  local contents = {}
-  local colors = tables.invert(defines.wire_type)
-  -- TODO: maybe, a setting which wire color to check
-  if not station.valid then
-    return contents
-  end
-  for _, wire in pairs({ defines.wire_type.red, defines.wire_type.green }) do
-    local cn = station.get_circuit_network(wire)
-    -- cn - signals (type,name),wire_type
-    if cn ~= nil and cn.signals ~= nil then
-      for _, signal_data in pairs(cn.signals) do
-        if signal_data.signal.type == "virtual" and return_virtual ~= true then
-          goto continue
-        end
-        table.insert(contents, {
-          type = signal_data.signal.type,
-          name = signal_data.signal.name,
-          count = signal_data.count,
-          color = colors[wire]
-        })
-        ::continue::
-      end
-    end
-  end
-  return contents
-end
 
 local function load_guess_pattern()
   refuel_pattern = split(settings.global["vtm-refuel-names"].value, ",")
@@ -171,7 +144,7 @@ function vtm_logic.init_stations()
   global.stations = stations
 end
 
--- unused, for now
+-- unused, for now, needs to be different for P and R
 function vtm_logic.update_station_limit(unit_number, entity)
   local station_data = global.stations[unit_number]
   if entity.station_limit < 1 then
@@ -239,7 +212,7 @@ function vtm_logic.clear_older(player_index, older_than)
 end
 
 local function find_first_stop(schedule)
-  -- search for TCS signal
+  -- search with TCS signals in mind
   local index = 1
   if schedule ~= nil and schedule.records and game.active_mods["Train_Control_Signals"] then
     local pattern = "[virtual-signal=skip-signal]"
@@ -255,8 +228,10 @@ local function find_first_stop(schedule)
   return index
 
 end
-
-local function new_current(train)
+---comment
+---@param train LuaTrain
+---@return table
+local function new_current_log(train)
   return {
     -- Required because front_stock might not be valid later
     force_index = train.front_stock.force.index,
@@ -286,7 +261,7 @@ end
 
 local function get_train_data(train, train_id)
   if not global.trains[train_id] then
-    global.trains[train_id] = new_current(train)
+    global.trains[train_id] = new_current_log(train)
   end
 
   return global.trains[train_id]
@@ -305,23 +280,11 @@ end
 
 local function finish_current_log(train, train_id, train_data)
   table.insert(global.history, 1, train_data)
-  local new_data = new_current(train)
+  local new_data = new_current_log(train)
   global.trains[train_id] = new_data
   clear_older_force(new_data.force_index, game.tick - MAX_KEEP)
   -- log(serpent.block(train_data)) --FIXME: remove line
 end
-
--- local interesting_states = {
---   [defines.train_state.path_lost] = true,
---   [defines.train_state.no_schedule] = true,
---   [defines.train_state.no_path] = true,
---   [defines.train_state.wait_signal] = false,
---   [defines.train_state.arrive_station] = true,
---   [defines.train_state.wait_station] = true,
---   [defines.train_state.manual_control_stop] = true,
---   [defines.train_state.manual_control] = true,
---   [defines.train_state.destination_full] = true
--- }
 
 local function read_contents(train)
   return {
@@ -357,9 +320,9 @@ local function on_train_changed_state(event)
   if train_data.last_station and event.old_state ~= defines.train_state.wait_station then
     train_data.last_station = nil
   end
-  -- TODO: check for Depot station
+
   if event.old_state == defines.train_state.wait_station then
-    log.position = train.front_stock.position
+    log.position = train.front_stock.position 
 
     local diff_items = diff(train_data.contents.items, train.get_contents())
     local diff_fluids = diff(train_data.contents.fluids, train.get_fluid_contents())
@@ -370,8 +333,8 @@ local function on_train_changed_state(event)
     }
     log.station = train_data.last_station
     train_data.last_station = nil
-    -- end old entry, but save timestamp somewhere
   end
+
   if new_state == defines.train_state.wait_station then
     -- always log position
     log.position = train.front_stock.position
@@ -383,11 +346,13 @@ local function on_train_changed_state(event)
       log.station = train.station
     end
   end
+
   if event.old_state == defines.train_state.destination_full and
-      event.new_state == defines.train_state.on_the_path
+      train.state == defines.train_state.on_the_path
   then
     log.old_tick = train_data.last_change
   end
+
   -- for train cargo in transit
   if train.has_path and train.path_end_stop then
     train_data.path_end_stop = train.path_end_stop.unit_number
@@ -417,7 +382,7 @@ local function on_trainstop_renamed(event)
     load_guess_pattern()
     if station_data then
       station_data.type = updated_station(event.entity).type
-        station_data.sort_prio = get_TCS_prio(event.entity.backer_name)
+      station_data.sort_prio = get_TCS_prio(event.entity.backer_name)
     else
       global.stations[event.entity.unit_number] = new_station(event.entity)
     end
@@ -440,12 +405,12 @@ local function on_train_schedule_changed(event)
   if not event.player_index then
     return
   end
-  -- local train_data = get_train_data(train, train_id)
-  -- add_log(train_data, {
-  --   tick = game.tick,
-  --   schedule = train.schedule,
-  --   changed_by = event.player_index
-  -- })
+  local train_data = get_train_data(train, train_id)
+  add_log(train_data, {
+    tick = game.tick,
+    schedule = train.schedule,
+    changed_by = event.player_index
+  })
   -- TODO trigger station refresh from train path_end_stop :/
   -- worth nothing if there is nothing ready to deliver
   -- better make that available in a different way
@@ -458,9 +423,9 @@ script.on_event(defines.events.on_train_changed_state, function(event)
   on_train_changed_state(event)
 end)
 
-script.on_event(defines.events.on_train_schedule_changed, function(event)
-  on_train_schedule_changed(event)
-end)
+-- script.on_event(defines.events.on_train_schedule_changed, function(event)
+--   on_train_schedule_changed(event)
+-- end)
 
 script.on_event(defines.events.on_built_entity, function(event)
   on_trainstop_build(event)

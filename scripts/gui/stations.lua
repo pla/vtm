@@ -2,15 +2,10 @@
 local misc = require("__flib__.misc")
 local tables = require("__flib__.table")
 local gui = require("__flib__.gui")
-local gui_util = require("scripts.gui.util")
+local gui_util = require("scripts.gui.utils")
 local match = require("scripts.match")
 local constants = require("scripts.constants")
 local vtm_logic = require("scripts.vtm_logic")
-
-local function status_color(station_data)
-  -- FIXME: actually do something
-  return "green"
-end
 
 local function read_inbound_trains(station_data)
   local station = station_data.station
@@ -66,11 +61,11 @@ end
 local function station_limit(station_data)
   local limit = station_data.station.trains_limit
   local inbound = station_data.station.trains_count
+  local color = "green"
   if limit == constants.MAX_LIMIT then
     limit = 1
   end
   local limit_text = inbound .. "/" .. limit
-  local color = "green"
   if station_data.type == "R" then
     if inbound > 0 then
       color = "blue"
@@ -94,6 +89,8 @@ local function update_tab(gui_id)
   local stations = {}
   local nd_stations = 0
   local table_index = 0
+  local max_lines = settings.global["vtm-limit-auto-refresh"].value
+
   local filters = {
     item = vtm_gui.gui.filter.item.elem_value,
     fluid = vtm_gui.gui.filter.fluid.elem_value,
@@ -132,19 +129,26 @@ local function update_tab(gui_id)
   for _, station_data in pairs(stations) do
 
     if station_data.station.valid then
+      if table_index >= max_lines and
+          max_lines > 0 and
+          global.settings[vtm_gui.player.index].gui_refresh == "auto" and
+          filters.search_field == ""
+      then
+        -- max entries
+        goto continue
+      end
+
       table_index = table_index + 1
       vtm_gui.gui.stations.warning.visible = false
       -- get or create gui row
       -- name,status,since,avg,type,stock,intransit
       -- limit manual or circuit,type(PR),group
       local row = children[table_index]
-      local color = table_index % 2 == 0 and "dark" or "light"
       if not row then
         row = gui.add(scroll_pane, {
           type = "frame",
           direction = "horizontal",
           style = "vtm_table_row_frame",
-          -- style = " vtm_table_row_frame_" .. color,
           {
             type = "sprite-button",
             style = "transparent_slot",
@@ -160,7 +164,7 @@ local function update_tab(gui_id)
           {
             type = "flow",
             style = "flib_indicator_flow",
-            style_mods = { horizontal_align = "left", width = width.status },
+            style_mods = { width = width.status, horizontal_align = "left" },
             { type = "sprite", style = "flib_indicator" },
             { type = "label", style = "vtm_semibold_label" },
           },
@@ -178,7 +182,7 @@ local function update_tab(gui_id)
             type = "label",
             style = "vtm_semibold_label",
             style_mods = { width = width.type, horizontal_align = "center" },
-            tooltip = { "type-tooltip" },
+            tooltip = { "vtm.type-tooltip" },
           },
           gui_util.slot_table(width, "light", "stock"),
           gui_util.slot_table(width, "light", "in_transit"),
@@ -192,12 +196,13 @@ local function update_tab(gui_id)
       if station_data.station.trains_count > 0 then
         in_transit_data = read_inbound_trains(station_data)
       end
+      local limit_text, color = station_limit(station_data)
       local since = ""
-      local prototype = station_data.station.prototype
+      -- TODO Topic open requests
       -- if station_data.opened then
       --   since = misc.ticks_to_timestring(game.tick - station_data.opened)
       -- end
-      local limit_text, color = station_limit(station_data)
+      local avg = "" --station_data.avg
       gui.update(row, {
         { -- Station button
           elem_mods = {
@@ -220,7 +225,7 @@ local function update_tab(gui_id)
         { elem_mods = {
           caption = since
         } }, -- since
-        { elem_mods = { caption = station_data.avg } }, -- avg
+        { elem_mods = { caption = avg } }, -- avg
         { elem_mods = { caption = station_data.type } }, --type
       })
       gui_util.slot_table_update(row.stock_table, stock_data, vtm_gui.gui_id)
@@ -228,6 +233,7 @@ local function update_tab(gui_id)
     end
 
   end
+  ::continue::
   vtm_gui.gui.tabs.stations_tab.badge_text = table_index or 0
   if table_index > 0 then
     if nd_stations > 10 then
@@ -304,7 +310,6 @@ local function build_gui(gui_id)
           style = "subheader_caption_label",
           caption = { "vtm.table-header-type" },
           style_mods = { width = width.type },
-          tooltip = "vtm.type-tooltip",
         },
         {
           type = "label",

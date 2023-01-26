@@ -1,7 +1,8 @@
+-- depots.lua
 local constants = require("scripts.constants")
 local tables = require("__flib__.table")
 local gui = require("__flib__.gui")
-local gui_util = require("scripts.gui.util")
+local gui_util = require("scripts.gui.utils")
 local match = require("scripts.match")
 local vtm_logic = require("scripts.vtm_logic")
 
@@ -10,9 +11,9 @@ local function depot_limit(station_data)
   local inbound = station_data.inbound
   local limit_text = inbound .. "/" .. limit
   local color = "green"
-  if limit == inbound or limit - 1 == inbound then
+  if (limit == inbound or limit - 1 == inbound) and limit > 1 then
     color = "red"
-  elseif inbound > limit - 5 then
+  elseif inbound > limit - 3 and limit > 10 then
     color = "yellow"
   end
   return limit_text, color
@@ -42,10 +43,17 @@ local function read_depot_cargo(station_data)
   if not station_data.station.valid then return {} end
   local trains = station_data.station.get_train_stop_trains()
   for _, t in pairs(trains) do
-    local stock = {}
-    stock.items = t.get_contents()
-    stock.fluids = t.get_fluid_contents()
-    add_stock(stock, station_stock)
+    -- check if the train is at the station
+    for _, rail in pairs(station_data.rails) do
+      if t.front_rail.is_rail_in_same_rail_block_as(rail) then
+        local stock = {}
+        stock.items = t.get_contents()
+        stock.fluids = t.get_fluid_contents()
+        add_stock(stock, station_stock)
+        goto continue
+      end
+    end
+    ::continue::
   end
   return station_stock
 end
@@ -80,7 +88,8 @@ local function update_tab(gui_id)
           depots_compact[station_data.station.backer_name].inbound =
           depots_compact[station_data.station.backer_name].inbound +
               station_data.station.trains_count
-
+          tables.insert(depots_compact[station_data.station.backer_name].rails,
+            station_data.station.connected_rail)
         else
           -- new record
           depots_compact[station_data.station.backer_name] = {
@@ -89,7 +98,8 @@ local function update_tab(gui_id)
             type = station_data.type,
             inbound = station_data.station.trains_count,
             limit = limit,
-            sort_prio=station_data.sort_prio,
+            sort_prio = station_data.sort_prio,
+            rails = { station_data.station.connected_rail, },
             stock = {}
           }
         end
@@ -102,14 +112,14 @@ local function update_tab(gui_id)
   local width = constants.gui.depots
   -- new table to make sorting possible
   for _, value in pairs(depots_compact) do
-    table.insert(depots,value)
+    table.insert(depots, value)
   end
-  -- TODO make special sort for TCS icons, depots always first
   --sorting by name and type
-  -- table.sort(depots, function(a, b) return a.type < b.type end)
-  table.sort(depots, function(a, b) return a.name < b.name end)
   if game.active_mods["Train_Control_Signals"] then
-    table.sort(depots, function(a, b) return a.sort_prio < b.sort_prio end)
+    -- special sort for TCS icons, depots always first
+    table.sort(depots, function(a, b) return a.sort_prio .. a.name < b.sort_prio .. b.name end)
+  else
+    table.sort(depots, function(a, b) return a.type .. a.name < b.type .. b.name end)
   end
 
   for _, station_data in pairs(depots) do
@@ -134,20 +144,16 @@ local function update_tab(gui_id)
           {
             type = "flow",
             style = "flib_indicator_flow",
-            style_mods = { horizontal_align = "left", width = width.status },
+            style_mods = { width = width.status, horizontal_align = "left", },
             { type = "sprite", style = "flib_indicator" },
             { type = "label", style = "vtm_semibold_label" },
           },
           {
             type = "label",
             style = "vtm_semibold_label",
-            style_mods = { width = width.type },
+            style_mods = { width = width.type, horizontal_align = "center", },
+            tooltip = { "vtm.type-depot-tooltip" },
           },
-          -- {
-          --   type = "empty-widget",
-          --   style = "flib_horizontal_pusher",
-          --   style_mods = { height = 20, },
-          -- },
           gui_util.slot_table(width, "light", "stock"),
         })
       end
@@ -225,7 +231,6 @@ local function build_gui(gui_id)
           style = "subheader_caption_label",
           caption = { "vtm.table-header-type" },
           style_mods = { width = width.type },
-          tooltip = "vtm.type-tooltip",
         },
         -- {
         --   type = "empty-widget",

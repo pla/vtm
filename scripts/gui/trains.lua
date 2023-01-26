@@ -1,10 +1,9 @@
 local flib_train = require("__flib__.train")
 local tables = require("__flib__.table")
 local gui = require("__flib__.gui")
-local gui_util = require("scripts.gui.util")
+local gui_util = require("scripts.gui.utils")
 local constants = require("scripts.constants")
 local match = require("scripts.match")
-
 
 local inv_states = tables.invert(defines.train_state)
 
@@ -33,12 +32,11 @@ local function select_station_from_schedule(train)
     end
     return station
   else
-    return "vtm.unclear"
+    return { "vtm.unclear" }
   end
 end
 
 local function train_status_message(train_data)
-  -- TODO: distance train.path - LuaRailPath
   local msg = { "", "Train invalid or error" }
   if not train_data.train.valid then
     return msg
@@ -115,6 +113,7 @@ function trains.update_tab(gui_id)
   local vtm_gui = global.guis[gui_id]
   local train_datas = {}
   local table_index = 0
+  local max_lines = settings.global["vtm-limit-auto-refresh"].value
   local filters = {
     item = vtm_gui.gui.filter.item.elem_value,
     fluid = vtm_gui.gui.filter.fluid.elem_value,
@@ -137,7 +136,15 @@ function trains.update_tab(gui_id)
   for _, train_data in pairs(train_datas) do
 
     if train_data.train.valid then
-      --filter trains by cargo
+      if table_index >= max_lines and
+          max_lines > 0 and
+          global.settings[vtm_gui.player.index].gui_refresh == "auto" and
+          filters.search_field == ""
+      then
+        -- max entries
+        goto continue
+      end
+
       table_index = table_index + 1
       vtm_gui.gui.trains.warning.visible = false
       -- get or create gui row
@@ -195,7 +202,6 @@ function trains.update_tab(gui_id)
         { { -- train_id button
           elem_mods = {
             sprite = "item/" .. gui_util.signal_for_entity(train_data.train.front_stock).name,
-            -- number = train_data.train.id,
             tooltip = prototype.localised_name,
           },
           {
@@ -222,6 +228,7 @@ function trains.update_tab(gui_id)
       gui_util.slot_table_update_train(row.cargo_table, train_data.contents, vtm_gui.gui_id)
     end
   end
+  ::continue::
   vtm_gui.gui.tabs.trains_tab.badge_text = table_index
   if table_index == 0 then
     vtm_gui.gui.trains.warning.visible = true
@@ -330,7 +337,6 @@ function trains.handle_action(action, event)
       end
     end
   elseif action.action == "refresh" then
-    local player = game.players[event.player_index]
     trains.update_tab(action.gui_id)
   elseif action.action == "position" then
     local player = game.players[event.player_index]

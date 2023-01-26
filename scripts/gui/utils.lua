@@ -1,6 +1,5 @@
 -- gui/util.lua
 local gui = require("__flib__.gui")
-local misc = require("__flib__.misc")
 
 local util = {}
 
@@ -14,22 +13,22 @@ function util.get_gui_id(player_index)
   return nil
 end
 
---- Creates a small non-scrollable slot table.
---- @param widths table
---- @param color string
---- @param name string
-function util.small_slot_table(widths, color, name)
-  return {
-    type = "frame",
-    name = name .. "_frame",
-    -- style = "right_side_frame",
-    style = "vtm_slot_table_frame_" .. color,
-    style_mods = { width = widths[name] },
-    { type = "table", name = name .. "_table", style = "slot_table", column_count = widths[name .. "_columns"] },
-  }
-end
+-- --- Creates a small non-scrollable slot table.
+-- --- @param widths table
+-- --- @param color string
+-- --- @param name string
+-- function util.small_slot_table(widths, color, name)
+--   return {
+--     type = "frame",
+--     name = name .. "_frame",
+--     -- style = "right_side_frame",
+--     style = "vtm_slot_table_frame_" .. color,
+--     style_mods = { width = widths[name] },
+--     { type = "table", name = name .. "_table", style = "slot_table", column_count = widths[name .. "_columns"] },
+--   }
+-- end
 
---- Creates a small non-scrollable slot table.
+--- Creates a non-scrollable slot table.
 --- @param widths table
 --- @param color string
 --- @param name string

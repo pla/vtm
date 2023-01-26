@@ -1,24 +1,23 @@
-local constants = {}
+local constants = {
 
-constants.gui_content_frame_height = 700
-constants.gui_window_min_width = 990
-constants.refresh_event=nil
-constants.MAX_LIMIT = 4294967295
-
-constants.tabs = {}
-
+  gui_content_frame_height = 700,
+  gui_window_min_width = 990,
+  MAX_LIMIT = 4294967295,
+  refresh_event = nil,
+  tabs = {},
+}
 constants.gui = {
   trains = {
     train_id = 60,
     status = 374,
     since = 70,
     composition = 180,
-    cargo = 36 * 4,
-    cargo_columns = 4,
+    cargo = 36 * 6,
+    cargo_columns = 6,
     appendix = 17,
   },
   stations = {
-    icon=40,
+    icon = 40,
     name = 283,
     status = 53,
     since = 50,
@@ -49,7 +48,6 @@ constants.gui = {
     finished = 68,
     shipment = (36 * 5),
     shipment_columns = 5,
-    shipment_checkbox_stretchy = true,
   },
   alerts = {
     time = 68,
@@ -57,7 +55,6 @@ constants.gui = {
     route = 326,
     network_id = 84,
     type = 230,
-    type_checkbox_stretchy = true,
     contents = 36 * 6,
   },
 
@@ -84,17 +81,17 @@ constants.interesting_states = {
 }
 
 constants.state_description = {
-  [defines.train_state.on_the_path] =  "gui-train-state.heading-to"  ,
-  [defines.train_state.path_lost] =  "gui-train-state.no-path-to"  ,
-  [defines.train_state.no_schedule] =  "gui-train-state.no-schedule"  ,
-  [defines.train_state.no_path] =  "gui-train-state.no-path-to"  ,
-  [defines.train_state.arrive_signal] =  "gui-train-state.standing-at"  ,
-  [defines.train_state.wait_signal] =  "gui-train-state.heading-to"   ,
-  [defines.train_state.arrive_station] =  "gui-train-state.standing-at"  ,
-  [defines.train_state.wait_station] =  "gui-train-state.waiting-at"  ,
-  [defines.train_state.manual_control_stop] =  "gui-train-state.manually-stopped"  ,
-  [defines.train_state.manual_control] =  "gui-train-state.manually-driving"  ,
-  [defines.train_state.destination_full] =  "gui-train-state.destination-full"
+  [defines.train_state.on_the_path] = "gui-train-state.heading-to",
+  [defines.train_state.path_lost] = "gui-train-state.no-path-to",
+  [defines.train_state.no_schedule] = "gui-train-state.no-schedule",
+  [defines.train_state.no_path] = "gui-train-state.no-path-to",
+  [defines.train_state.arrive_signal] = "gui-train-state.heading-to",
+  [defines.train_state.wait_signal] = "gui-train-state.heading-to",
+  [defines.train_state.arrive_station] = "gui-train-state.heading-to",
+  [defines.train_state.wait_station] = "gui-train-state.waiting-at",
+  [defines.train_state.manual_control_stop] = "gui-train-state.manually-stopped",
+  [defines.train_state.manual_control] = "gui-train-state.manually-driving",
+  [defines.train_state.destination_full] = "gui-train-state.destination-full"
 }
 
 constants.state_description2 = {

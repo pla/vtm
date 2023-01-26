@@ -24,7 +24,6 @@ local function handle_action(action, event)
     refresh(action)
   end
   local filter = action.filter
-
   if action.action == "filter" then
     if filter == "item" and game.item_prototypes[action.value] then
       vtm_gui.gui.filter.item.elem_value = action.value
@@ -40,9 +39,16 @@ local function handle_action(action, event)
     if action.filter == "item" then
       filter_guis.fluid.elem_value = nil
       filter_guis.search_field.text = filter_guis.item.elem_value or ""
+      if event.button and event.button == defines.mouse_button_type.right then
+        filter_guis.search_field.text = ("=".. filter_guis.item.elem_value .. "]") or ""
+      end
     elseif action.filter == "fluid" then
       filter_guis.item.elem_value = nil
       filter_guis.search_field.text = filter_guis.fluid.elem_value or ""
+      if event.button and event.button == defines.mouse_button_type.right then
+        filter_guis.search_field.text = ("=".. filter_guis.fluid.elem_value .. "]") or ""
+      end
+
     end
     refresh(action)
   end
@@ -58,7 +64,7 @@ local function handle_action(action, event)
   end
 end
 
-local function create_toolbar(gui_id)
+local function build_gui(gui_id)
   return {
     type = "frame",
     direction = "vertical",
@@ -76,7 +82,7 @@ local function create_toolbar(gui_id)
           },
           {
             type = "textfield",
-            tooltip = { "vtm.filter-station-name" },
+            tooltip = { "vtm.filter-station-name-tooltip" },
             clear_and_focus_on_right_click = true,
             ref = { "filter", "search_field" },
             actions = {
@@ -144,6 +150,6 @@ end
 
 return {
   handle_action = handle_action,
-  create_toolbar = create_toolbar,
+  build_gui = build_gui,
   refresh = refresh,
 }

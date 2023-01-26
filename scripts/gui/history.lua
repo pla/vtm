@@ -1,6 +1,6 @@
 -- history.lua
 local gui = require("__flib__.gui")
-local gui_util = require("scripts.gui.util")
+local gui_util = require("scripts.gui.utils")
 local match = require("scripts.match")
 local constants = require("scripts.constants")
 
@@ -47,10 +47,14 @@ local function create_history_msg(event)
   elseif event.diff then
     style = style
     msg = { "vtm.histstory-un-load", cargo }
-  elseif event.old_tick then
-    msg = { "vtm.histstory-waited", event.tick - event.old_tick }
   elseif event.state == defines.train_state.on_the_path then
-    msg = { "vtm.histstory-done-waiting" }
+    if event.old_tick then
+      msg = { "vtm.histstory-waited", gui_util.ticks_to_timestring(event.tick - event.old_tick)  }
+    else
+      msg = { "vtm.histstory-done-waiting" }
+    end
+  elseif event.old_tick then
+    msg = { "vtm.histstory-waited", gui_util.ticks_to_timestring(event.tick - event.old_tick) }
   elseif event.state == defines.train_state.destination_full then
     msg = { "vtm.histstory-waiting" }
   elseif event.state == defines.train_state.wait_signal then
@@ -297,7 +301,7 @@ local function update_tab(gui_id)
       if history_data.train.valid then
         prototype = history_data.train.front_stock.prototype
         sprite = "item/" .. gui_util.signal_for_entity(history_data.train.front_stock).name
-        train_id = tostring(history_data.train.id)
+        train_id = history_data.train.id
         tooltip = prototype.localised_name
       end
       local runtime = gui_util.ticks_to_timestring(history_data.last_change - history_data.started_at)
@@ -316,8 +320,8 @@ local function update_tab(gui_id)
             actions = {
               on_click = { type = "trains", action = "open-train", train_id = train_id },
             },
-            tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", train_id },
           },
+            tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", train_id },
         } },
         { -- route
         },
@@ -343,7 +347,6 @@ local function update_tab(gui_id)
     children[child_index].destroy()
   end
 end
-
 return {
   build_gui = build_gui,
   update_tab = update_tab,

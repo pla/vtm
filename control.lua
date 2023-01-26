@@ -3,7 +3,7 @@ local on_tick_n = require("__flib__.on-tick-n")
 local constants = require("scripts.constants")
 local vtm_gui = require("scripts.gui.main_gui")
 local vtm_logic = require("scripts.vtm_logic")
-local gui_util = require("scripts.gui.util")
+local gui_util = require("scripts.gui.utils")
 local mod_gui = require("__core__.lualib.mod-gui")
 
 local function init_player_data(player)
@@ -30,12 +30,8 @@ local function init_global_data()
   global.history = {}
   global.trains = {}
   global.stations = {}
-  if not global.settings then
-    global.settings = {}
-  end
-  if not global.stats then
-    global.stats = {}
-  end
+  global.settings = {}
+  global.stats = {}
 end
 
 local function remove_mod_gui_button(player)
@@ -77,12 +73,12 @@ local function on_configuration_changed(event)
       if global.settings[player.index] == nil then
         init_player_data(player)
         -- init stats per force
-        -- if global.stats[player.force] == nil then
-        --   global.stats[player.force] = {
-        --     stations = {},
-        --     trains = {},
-        --   }
-        -- end
+        if global.stats[player.force] == nil then
+          global.stats[player.force] = {
+            stations = {},
+            trains = {},
+          }
+        end
       end
       local gui_id = gui_util.get_gui_id(player.index)
       if gui_id ~= nil then
@@ -151,12 +147,11 @@ script.on_init(function()
     init_player_data(player)
   end
   global.station_refresh = "init"
-  -- on_tick_n.add(game.tick+3, "init_vtm_gui")
 end)
 
 script.on_event(defines.events.on_gui_opened, function(event)
   if event.entity and event.entity.type == "train-stop" then
-    -- game.print("gui opened" .. event.entity.type, { 0.5, 0, 0, 0.5 })
+    -- game.print("gui opened" .. event.entity.type)
   end
 end)
 -- script.on_event(defines.events.on_gui_closed, function(event)
@@ -216,10 +211,22 @@ end)
 -- COMMANDS
 -- TODO: clean or remove
 commands.add_command("vtm", { "vtm.command-help" }, function(event)
-  if event.parameter == "refresh-player-data" then
-    -- local player = game.get_player(e.player_index)
-    -- local player_table = global.players[e.player_index]
-    -- player_data.refresh(player, player_table)
+  if event.parameter == "show-undef-stations" then
+    local player = game.get_player(event.player_index)
+    if player == nil then return end
+    local force = player.valid and player.force or 1
+    local table_index = 0
+    force.print({"vtm.show-undef-stations"})
+    for _, station_data in pairs(global.stations) do
+      if station_data.station.valid and
+          station_data.force_index == player.force.index and
+          station_data.type == "ND"
+      then
+        table_index = table_index + 1
+        force.print("[train-stop="..station_data.station.unit_number.."]")
+        if table_index == 10 then return end
+      end
+    end
   elseif event.parameter == "del-history" then
     global.history = {}
   elseif event.parameter == "del-stations" then

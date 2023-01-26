@@ -5,12 +5,10 @@ local trains      = require("scripts.gui.trains")
 local stations    = require("scripts.gui.stations")
 local depots      = require("scripts.gui.depots")
 local history     = require("scripts.gui.history")
-local tables      = require("__flib__.table")
 local vtm_logic   = require("scripts.vtm_logic")
-local gui_util    = require("scripts.gui.util")
+local gui_util    = require("scripts.gui.utils")
 local time_filter = require("scripts.filter-time")
 
-local tabs = constants.tabs
 -- config sprite: side_menu_menu_icon
 -- search sprite: search_white
 -- refresh sprite: refresh_white
@@ -71,6 +69,7 @@ local function create_gui(player)
     {
       type = "frame",
       direction = "vertical",
+      name = "vtm_main_frame",
       style_mods = { minimal_width = constants.gui_window_min_width },
       ref = { "window" },
       actions = {
@@ -78,7 +77,7 @@ local function create_gui(player)
       },
       children = {
         header(gui_id),
-        searchbar.create_toolbar(gui_id),
+        searchbar.build_gui(gui_id),
         {
           type = "frame",
           direction = "vertical",
@@ -246,15 +245,10 @@ local function dispatch_refresh(event, action)
   if gui_id == nil then
     return --no gui
   end
-  if event.control and event.button == defines.mouse_button_type.left then
+  if (event.control and event.button == defines.mouse_button_type.left) or
+      event.button == defines.mouse_button_type.right
+  then
     toggle_auto_refresh(gui_id)
-    -- if settings.gui_refresh == "" then
-    --   settings.gui_refresh = "auto"
-    --   if player then player.print({ "vtm.auto-refresh-on" }) end
-    -- else
-    --   settings.gui_refresh = ""
-    --   if player then player.print({ "vtm.auto-refresh-off" }) end
-    -- end
   end
   if action then
     -- gui_id = action.gui_id
@@ -271,11 +265,6 @@ local function dispatch_refresh(event, action)
     history.update_tab(gui_id)
   elseif current_tab == "requests" then
   elseif current_tab == "statistic" then
-    -- elseif current_tab == "events" or current_tab == "summary" then
-    -- events_table.create_events_table(gui_id)
-  else
-    if player then player.print("no tab selected") end
-
   end
 
 end
@@ -319,6 +308,8 @@ gui.hook_events(function(event)
       depots.handle_action(action, event)
     elseif action.type == "searchbar" then
       searchbar.handle_action(action, event)
+    elseif action.type == "history" then
+      history.handle_action(action, event)
     end
   end
 end)

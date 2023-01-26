@@ -1,6 +1,5 @@
 data:extend({
   {
-    -- FIXME:mod_gui button optional
     type = "bool-setting",
     default_value = true,
     name = "vtm-showModgui",
@@ -50,5 +49,14 @@ data:extend({
     setting_type = "runtime-global",
     default_value = false,
     order = "f",
+  },
+  {
+    type = "int-setting",
+    name = "vtm-limit-auto-refresh",
+    setting_type = "runtime-global",
+    minimum_value = 0,
+    maximum_value = 1000,
+    default_value = 30,
+    order = "g",
   },
 })
