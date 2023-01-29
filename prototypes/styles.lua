@@ -1,4 +1,4 @@
-local constants = require("scripts.constants")
+local constants = require("__vtm__.scripts.constants")
 local styles = data.raw["gui-style"]["default"]
 
 styles.vtm_main_content_frame = {
@@ -66,24 +66,6 @@ styles.vtm_table_scroll_pane = {
   },
 }
 
-styles.vtm_slot_table_scroll_pane = {
-  type = "scroll_pane_style",
-  parent = "flib_naked_scroll_pane_no_padding",
-  horizontally_squashable = "off",
-  background_graphical_set = {
-    base = {
-      position = { 282, 17 },
-      corner_size = 8,
-      overall_tiling_horizontal_padding = 4,
-      overall_tiling_horizontal_size = 32,
-      overall_tiling_horizontal_spacing = 8,
-      overall_tiling_vertical_padding = 4,
-      overall_tiling_vertical_size = 32,
-      overall_tiling_vertical_spacing = 8,
-    },
-  },
-}
-
 -- TABBED PANE STYLES
 
 styles.vtm_tabbed_pane = {
@@ -97,120 +79,33 @@ styles.vtm_tabbed_pane = {
   },
 }
 
-styles.vtm_small_slot_table_frame_light = {
-  type = "frame_style",
-  parent = "vtm_table_inset_frame_light",
-  minimal_height = 36,
-  background_graphical_set = {
-    base = {
-      position = { 282, 17 },
-      corner_size = 8,
-      overall_tiling_horizontal_padding = 4,
-      overall_tiling_horizontal_size = 28,
-      overall_tiling_horizontal_spacing = 8,
-      overall_tiling_vertical_padding = 4,
-      overall_tiling_vertical_size = 28,
-      overall_tiling_vertical_spacing = 8,
-    },
-  },
-}
-
-styles.vtm_small_slot_table_frame_dark = {
-  type = "frame_style",
-  parent = "vtm_table_inset_frame_dark",
-  minimal_height = 36,
-  background_graphical_set = {
-    base = {
-      position = { 282, 17 },
-      corner_size = 8,
-      overall_tiling_horizontal_padding = 4,
-      overall_tiling_horizontal_size = 28,
-      overall_tiling_horizontal_spacing = 8,
-      overall_tiling_vertical_padding = 4,
-      overall_tiling_vertical_size = 28,
-      overall_tiling_vertical_spacing = 8,
-    },
-  },
-}
-
-styles.vtm_slot_table_frame_light = {
-  type = "frame_style",
-  parent = "vtm_table_inset_frame_light",
-  minimal_height = 40,
-  background_graphical_set = {
-    base = {
-      position = { 282, 17 },
-      corner_size = 8,
-      overall_tiling_horizontal_padding = 4,
-      overall_tiling_horizontal_size = 28,
-      overall_tiling_horizontal_spacing = 8,
-      overall_tiling_vertical_padding = 4,
-      overall_tiling_vertical_size = 28,
-      overall_tiling_vertical_spacing = 8,
-    },
-  },
-}
-
-styles.vtm_slot_table_frame_dark = {
-  type = "frame_style",
-  parent = "vtm_table_inset_frame_dark",
-  minimal_height = 40,
-  background_graphical_set = {
-    base = {
-      position = { 282, 17 },
-      corner_size = 8,
-      overall_tiling_horizontal_padding = 4,
-      overall_tiling_horizontal_size = 28,
-      overall_tiling_horizontal_spacing = 8,
-      overall_tiling_vertical_padding = 4,
-      overall_tiling_vertical_size = 28,
-      overall_tiling_vertical_spacing = 8,
-    },
-  },
-}
-
--- styles.vtm_table_right = {
---   type = "frame_style",
---   parent = "right_side_frame",
---   -- horizontally_stretchable = "on",
--- }
-
-styles.vtm_table_inset_frame_light = {
-  type = "frame_style",
-  parent = "deep_frame_in_shallow_frame",
-  horizontally_stretchable = "on",
-}
-
-styles.vtm_table_inset_frame_dark = {
-  type = "frame_style",
-  parent = "deep_frame_in_shallow_frame",
-  graphical_set = {
-    base = {
-      position = { 51, 0 },
-      corner_size = 8,
-      center = { position = { 42, 8 }, size = { 1, 1 } },
-      draw_type = "outer",
-    },
-    shadow = default_inner_shadow,
-  },
-}
-
+-- label styles
 styles.vtm_clickable_semibold_label = {
   type = "label_style",
   parent = "clickable_label",
   font = "default-semibold",
 }
+styles.vtm_clickable_semibold_label_with_padding = {
+  type = "label_style",
+  parent = "clickable_label",
+  font = "default-semibold",
+  left_padding = 8,
+}
 
 styles.vtm_semibold_label = {
   type = "label_style",
-  -- parent = "default_label",
   font = "default-semibold",
+}
 
+styles.vtm_semibold_label_with_padding = {
+  type = "label_style",
+  font = "default-semibold",
+  left_padding = 8,
 }
 
 styles.vtm_trainid_label = {
   type = "label_style",
-  font_color = default_font_color,
+  -- font_color = default_font_color,
   vertical_align = "bottom",
   horizontal_align = "right",
   font = "default-semibold",
@@ -218,3 +113,4 @@ styles.vtm_trainid_label = {
   size = 32,
 
 }
+

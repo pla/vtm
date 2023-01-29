@@ -1,9 +1,9 @@
 local tables = require("__flib__.table")
 local on_tick_n = require("__flib__.on-tick-n")
-local constants = require("scripts.constants")
-local vtm_gui = require("scripts.gui.main_gui")
-local vtm_logic = require("scripts.vtm_logic")
-local gui_util = require("scripts.gui.utils")
+local constants = require("__vtm__.scripts.constants")
+local vtm_gui = require("__vtm__.scripts.gui.main_gui")
+local vtm_logic = require("__vtm__.scripts.vtm_logic")
+local gui_util = require("__vtm__.scripts.gui.utils")
 local mod_gui = require("__core__.lualib.mod-gui")
 
 local function init_player_data(player)
@@ -69,6 +69,9 @@ end
 local function on_configuration_changed(event)
   for _, player in pairs(game.players) do
     if player.valid then
+      if global.trains[1] ~= nil and global.trains[1].prototype == nil then
+        global.trains = {} -- FIXME: remove before release
+      end
       -- init personal settings
       if global.settings[player.index] == nil then
         init_player_data(player)
@@ -120,7 +123,7 @@ local function on_tick(event)
   end
   for _, player in pairs(game.players) do
     if global.settings[player.index].gui_refresh == "auto" and
-        event.tick % 63 == 0 then
+        event.tick % (60 + 3 * player.index) == 0 then
       script.raise_event(constants.refresh_event, {
         player_index = player.index,
       })
@@ -149,11 +152,11 @@ script.on_init(function()
   global.station_refresh = "init"
 end)
 
-script.on_event(defines.events.on_gui_opened, function(event)
-  if event.entity and event.entity.type == "train-stop" then
-    -- game.print("gui opened" .. event.entity.type)
-  end
-end)
+-- script.on_event(defines.events.on_gui_opened, function(event)
+--   if event.entity and event.entity.type == "train-stop" then
+--     -- game.print("gui opened" .. event.entity.type)
+--   end
+-- end)
 -- script.on_event(defines.events.on_gui_closed, function(event)
 
 --   if event.element and event.element.name == "vtm_main_frame" then
@@ -195,6 +198,7 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
     "vtm-p-or-r-start"
   }, event["setting"])
   then
+    vtm_logic.load_guess_pattern()
     global.station_refresh = "all"
   end
   if event["setting"] == "vtm-showModgui" then
@@ -216,17 +220,21 @@ commands.add_command("vtm", { "vtm.command-help" }, function(event)
     if player == nil then return end
     local force = player.valid and player.force or 1
     local table_index = 0
-    force.print({"vtm.show-undef-stations"})
+    force.print({ "vtm.show-undef-stations" })
     for _, station_data in pairs(global.stations) do
       if station_data.station.valid and
           station_data.force_index == player.force.index and
           station_data.type == "ND"
       then
         table_index = table_index + 1
-        force.print("[train-stop="..station_data.station.unit_number.."]")
+        force.print("[train-stop=" .. station_data.station.unit_number .. "]")
         if table_index == 10 then return end
       end
     end
+  elseif event.parameter == "count-history" then
+    local player = game.get_player(event.player_index)
+    if player == nil then return end
+    player.print("History Records: " .. table_size(global.history))
   elseif event.parameter == "del-history" then
     global.history = {}
   elseif event.parameter == "del-stations" then

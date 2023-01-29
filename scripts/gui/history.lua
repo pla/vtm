@@ -1,8 +1,8 @@
 -- history.lua
 local gui = require("__flib__.gui")
-local gui_util = require("scripts.gui.utils")
-local match = require("scripts.match")
-local constants = require("scripts.constants")
+local gui_util = require("__vtm__.scripts.gui.utils")
+local match = require("__vtm__.scripts.match")
+local constants = require("__vtm__.scripts.constants")
 
 local function material_icon_list(event)
   local result = ""
@@ -35,10 +35,10 @@ end
 
 local function create_history_msg(event)
   local msg = { "", "Error" }
-  local style = "vtm_semibold_label"
+  local style = "vtm_semibold_label_with_padding"
   local action = false
   local skip = false
-  local style_click = "vtm_clickable_semibold_label"
+  local style_click = "vtm_clickable_semibold_label_with_padding"
   local cargo = material_icon_list(event) or {}
   -- create material list
   if event.state == defines.train_state.wait_station and event.station and event.station.valid then
@@ -110,7 +110,7 @@ local function update_route_flow(flow, history_data)
     if not row then
       row = gui.add(flow, {
         type = "label",
-        style = "vtm_semibold_label",
+        style = "vtm_semibold_label_with_padding",
       })
     end
     gui.update(row, { elem_mods = {
@@ -282,12 +282,12 @@ local function update_tab(gui_id)
           },
           {
             type = "label",
-            style = "vtm_semibold_label",
+            style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.runtime, horizontal_align = "right" },
           },
           {
             type = "label",
-            style = "vtm_semibold_label",
+            style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.finished, horizontal_align = "right" },
           },
           gui_util.slot_table(width, "light", "shipment"),

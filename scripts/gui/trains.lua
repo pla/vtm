@@ -1,9 +1,9 @@
 local flib_train = require("__flib__.train")
 local tables = require("__flib__.table")
 local gui = require("__flib__.gui")
-local gui_util = require("scripts.gui.utils")
-local constants = require("scripts.constants")
-local match = require("scripts.match")
+local gui_util = require("__vtm__.scripts.gui.utils")
+local constants = require("__vtm__.scripts.constants")
+local match = require("__vtm__.scripts.match")
 
 local inv_states = tables.invert(defines.train_state)
 
@@ -149,7 +149,6 @@ function trains.update_tab(gui_id)
       vtm_gui.gui.trains.warning.visible = false
       -- get or create gui row
       local row = children[table_index]
-      local color = table_index % 2 == 0 and "dark" or "light"
       if not row then
         row = gui.add(scroll_pane, {
           type = "frame",
@@ -171,17 +170,17 @@ function trains.update_tab(gui_id)
           },
           {
             type = "label",
-            style = "vtm_semibold_label",
+            style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.status },
           },
           {
             type = "label",
-            style = "vtm_semibold_label",
+            style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.since, horizontal_align = "center" },
           },
           {
             type = "label",
-            style = "vtm_semibold_label",
+            style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.composition },
           },
           gui_util.slot_table(width, "light", "cargo"),
@@ -194,24 +193,22 @@ function trains.update_tab(gui_id)
       -- last_change = game.tick,
       -- contents = {},
       -- events = {}
-      local comp, _ = flib_train.get_composition_string(train_data.train)
       local status_string = train_status_message(train_data)
-      local prototype = train_data.train.front_stock.prototype
       local since = gui_util.ticks_to_timestring(game.tick - train_data.last_change)
       gui.update(row, {
         { { -- train_id button
           elem_mods = {
-            sprite = "item/" .. gui_util.signal_for_entity(train_data.train.front_stock).name,
-            tooltip = prototype.localised_name,
+            sprite = train_data.sprite,
+            tooltip = train_data.prototype.localised_name or "",
           },
           {
             elem_mods = {
-              caption = tostring(train_data.train.id)
+              caption = train_data.train.id
             },
             actions = {
               on_click = { type = "trains", action = "open-train", train_id = train_data.train.id },
             },
-            tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", tostring(train_data.train.id) },
+            tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", train_data.train.id },
           },
         } },
         { --status
@@ -222,7 +219,7 @@ function trains.update_tab(gui_id)
           elem_mods = { caption = since }
         },
         { --composition
-          elem_mods = { caption = comp }
+          elem_mods = { caption = train_data.composition }
         }
       })
       gui_util.slot_table_update_train(row.cargo_table, train_data.contents, vtm_gui.gui_id)

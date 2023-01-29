@@ -1,40 +1,30 @@
 local on_tick_n = require("__flib__.on-tick-n")
 local tables = require("__flib__.table")
-local constants = require("scripts.constants")
+local constants = require("__vtm__.scripts.constants")
+local gui_util = require("__vtm__.scripts.gui.utils")
+local flib_train = require("__flib__.train")
 
 local MAX_KEEP = 60 * 60 * 60 * 12 -- ticks * seconds * minutes * hours
+local last_sweep = 0
 
 local vtm_logic = {}
 
-local refuel_pattern = {}
-local depot_pattern = {}
-local requester_pattern = {}
-local provider_pattern = {}
+local refuel_pattern = gui_util.split(settings.global["vtm-refuel-names"].value, ",")
+local depot_pattern = gui_util.split(settings.global["vtm-depot-names"].value, ",")
+local requester_pattern = gui_util.split(settings.global["vtm-requester-names"].value, ",")
+local provider_pattern = gui_util.split(settings.global["vtm-provider-names"].value, ",")
 
-local function split(inputstr, sep)
-  if sep == nil then
-    sep = "%s"
-  end
-  local t = {}
-  for str in string.gmatch(inputstr, "([^" .. sep .. "]+)") do
-    table.insert(t, str)
-  end
-  return t
-end
-
-
-local function load_guess_pattern()
-  refuel_pattern = split(settings.global["vtm-refuel-names"].value, ",")
-  depot_pattern = split(settings.global["vtm-depot-names"].value, ",")
-  requester_pattern = split(settings.global["vtm-requester-names"].value, ",")
-  provider_pattern = split(settings.global["vtm-provider-names"].value, ",")
+function vtm_logic.load_guess_pattern()
+  refuel_pattern = gui_util.split(settings.global["vtm-refuel-names"].value, ",")
+  depot_pattern = gui_util.split(settings.global["vtm-depot-names"].value, ",")
+  requester_pattern = gui_util.split(settings.global["vtm-requester-names"].value, ",")
+  provider_pattern = gui_util.split(settings.global["vtm-provider-names"].value, ",")
 end
 
 ---comment Try to guess the station type: Requester, Provider, Depot or Refuel
 ---@param station LuaEntity
 ---@return string
 local function guess_station_type(station)
-  load_guess_pattern()
   local station_type = "ND"
   local is_refuel, is_depot, is_provider, is_requester
   local from_start = settings.global["vtm-p-or-r-start"].value
@@ -79,7 +69,7 @@ local function guess_station_type(station)
   return station_type
 end
 
----comment extra sort criteria to sort depots tab
+---extra sort criteria to sort depots tab, TCS Depot always first
 ---@param backer_name string
 ---@return integer
 local function get_TCS_prio(backer_name)
@@ -112,23 +102,24 @@ local function new_station(station)
     train_front_rail = nil,
     type = guess_station_type(station), -- one of P R D F or ND
     sort_prio = get_TCS_prio(station.backer_name),
+    incoming_trains = {},
     stock = {},
     in_transit = {},
   }
 end
 
-local function updated_station(station)
-  return {
-    -- TODO: refine me
-    force_index = station.force.index,
-    station = station,
-    last_changed = game.tick,
-    type = guess_station_type(station) or "", -- one of P R D F or ND
-    sort_prio = get_TCS_prio(station.backer_name),
-    -- stock = {},
-    -- events = {}
-  }
-end
+-- local function updated_station(station)
+--   return {
+--     -- TODO: refine me
+--     force_index = station.force.index,
+--     station = station,
+--     last_changed = game.tick,
+--     type = guess_station_type(station) or "ND", -- one of P R D F or ND
+--     sort_prio = get_TCS_prio(station.backer_name),
+--     -- stock = {},
+--     -- events = {}
+--   }
+-- end
 
 function vtm_logic.init_stations()
   if table_size(global.stations) > 0 then
@@ -137,7 +128,6 @@ function vtm_logic.init_stations()
   end
   local train_stops = game.get_train_stops()
   local stations = {}
-  load_guess_pattern()
   for _, station in pairs(train_stops) do
     stations[station.unit_number] = new_station(station)
   end
@@ -156,11 +146,19 @@ end
 function vtm_logic.update_station(station)
   -- special function for for_n_of
   if global.stations[station.unit_number] then
-    global.stations[station.unit_number] = updated_station(station)
+    local station_data = global.stations[station.unit_number]
+    station_data.force_index = station.force.index
+    station_data.station = station
+    station_data.last_changed = game.tick
+    station_data.type = guess_station_type(station) or "ND" -- one of P R D F or ND
+    station_data.sort_prio = get_TCS_prio(station.backer_name)
+    if station_data.incoming_trains == nil then
+      station_data.incoming_trains = {}
+    end
+    -- global.stations[station.unit_number] = updated_station(station)
   else
     global.stations[station.unit_number] = new_station(station)
   end
-  -- global.stations[station.unit_number].stock = read_station_network(station)
   return station.unit_number, true
 end
 
@@ -169,7 +167,6 @@ function vtm_logic.update_all_stations(mode)
   if mode == "force" then
 
     local train_stops = game.get_train_stops()
-    load_guess_pattern()
     for _, station in pairs(train_stops) do
       vtm_logic.update_station(station)
     end
@@ -200,15 +197,33 @@ function vtm_logic.clear_invalid_stations()
   end
 end
 
-local function clear_older_force(force_index, older_than)
-  global.history = tables.filter(global.history, function(v)
-    return v.force_index ~= force_index or v.last_change >= older_than
-  end, true)
+local function trim_old_history(older_than)
+  local size = table_size(global.history)
+  if size < 10 or game.tick - last_sweep < 720 then return end
+  while global.history[size].last_change <= older_than do
+    table.remove(global.history, size)
+    size = size - 1
+  end
+  last_sweep = game.tick
+end
+
+local function clear_older_force(force, older_than)
+  local force_index = force.index
+  local size = table_size(global.history)
+  while global.history[size].last_change <= older_than do
+    if global.history[size].force_index == force_index then
+      table.remove(global.history, size)
+      size = size - 1
+    end
+  end
+  last_sweep = game.tick
+
 end
 
 function vtm_logic.clear_older(player_index, older_than)
-  local force_index = game.players[player_index].force.index
-  clear_older_force(force_index, older_than)
+  local force = game.players[player_index].force
+  clear_older_force(force, older_than)
+  force.print { "vtm.player-cleared-history", game.players[player_index].name }
 end
 
 local function find_first_stop(schedule)
@@ -228,6 +243,7 @@ local function find_first_stop(schedule)
   return index
 
 end
+
 ---comment
 ---@param train LuaTrain
 ---@return table
@@ -238,6 +254,9 @@ local function new_current_log(train)
     train = train,
     started_at = game.tick,
     last_change = game.tick,
+    composition = flib_train.get_composition_string(train),
+    prototype = train.front_stock.prototype,
+    sprite = "item/" .. gui_util.signal_for_entity(train.front_stock).name,
     contents = {},
     events = {}
   }
@@ -282,7 +301,7 @@ local function finish_current_log(train, train_id, train_data)
   table.insert(global.history, 1, train_data)
   local new_data = new_current_log(train)
   global.trains[train_id] = new_data
-  clear_older_force(new_data.force_index, game.tick - MAX_KEEP)
+  trim_old_history(game.tick - MAX_KEEP)
   -- log(serpent.block(train_data)) --FIXME: remove line
 end
 
@@ -322,7 +341,7 @@ local function on_train_changed_state(event)
   end
 
   if event.old_state == defines.train_state.wait_station then
-    log.position = train.front_stock.position 
+    log.position = train.front_stock.position
 
     local diff_items = diff(train_data.contents.items, train.get_contents())
     local diff_fluids = diff(train_data.contents.fluids, train.get_fluid_contents())
@@ -356,8 +375,12 @@ local function on_train_changed_state(event)
   -- for train cargo in transit
   if train.has_path and train.path_end_stop then
     train_data.path_end_stop = train.path_end_stop.unit_number
+    global.stations[train.path_end_stop.unit_number].incoming_trains[train_id] = true
   else
-    train_data.path_end_stop = nil
+    if train_data.path_end_stop ~= nil then
+      global.stations[train_data.path_end_stop].incoming_trains[train_id] = nil
+      train_data.path_end_stop = nil
+    end
   end
   add_log(train_data, log)
 
@@ -377,12 +400,14 @@ local function on_trainstop_build(event)
 end
 
 local function on_trainstop_renamed(event)
-  if event.entity.type == "train-stop" and event.by_script == false then
+  if event.entity.type == "train-stop" then
     local station_data = global.stations[event.entity.unit_number]
-    load_guess_pattern()
     if station_data then
-      station_data.type = updated_station(event.entity).type
       station_data.sort_prio = get_TCS_prio(event.entity.backer_name)
+      station_data.force_index = event.entity.force.index
+      station_data.station = event.entity
+      station_data.last_changed = game.tick
+      station_data.type = guess_station_type(event.entity) or "ND" -- one of P R D F or ND
     else
       global.stations[event.entity.unit_number] = new_station(event.entity)
     end

@@ -1,10 +1,8 @@
 -- depots.lua
-local constants = require("scripts.constants")
+local constants = require("__vtm__.scripts.constants")
 local tables = require("__flib__.table")
 local gui = require("__flib__.gui")
-local gui_util = require("scripts.gui.utils")
-local match = require("scripts.match")
-local vtm_logic = require("scripts.vtm_logic")
+local gui_util = require("__vtm__.scripts.gui.utils")
 
 local function depot_limit(station_data)
   local limit = station_data.limit
@@ -45,7 +43,7 @@ local function read_depot_cargo(station_data)
   for _, t in pairs(trains) do
     -- check if the train is at the station
     for _, rail in pairs(station_data.rails) do
-      if t.front_rail.is_rail_in_same_rail_block_as(rail) then
+      if t.front_rail.is_rail_in_same_rail_segment_as(rail) then
         local stock = {}
         stock.items = t.get_contents()
         stock.fluids = t.get_fluid_contents()
@@ -137,20 +135,20 @@ local function update_tab(gui_id)
           -- style = "vtm_table_row_frame_" .. color,
           {
             type = "label",
-            style = "vtm_clickable_semibold_label",
+            style = "vtm_clickable_semibold_label_with_padding",
             style_mods = { width = width.name },
             tooltip = { "vtm.show-station-on-map-tooltip" },
           },
           {
             type = "flow",
             style = "flib_indicator_flow",
-            style_mods = { width = width.status, horizontal_align = "left", },
+            style_mods = { width = width.status,  },
             { type = "sprite", style = "flib_indicator" },
-            { type = "label", style = "vtm_semibold_label" },
+            { type = "label", style = "vtm_semibold_label_with_padding" },
           },
           {
             type = "label",
-            style = "vtm_semibold_label",
+            style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.type, horizontal_align = "center", },
             tooltip = { "vtm.type-depot-tooltip" },
           },
@@ -159,7 +157,7 @@ local function update_tab(gui_id)
       end
       -- read cargo from trains parking at depot
       local station_stock = {}
-      if station_data.inbound > 0 then
+      if station_data.inbound > 0 and not settings.global["vtm-dont-read-depot-stock"].value then
         station_stock = read_depot_cargo(station_data)
       end
       local limit_text, color = depot_limit(station_data)
@@ -213,7 +211,7 @@ local function build_gui(gui_id)
         type = "frame",
         style = "subheader_frame",
         direction = "horizontal",
-        style_mods = { horizontally_stretchable = true },
+        style_mods = { horizontally_stretchable = true ,left_padding=4},
         {
           type = "label",
           style = "subheader_caption_label",
@@ -232,10 +230,6 @@ local function build_gui(gui_id)
           caption = { "vtm.table-header-type" },
           style_mods = { width = width.type },
         },
-        -- {
-        --   type = "empty-widget",
-        --   style = "flib_horizontal_pusher",
-        -- },
         {
           type = "label",
           style = "subheader_caption_label",

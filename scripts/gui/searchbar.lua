@@ -1,7 +1,7 @@
 --searchbar.lua
-local constants   = require("scripts.constants")
-local time_filter = require("scripts.filter-time")
-local vtm_logic   = require("scripts.vtm_logic")
+local constants   = require("__vtm__.scripts.constants")
+local time_filter = require("__vtm__.scripts.filter-time")
+local vtm_logic   = require("__vtm__.scripts.vtm_logic")
 
 local function refresh(action)
   script.raise_event(constants.refresh_event, {
@@ -77,7 +77,7 @@ local function build_gui(gui_id)
         children = {
           {
             type = "label",
-            style = "vtm_semibold_label",
+            style = "vtm_semibold_label_with_padding",
             caption = { "vtm.filter-search" }
           },
           {
@@ -98,7 +98,7 @@ local function build_gui(gui_id)
           },
           {
             type = "label",
-            style = "vtm_semibold_label",
+            style = "vtm_semibold_label_with_padding",
             caption = { "vtm.filter-item-label" }
           },
           {
@@ -117,7 +117,7 @@ local function build_gui(gui_id)
           },
           {
             type = "label",
-            style = "vtm_semibold_label",
+            style = "vtm_semibold_label_with_padding",
             caption = { "vtm.filter-or-fluid-label" }
           },
           {

@@ -17,7 +17,7 @@ constants.gui = {
     appendix = 17,
   },
   stations = {
-    icon = 40,
+    icon = 28,
     name = 283,
     status = 53,
     since = 50,

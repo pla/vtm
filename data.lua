@@ -23,4 +23,4 @@ data:extend {
     enabled_while_spectating = true,
   },
 }
-require("prototypes.styles")
+require("__vtm__.prototypes.styles")

@@ -13,21 +13,6 @@ function util.get_gui_id(player_index)
   return nil
 end
 
--- --- Creates a small non-scrollable slot table.
--- --- @param widths table
--- --- @param color string
--- --- @param name string
--- function util.small_slot_table(widths, color, name)
---   return {
---     type = "frame",
---     name = name .. "_frame",
---     -- style = "right_side_frame",
---     style = "vtm_slot_table_frame_" .. color,
---     style_mods = { width = widths[name] },
---     { type = "table", name = name .. "_table", style = "slot_table", column_count = widths[name .. "_columns"] },
---   }
--- end
-
 --- Creates a non-scrollable slot table.
 --- @param widths table
 --- @param color string
@@ -268,6 +253,21 @@ function util.ticks_to_timestring(tick, include_leading_zeroes)
       return string.format("%d:%02d", minutes, seconds)
     end
   end
+end
+
+---Split inputstr by sep and return a table, thanks Internet
+---@param inputstr any
+---@param sep string
+---@return table
+function util.split(inputstr, sep)
+  if sep == nil then
+    sep = "%s"
+  end
+  local t = {}
+  for str in string.gmatch(inputstr, "([^" .. sep .. "]+)") do
+    table.insert(t, str)
+  end
+  return t
 end
 
 return util

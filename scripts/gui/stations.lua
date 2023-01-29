@@ -2,22 +2,23 @@
 local misc = require("__flib__.misc")
 local tables = require("__flib__.table")
 local gui = require("__flib__.gui")
-local gui_util = require("scripts.gui.utils")
-local match = require("scripts.match")
-local constants = require("scripts.constants")
-local vtm_logic = require("scripts.vtm_logic")
+local gui_util = require("__vtm__.scripts.gui.utils")
+local match = require("__vtm__.scripts.match")
+local constants = require("__vtm__.scripts.constants")
+local vtm_logic = require("__vtm__.scripts.vtm_logic")
 
 local function read_inbound_trains(station_data)
   local station = station_data.station
   local contents = {}
-  if station.valid then
-    local trains = global.trains
-    for _, train_data in pairs(trains) do
+  if station.valid and station_data.incoming_trains then
+    local trains = station_data.incoming_trains
+    for train_id, _ in pairs(trains) do
+      local train_data = global.trains[train_id]
       if train_data.path_end_stop == station.unit_number then
-        for k, y in pairs(train_data.contents) do
+        for type, item_data in pairs(train_data.contents) do
           local row = {}
-          row.type = k == "items" and "item" or "fluid"
-          for name, count in pairs(y) do
+          row.type = type == "items" and "item" or "fluid"
+          for name, count in pairs(item_data) do
             row.name = name
             row.count = count
             row.color = "blue"
@@ -152,12 +153,13 @@ local function update_tab(gui_id)
           {
             type = "sprite-button",
             style = "transparent_slot",
+            style_mods = { size = width.icon },
             sprite = "vtm_train",
             tooltip = { "vtm.open-station-gui-tooltip" },
           },
           {
             type = "label",
-            style = "vtm_clickable_semibold_label",
+            style = "vtm_clickable_semibold_label_with_padding",
             style_mods = { width = width.name },
             tooltip = { "vtm.show-station-on-map-tooltip" },
           },
@@ -166,21 +168,21 @@ local function update_tab(gui_id)
             style = "flib_indicator_flow",
             style_mods = { width = width.status, horizontal_align = "left" },
             { type = "sprite", style = "flib_indicator" },
-            { type = "label", style = "vtm_semibold_label" },
+            { type = "label", style = "vtm_semibold_label_with_padding" },
           },
           {
             type = "label",
-            style = "vtm_semibold_label",
+            style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.since, horizontal_align = "right" },
           },
           {
             type = "label",
-            style = "vtm_semibold_label",
+            style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.avg, horizontal_align = "right" },
           },
           {
             type = "label",
-            style = "vtm_semibold_label",
+            style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.type, horizontal_align = "center" },
             tooltip = { "vtm.type-tooltip" },
           },
@@ -200,7 +202,7 @@ local function update_tab(gui_id)
       local since = ""
       -- TODO Topic open requests
       -- if station_data.opened then
-      --   since = misc.ticks_to_timestring(game.tick - station_data.opened)
+      -- since = misc.ticks_to_timestring(game.tick - station_data.opened)
       -- end
       local avg = "" --station_data.avg
       gui.update(row, {
@@ -278,7 +280,6 @@ local function build_gui(gui_id)
         {
           type = "label",
           style = "subheader_caption_label",
-          -- caption = { "vtm.table-header-name" },
           style_mods = { width = width.icon },
         },
         {

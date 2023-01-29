@@ -51,12 +51,19 @@ data:extend({
     order = "f",
   },
   {
+    type = "bool-setting",
+    name = "vtm-dont-read-depot-stock",
+    setting_type = "runtime-global",
+    default_value = false,
+    order = "g",
+  },
+  {
     type = "int-setting",
     name = "vtm-limit-auto-refresh",
     setting_type = "runtime-global",
     minimum_value = 0,
     maximum_value = 1000,
     default_value = 30,
-    order = "g",
+    order = "h",
   },
 })
