@@ -16,6 +16,9 @@ local function header(gui_id)
   return {
     type = "flow",
     ref = { "titlebar", "flow" },
+    actions = {
+      on_click = { type = "generic", action = "recenter", gui_id = gui_id },
+    },
     children = {
       { type = "label", style = "frame_title", caption = { "vtm.header" }, ignored_by_interaction = true },
       { type = "empty-widget", style = "flib_titlebar_drag_handle", ignored_by_interaction = true },
@@ -138,6 +141,9 @@ local function create_gui(player)
 
 end
 
+---Toggle auto refresh
+---@param gui_id number
+---@param to_state string?
 local function toggle_auto_refresh(gui_id, to_state)
   local vtm_gui = global.guis[gui_id]
   local settings = global.settings[vtm_gui.player.index]
@@ -157,12 +163,10 @@ local function toggle_auto_refresh(gui_id, to_state)
   end
 
   if settings.gui_refresh == "auto" then
-    -- vtm_gui.gui.titlebar.refresh_button.tooltip = { "gui.close" }
     vtm_gui.gui.titlebar.refresh_button.sprite = "vtm_refresh_black"
     vtm_gui.gui.titlebar.refresh_button.style = "flib_selected_frame_action_button"
     vtm_gui.player.print({ "vtm.auto-refresh-on" })
   else
-    -- vtm_gui.gui.titlebar.refresh_button.tooltip = { "gui.close-instruction" }
     vtm_gui.gui.titlebar.refresh_button.sprite = "vtm_refresh_white"
     vtm_gui.gui.titlebar.refresh_button.style = "frame_action_button"
     vtm_gui.player.print({ "vtm.auto-refresh-off" })
@@ -197,7 +201,7 @@ local function destroy_gui(gui_id)
   global.guis[gui_id] = nil
 end
 
-local function open_or_close_gui(player)
+local function open_or_close_gui(player, center_gui)
   local gui_id = gui_util.get_gui_id(player.index)
   if gui_id ~= nil then
     local vtm_gui = global.guis[gui_id]
@@ -237,11 +241,8 @@ end
 --- @field action table
 
 --- @param event CustomEventDef|table
---- @param action? any
-local function dispatch_refresh(event, action)
+local function dispatch_refresh(event)
   local gui_id = gui_util.get_gui_id(event.player_index)
-  local player = game.get_player(event.player_index)
-  local settings = global.settings[event.player_index]
   if gui_id == nil then
     return --no gui
   end
@@ -249,9 +250,6 @@ local function dispatch_refresh(event, action)
       event.button == defines.mouse_button_type.right
   then
     toggle_auto_refresh(gui_id)
-  end
-  if action then
-    -- gui_id = action.gui_id
   end
 
   local current_tab = global.settings[event.player_index].current_tab
@@ -286,12 +284,21 @@ local function handle_action(action, event)
     global.settings[event.player_index].current_tab = action.tab
     dispatch_refresh(event)
   elseif action.action == "refresh" then
-    dispatch_refresh(event, action)
+    dispatch_refresh(event)
   elseif action.action == "toggle_pinned" then
     toggle_pinned(event)
   elseif action.action == "open-vtm" then -- mod-gui-button
     local player = game.players[event.player_index]
     open_or_close_gui(player)
+  elseif action.action == "recenter" then
+    if event.button == defines.mouse_button_type.middle then
+      local gui_data = global.guis[action.gui_id]
+      if gui_data then
+        gui_data.gui.window.force_auto_center()
+      end
+    end
+  elseif action.action == "focus_search" then
+    searchbar.handle_action(action, event)
   end
 end
 
@@ -328,4 +335,5 @@ return {
   close = close_gui,
   destroy = destroy_gui,
   create_gui = create_gui,
+  handle_action = handle_action
 }

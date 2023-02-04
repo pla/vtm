@@ -93,8 +93,8 @@ local function update_tab(gui_id)
   local max_lines = settings.global["vtm-limit-auto-refresh"].value
 
   local filters = {
-    item = vtm_gui.gui.filter.item.elem_value,
-    fluid = vtm_gui.gui.filter.fluid.elem_value,
+    -- item = vtm_gui.gui.filter.item.elem_value.name,
+    -- fluid = vtm_gui.gui.filter.fluid.elem_value,
     search_field = vtm_gui.gui.filter.search_field.text:lower(),
   }
 
@@ -202,7 +202,7 @@ local function update_tab(gui_id)
       local since = ""
       -- TODO Topic open requests
       -- if station_data.opened then
-      -- since = misc.ticks_to_timestring(game.tick - station_data.opened)
+      -- since = format.time(game.tick - station_data.opened--[[@as uint]])
       -- end
       local avg = "" --station_data.avg
       gui.update(row, {

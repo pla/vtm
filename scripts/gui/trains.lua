@@ -4,6 +4,8 @@ local gui = require("__flib__.gui")
 local gui_util = require("__vtm__.scripts.gui.utils")
 local constants = require("__vtm__.scripts.constants")
 local match = require("__vtm__.scripts.match")
+local format = require("__flib__.format")
+
 
 local inv_states = tables.invert(defines.train_state)
 
@@ -26,7 +28,23 @@ local function select_station_from_schedule(train)
   local schedule = train.schedule
   if schedule ~= nil then
     local station = schedule.records[schedule.current].station
+    if station == nil and schedule.records[schedule.current].rail ~= nil then --cybersyn method
+      --if the rail connected to a station?
+      local front = schedule.records[schedule.current].rail.get_rail_segment_entity(defines.rail_direction.front,false)
+      local back = schedule.records[schedule.current].rail.get_rail_segment_entity(defines.rail_direction.back,false)
+      if front and front.type=="train-stop" then
+        station = front.backer_name
+      end
+      if back and back.type=="train-stop" then
+        station = back.backer_name
+      end
+    end
     if station == nil and schedule.records[schedule.current].temporary then
+      local position = "Position (" .. train.front_stock.position.x .. ", " .. train.front_stock.position.y .. ")"
+      return position
+
+    end
+    if station == nil then
       local position = "Position (" .. train.front_stock.position.x .. ", " .. train.front_stock.position.y .. ")"
       return position
     end
@@ -115,8 +133,8 @@ function trains.update_tab(gui_id)
   local table_index = 0
   local max_lines = settings.global["vtm-limit-auto-refresh"].value
   local filters = {
-    item = vtm_gui.gui.filter.item.elem_value,
-    fluid = vtm_gui.gui.filter.fluid.elem_value,
+    -- item = vtm_gui.gui.filter.item.elem_value.name,
+    -- fluid = vtm_gui.gui.filter.fluid.elem_value,
     search_field = vtm_gui.gui.filter.search_field.text:lower(),
   }
 
@@ -194,7 +212,7 @@ function trains.update_tab(gui_id)
       -- contents = {},
       -- events = {}
       local status_string = train_status_message(train_data)
-      local since = gui_util.ticks_to_timestring(game.tick - train_data.last_change)
+      local since = format.time(game.tick - train_data.last_change--[[@as uint]] )
       gui.update(row, {
         { { -- train_id button
           elem_mods = {

@@ -36,7 +36,7 @@ local function add_stock(stock, all_stock)
 
 end
 
-local function read_depot_cargo(station_data)
+local function read_depot_cargo_old(station_data)
   local station_stock = {}
   if not station_data.station.valid then return {} end
   local trains = station_data.station.get_train_stop_trains()
@@ -56,6 +56,28 @@ local function read_depot_cargo(station_data)
   return station_stock
 end
 
+local function read_depot_cargo(station_data)
+  local station_stock = {}
+  if not station_data.station.valid then return {} end
+  local trains = station_data.station.get_train_stop_trains()
+  for _, t in pairs(trains) do
+    -- check if the train is at the station
+    local entity = t.front_rail.get_rail_segment_entity(t.rail_direction_from_front_rail,false)
+    if entity and
+        entity.valid and
+        entity.backer_name and
+        -- entity.name == "train-stop" and
+        entity.backer_name == station_data.name
+    then
+      local stock = {}
+      stock.items = t.get_contents()
+      stock.fluids = t.get_fluid_contents()
+      add_stock(stock, station_stock)
+    end
+  end
+  return station_stock
+end
+
 local function update_tab(gui_id)
   local vtm_gui = global.guis[gui_id]
   local depots_compact = {}
@@ -63,8 +85,8 @@ local function update_tab(gui_id)
   local limit
   local table_index = 0
   local filters = {
-    item = vtm_gui.gui.filter.item.elem_value,
-    fluid = vtm_gui.gui.filter.fluid.elem_value,
+    -- item = vtm_gui.gui.filter.item.elem_value.name,
+    -- fluid = vtm_gui.gui.filter.fluid.elem_value,
     search_field = vtm_gui.gui.filter.search_field.text:lower(),
   }
 
@@ -142,7 +164,7 @@ local function update_tab(gui_id)
           {
             type = "flow",
             style = "flib_indicator_flow",
-            style_mods = { width = width.status,  },
+            style_mods = { width = width.status, },
             { type = "sprite", style = "flib_indicator" },
             { type = "label", style = "vtm_semibold_label_with_padding" },
           },
@@ -211,7 +233,7 @@ local function build_gui(gui_id)
         type = "frame",
         style = "subheader_frame",
         direction = "horizontal",
-        style_mods = { horizontally_stretchable = true ,left_padding=4},
+        style_mods = { horizontally_stretchable = true, left_padding = 4 },
         {
           type = "label",
           style = "subheader_caption_label",

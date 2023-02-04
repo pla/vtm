@@ -31,6 +31,7 @@ local function init_global_data()
   global.trains = {}
   global.stations = {}
   global.settings = {}
+  global.groups = {}
   global.stats = {}
 end
 
@@ -157,11 +158,8 @@ end)
 --     -- game.print("gui opened" .. event.entity.type)
 --   end
 -- end)
+
 -- script.on_event(defines.events.on_gui_closed, function(event)
-
---   if event.element and event.element.name == "vtm_main_frame" then
-
---   end
 --   if event.entity and event.entity.type == "train-stop" then
 --     -- game.print("gui closed" .. event.entity.type, { 0.5, 0, 0, 0.5 })
 --   end
@@ -171,15 +169,22 @@ script.on_event("vtm-open", function(event)
   vtm_gui.open_or_close_gui(game.players[event.player_index])
 end)
 
+script.on_event(defines.events.on_lua_shortcut, function(event)
+  if event.prototype_name == "vtm-open" then
+    vtm_gui.open_or_close_gui(game.players[event.player_index])
+  end
+end)
+
 script.on_configuration_changed(function(event)
   on_configuration_changed(event)
 end)
 
-script.on_event(defines.events.on_player_joined_game, function(event)
-  -- local player = game.players[event.player_index]
-  -- init_player_data(player)
-  -- add_mod_gui_button(player)
-  -- vtm_gui.create_gui(player)
+script.on_event("vtm-linked-focus-search", function(event)
+  vtm_gui.handle_action({
+    type = "generic",
+    action = "focus_search",
+    gui_id = gui_util.get_gui_id(event.player_index)
+  }, event)
 end)
 
 script.on_event(defines.events.on_player_created, function(event)

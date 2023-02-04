@@ -1,8 +1,10 @@
 -- history.lua
+local util = require("__core__.lualib.util")
 local gui = require("__flib__.gui")
 local gui_util = require("__vtm__.scripts.gui.utils")
 local match = require("__vtm__.scripts.match")
 local constants = require("__vtm__.scripts.constants")
+local format = require("__flib__.format")
 
 local function material_icon_list(event)
   local result = ""
@@ -11,8 +13,8 @@ local function material_icon_list(event)
     for item, amount in pairs(event.diff.items or {}) do
       result = result .. amount .. " [item=" .. item .. "], "
     end
-    for item, amount in pairs(event.diff.fluids or {}) do
-      result = result .. amount .. " [fluid=" .. item .. "], "
+    for fluid, amount in pairs(event.diff.fluids or {}) do
+      result = result .. math.abs(amount) .. " [fluid=" .. fluid .. "], "
     end
   end
   --contents and fluids only when wait_station
@@ -22,9 +24,8 @@ local function material_icon_list(event)
     end
   end
   if event.fluids then
-    for item, _ in pairs(event.fluids or {}) do
-      result = result .. "[fluid=" .. item .. "] "
-
+    for fluid, _ in pairs(event.fluids or {}) do
+      result = result .. "[fluid=" .. fluid .. "] "
     end
   end
   if result == "" then
@@ -35,26 +36,23 @@ end
 
 local function create_history_msg(event)
   local msg = { "", "Error" }
-  local style = "vtm_semibold_label_with_padding"
   local action = false
   local skip = false
-  local style_click = "vtm_clickable_semibold_label_with_padding"
+  local style = ""
   local cargo = material_icon_list(event) or {}
   -- create material list
   if event.state == defines.train_state.wait_station and event.station and event.station.valid then
-    style = style_click
     msg = { "vtm.histstory-arrived", event.station.backer_name, cargo }
   elseif event.diff then
-    style = style
     msg = { "vtm.histstory-un-load", cargo }
   elseif event.state == defines.train_state.on_the_path then
     if event.old_tick then
-      msg = { "vtm.histstory-waited", gui_util.ticks_to_timestring(event.tick - event.old_tick)  }
+      msg = { "vtm.histstory-waited", format.time(event.tick - event.old_tick--[[@as uint]] ) }
     else
       msg = { "vtm.histstory-done-waiting" }
     end
   elseif event.old_tick then
-    msg = { "vtm.histstory-waited", gui_util.ticks_to_timestring(event.tick - event.old_tick) }
+    msg = { "vtm.histstory-waited", format.time(event.tick - event.old_tick--[[@as uint]] ) }
   elseif event.state == defines.train_state.destination_full then
     msg = { "vtm.histstory-waiting" }
   elseif event.state == defines.train_state.wait_signal then
@@ -103,9 +101,11 @@ local function update_route_flow(flow, history_data)
     table_index = table_index + 1
     -- get or create gui row
     local row = children[table_index]
-    local color = table_index % 2 == 0 and "dark" or "light"
     local msg, style, action, skip = create_history_msg(event)
-    if skip then goto continue end
+    if skip then
+      table_index = table_index - 1
+      goto continue
+    end
     add_diff_to_shipment(shipment, event)
     if not row then
       row = gui.add(flow, {
@@ -115,8 +115,6 @@ local function update_route_flow(flow, history_data)
     end
     gui.update(row, { elem_mods = {
       caption = { "", msg },
-      -- style = style, -- FIXME: padding is different
-      -- TODO : maybe some clicking actions
     }
     })
     ::continue::
@@ -232,8 +230,8 @@ local function update_tab(gui_id)
   local max_hist = settings.global["vtm-history-length"].value
   local table_index = 0
   local filters = {
-    item = vtm_gui.gui.filter.item.elem_value,
-    fluid = vtm_gui.gui.filter.fluid.elem_value,
+    -- item = vtm_gui.gui.filter.item.elem_value.name,
+    -- fluid = vtm_gui.gui.filter.fluid.elem_value,
     search_field = vtm_gui.gui.filter.search_field.text:lower(),
   }
 
@@ -253,13 +251,11 @@ local function update_tab(gui_id)
       vtm_gui.gui.history.warning.visible = false
       -- get or create gui row
       local row = children[table_index]
-      local color = table_index % 2 == 0 and "dark" or "light"
       if not row then
         row = gui.add(scroll_pane, {
           type = "frame",
           direction = "horizontal",
           style = "vtm_table_row_frame",
-          -- style = "vtm_table_row_frame_" .. color,
           { -- train id
             type = "flow",
             style_mods = { horizontal_align = "center", width = width.train_id },
@@ -280,12 +276,12 @@ local function update_tab(gui_id)
             name = "route",
             style_mods = { width = width.route },
           },
-          {
+          { -- runtime
             type = "label",
             style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.runtime, horizontal_align = "right" },
           },
-          {
+          { -- finished
             type = "label",
             style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.finished, horizontal_align = "right" },
@@ -304,8 +300,10 @@ local function update_tab(gui_id)
         train_id = history_data.train.id
         tooltip = prototype.localised_name
       end
-      local runtime = gui_util.ticks_to_timestring(history_data.last_change - history_data.started_at)
-      local finished = gui_util.ticks_to_timestring(game.tick - history_data.last_change)
+      -- local runtime = format.time(history_data.last_change - history_data.started_at--[[@as uint]] )
+      -- local finished = format.time(game.tick - history_data.last_change--[[@as uint]])
+      local runtime = util.formattime(history_data.last_change - history_data.started_at--[[@as uint]] )
+      local finished = util.formattime(game.tick - history_data.last_change--[[@as uint]] )
 
       gui.update(row, {
         { {
@@ -321,9 +319,9 @@ local function update_tab(gui_id)
               on_click = { type = "trains", action = "open-train", train_id = train_id },
             },
           },
-            tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", train_id },
+          tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", train_id },
         } },
-        { -- route
+        { -- route, gets updated below
         },
         { -- runtime
           elem_mods = { caption = runtime },
@@ -347,6 +345,7 @@ local function update_tab(gui_id)
     children[child_index].destroy()
   end
 end
+
 return {
   build_gui = build_gui,
   update_tab = update_tab,

@@ -15,7 +15,7 @@ end
 
 --- Creates a non-scrollable slot table.
 --- @param widths table
---- @param color string
+--- @param color? string
 --- @param name string
 function util.slot_table(widths, color, name)
   return {
@@ -92,7 +92,6 @@ function util.sprite_button_type_name_amount(type, name, amount, color, gui_id)
       tooltip = prototype.localised_name
     end
     style = "transparent_slot"
-    -- style = color and "flib_slot_button_" .. color or "flib_slot_button_default"
   else
     tooltip = "Error"
     sprite = "warning-white"
@@ -129,7 +128,6 @@ function util.update_sprite_button(button, type, name, amount, color, gui_id)
       tooltip = prototype.localised_name
     end
     style = "transparent_slot"
-    -- style = color and "flib_slot_button_" .. color or "flib_slot_button_default"
   else
     tooltip = "Error"
     sprite = "warning-white"
@@ -232,27 +230,6 @@ function util.open_gui(player_index, entity)
     return true
   end
   return false
-end
-
-function util.ticks_to_timestring(tick, include_leading_zeroes)
-  local total_seconds = math.floor((tick or game.ticks_played) / 60)
-  local seconds = total_seconds % 60
-  local minutes = math.floor(total_seconds / 60)
-  if minutes > 59 then
-    minutes = minutes % 60
-    local hours = math.floor(total_seconds / 3600)
-    if include_leading_zeroes then
-      return string.format("%02d:%02d:%02d", hours, minutes, seconds)
-    else
-      return string.format("%d:%02d:%02d", hours, minutes, seconds)
-    end
-  else
-    if include_leading_zeroes then
-      return string.format("%02d:%02d", minutes, seconds)
-    else
-      return string.format("%d:%02d", minutes, seconds)
-    end
-  end
 end
 
 ---Split inputstr by sep and return a table, thanks Internet

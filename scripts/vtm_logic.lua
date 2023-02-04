@@ -26,12 +26,21 @@ end
 ---@return string
 local function guess_station_type(station)
   local station_type = "ND"
-  local is_refuel, is_depot, is_provider, is_requester
+  local is_refuel, is_depot, is_provider, is_requester, is_hidden
   local from_start = settings.global["vtm-p-or-r-start"].value
 
   -- depot
   for _, pattern in pairs(depot_pattern) do
-    is_depot = string.find(string.lower(station.backer_name), pattern, 1, true) or false
+    if pattern:sub(1, 1) == "-" then
+      is_hidden = true
+      is_depot = string.find(string.lower(station.backer_name), pattern:sub(2), 1, true) or false
+    else
+      is_hidden = false
+      is_depot = string.find(string.lower(station.backer_name), pattern, 1, true) or false
+    end
+    if is_hidden and is_depot then
+      return "H"
+    end
     if is_depot then
       return "D"
     end
@@ -100,26 +109,13 @@ local function new_station(station)
     closed = "",
     avg = 0, --TODO : calculate on finish log
     train_front_rail = nil,
-    type = guess_station_type(station), -- one of P R D F or ND
+    type = guess_station_type(station), -- one of P R D F H or ND
     sort_prio = get_TCS_prio(station.backer_name),
     incoming_trains = {},
     stock = {},
     in_transit = {},
   }
 end
-
--- local function updated_station(station)
---   return {
---     -- TODO: refine me
---     force_index = station.force.index,
---     station = station,
---     last_changed = game.tick,
---     type = guess_station_type(station) or "ND", -- one of P R D F or ND
---     sort_prio = get_TCS_prio(station.backer_name),
---     -- stock = {},
---     -- events = {}
---   }
--- end
 
 function vtm_logic.init_stations()
   if table_size(global.stations) > 0 then
@@ -210,7 +206,7 @@ end
 local function clear_older_force(force, older_than)
   local force_index = force.index
   local size = table_size(global.history)
-  while global.history[size].last_change <= older_than do
+  while global.history[size].last_change <= older_than and size > 1 do
     if global.history[size].force_index == force_index then
       table.remove(global.history, size)
       size = size - 1
@@ -226,16 +222,26 @@ function vtm_logic.clear_older(player_index, older_than)
   force.print { "vtm.player-cleared-history", game.players[player_index].name }
 end
 
+---Find start of schedule, to finish the current log and start a new one
+---@param schedule TrainSchedule
+---@return integer
 local function find_first_stop(schedule)
-  -- search with TCS signals in mind
   local index = 1
-  if schedule ~= nil and schedule.records and game.active_mods["Train_Control_Signals"] then
-    local pattern = "[virtual-signal=skip-signal]"
-    for key, record in pairs(schedule.records) do
-      if record.station ~= nil then
-        local start = string.sub(record.station, 1, string.len(pattern))
-        if start ~= pattern then
-          return key
+  if schedule ~= nil and schedule.records then
+    if game.active_mods["cybersyn"] then
+      -- timings will be off because of the depot waiting time
+      if schedule.current == 2 then
+        index = schedule.current
+      end
+      -- search with TCS signals in mind
+    elseif game.active_mods["Train_Control_Signals"] then
+      local pattern = "[virtual-signal=skip-signal]"
+      for key, record in pairs(schedule.records) do
+        if record.station ~= nil then
+          local start = string.sub(record.station, 1, string.len(pattern))
+          if start ~= pattern then
+            return key
+          end
         end
       end
     end
@@ -373,6 +379,9 @@ local function on_train_changed_state(event)
   end
 
   -- for train cargo in transit
+  if train.path_end_stop and global.stations[train.path_end_stop.unit_number] == nil then
+    global.stations[train.path_end_stop.unit_number] = new_station(train.path_end_stop)
+  end
   if train.has_path and train.path_end_stop then
     train_data.path_end_stop = train.path_end_stop.unit_number
     global.stations[train.path_end_stop.unit_number].incoming_trains[train_id] = true

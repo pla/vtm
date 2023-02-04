@@ -1,9 +1,11 @@
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.0
-Date: 2023-01-23
+Date: 2023-02-04
   Changes:
     - Exact search with right click
-    - Some code cleanup
+    - Added shortcut
+    - Some adjustments for Project Cybersyn and TSM to avoid crashes
+    - Performance optimization
 ---------------------------------------------------------------------------------------------------
 Version: 0.0.16
 Date: 2023-01-20
