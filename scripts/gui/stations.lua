@@ -33,10 +33,14 @@ local function read_inbound_trains(station_data)
 end
 
 local function read_station_network(station_data, return_virtual)
-  local station = station_data.station
+  local station = station_data.station --[[@as LuaEntity]]
   local contents = {}
   local colors = tables.invert(defines.wire_type)
+  local set_trains_limit = false
+  local cb = station.get_or_create_control_behavior() --[[@as LuaTrainStopControlBehavior]]
   if station.valid then
+    set_trains_limit = cb.set_trains_limit
+    -- TODO use get_merged_signals
     for _, wire in pairs({ defines.wire_type.red, defines.wire_type.green }) do
       local cn = station.get_circuit_network(wire)
       -- cn - signals (type,name),wire_type
@@ -56,10 +60,10 @@ local function read_station_network(station_data, return_virtual)
       end
     end
   end
-  return contents
+  return contents, set_trains_limit
 end
 
-local function station_limit(station_data)
+local function station_limit(station_data,is_circuit_limit)
   local limit = station_data.station.trains_limit
   local inbound = station_data.station.trains_count
   local color = "green"
@@ -80,7 +84,9 @@ local function station_limit(station_data)
       color = "green"
     end
   end
-
+  if not is_circuit_limit then
+    limit_text = limit_text .. " m"
+  end
   return limit_text, color
 
 end
@@ -115,6 +121,7 @@ local function update_tab(gui_id)
     elseif station_data.force_index == vtm_gui.player.force.index and
         station_data.type == "ND"
     then
+      -- TODO setting abfragen
       nd_stations = nd_stations + 1
     end
   end
@@ -135,7 +142,7 @@ local function update_tab(gui_id)
           global.settings[vtm_gui.player.index].gui_refresh == "auto" and
           filters.search_field == ""
       then
-        -- max entries
+        -- max entries, loop verlasen
         goto continue
       end
 
@@ -193,12 +200,12 @@ local function update_tab(gui_id)
       -- insert data
       -- name,status,since,avg,type,stock,intransit
       -- limit manual or circuit,type(PR),group
-      local stock_data = read_station_network(station_data)
+      local stock_data,is_circuit_limit = read_station_network(station_data)
       local in_transit_data = {}
       if station_data.station.trains_count > 0 then
         in_transit_data = read_inbound_trains(station_data)
       end
-      local limit_text, color = station_limit(station_data)
+      local limit_text, color = station_limit(station_data,is_circuit_limit)
       local since = ""
       -- TODO Topic open requests
       -- if station_data.opened then
@@ -238,7 +245,7 @@ local function update_tab(gui_id)
   ::continue::
   vtm_gui.gui.tabs.stations_tab.badge_text = table_index or 0
   if table_index > 0 then
-    if nd_stations > 10 then
+    if nd_stations > 10 then --TODO setting abfragen
       vtm_gui.gui.stations.warning.visible = true
       vtm_gui.gui.stations.warning_label.caption = { "vtm.station-warning", nd_stations }
     end

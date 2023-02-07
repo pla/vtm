@@ -2,35 +2,41 @@ local on_tick_n = require("__flib__.on-tick-n")
 local tables = require("__flib__.table")
 local constants = require("__vtm__.scripts.constants")
 local gui_util = require("__vtm__.scripts.gui.utils")
+local util = require("__core__.lualib.util")
 local flib_train = require("__flib__.train")
 
-local MAX_KEEP = 60 * 60 * 60 * 12 -- ticks * seconds * minutes * hours
+local MAX_KEEP = 60 * 60 * 60 * 5 -- ticks * seconds * minutes * hours
 local last_sweep = 0
 
 local vtm_logic = {}
 
-local refuel_pattern = gui_util.split(settings.global["vtm-refuel-names"].value, ",")
-local depot_pattern = gui_util.split(settings.global["vtm-depot-names"].value, ",")
-local requester_pattern = gui_util.split(settings.global["vtm-requester-names"].value, ",")
-local provider_pattern = gui_util.split(settings.global["vtm-provider-names"].value, ",")
-
-function vtm_logic.load_guess_pattern()
-  refuel_pattern = gui_util.split(settings.global["vtm-refuel-names"].value, ",")
-  depot_pattern = gui_util.split(settings.global["vtm-depot-names"].value, ",")
-  requester_pattern = gui_util.split(settings.global["vtm-requester-names"].value, ",")
-  provider_pattern = gui_util.split(settings.global["vtm-provider-names"].value, ",")
+---@class GuessPatterns
+---@field depot table
+---@field refuel table
+---@field requester table
+---@field provider table
+function vtm_logic.load_guess_patterns()
+  if not global.settings["patterns"] then
+    global.settings["patterns"] = {} --[[@as GuessPatterns ]]
+  end
+  global.settings["patterns"] = {
+      depot = util.split(settings.global["vtm-depot-names"].value, ","),
+      refuel = util.split(settings.global["vtm-refuel-names"].value, ","),
+      requester = util.split(settings.global["vtm-requester-names"].value, ","),
+      provider = util.split(settings.global["vtm-provider-names"].value, ","),
+  }
 end
 
----comment Try to guess the station type: Requester, Provider, Depot or Refuel
+---Try to guess the station type: Requester, Provider, Depot or Refuel
 ---@param station LuaEntity
 ---@return string
 local function guess_station_type(station)
   local station_type = "ND"
   local is_refuel, is_depot, is_provider, is_requester, is_hidden
   local from_start = settings.global["vtm-p-or-r-start"].value
-
+  local patterns = global.settings["patterns"] --[[@as GuessPatterns ]]
   -- depot
-  for _, pattern in pairs(depot_pattern) do
+  for _, pattern in pairs(patterns.depot) do
     if pattern:sub(1, 1) == "-" then
       is_hidden = true
       is_depot = string.find(string.lower(station.backer_name), pattern:sub(2), 1, true) or false
@@ -46,14 +52,14 @@ local function guess_station_type(station)
     end
   end
   -- refuel
-  for _, pattern in pairs(refuel_pattern) do
+  for _, pattern in pairs(patterns.refuel) do
     is_refuel = string.find(string.lower(station.backer_name), pattern, 1, true) or false
     if is_refuel then
       return "F"
     end
   end
   -- requester
-  for _, pattern in pairs(requester_pattern) do
+  for _, pattern in pairs(patterns.requester) do
     local start = pattern:len() * -1
     if from_start then
       start = 1
@@ -65,7 +71,7 @@ local function guess_station_type(station)
   end
 
   -- provider
-  for _, pattern in pairs(provider_pattern) do
+  for _, pattern in pairs(patterns.provider) do
     local start = pattern:len() * -1
     if from_start then
       start = 1
@@ -97,23 +103,25 @@ local function get_TCS_prio(backer_name)
   end
   return 9
 end
-
+---comment
+---@param station LuaEntity
+---@return table
 local function new_station(station)
   return {
-    -- TODO: refine me, limit, avg
-    force_index = station.force.index,
-    station = station,
-    created = game.tick,
-    last_changed = game.tick,
-    opened = "",
-    closed = "",
-    avg = 0, --TODO : calculate on finish log
-    train_front_rail = nil,
-    type = guess_station_type(station), -- one of P R D F H or ND
-    sort_prio = get_TCS_prio(station.backer_name),
-    incoming_trains = {},
-    stock = {},
-    in_transit = {},
+      -- TODO: refine me, limit, avg
+      force_index = station.force.index,
+      station = station,
+      created = game.tick,
+      last_changed = game.tick,
+      opened = "",
+      closed = "",
+      avg = 0, --TODO : calculate on finish log
+      train_front_rail = nil,
+      type = guess_station_type(station), -- one of P R D F H or ND
+      sort_prio = get_TCS_prio(station.backer_name),
+      incoming_trains = {},
+      stock = {},
+      in_transit = {},
   }
 end
 
@@ -131,16 +139,19 @@ function vtm_logic.init_stations()
 end
 
 -- unused, for now, needs to be different for P and R
-function vtm_logic.update_station_limit(unit_number, entity)
+function vtm_logic.update_station_limit(unit_number, station)
   local station_data = global.stations[unit_number]
-  if entity.station_limit < 1 then
+  if station.station_limit < 1 then
     station_data.closed = game.tick
-  elseif entity.station_limit > 0 and entity.station_limit < constants.MAX_LIMIT then
+  elseif station.station_limit > 0 and station.station_limit < constants.MAX_LIMIT then
   end
 end
 
 function vtm_logic.update_station(station)
   -- special function for for_n_of
+  if not station.valid then
+    return 0, true
+  end
   if global.stations[station.unit_number] then
     local station_data = global.stations[station.unit_number]
     station_data.force_index = station.force.index
@@ -151,7 +162,6 @@ function vtm_logic.update_station(station)
     if station_data.incoming_trains == nil then
       station_data.incoming_trains = {}
     end
-    -- global.stations[station.unit_number] = updated_station(station)
   else
     global.stations[station.unit_number] = new_station(station)
   end
@@ -161,7 +171,6 @@ end
 ---@param mode string
 function vtm_logic.update_all_stations(mode)
   if mode == "force" then
-
     local train_stops = game.get_train_stops()
     for _, station in pairs(train_stops) do
       vtm_logic.update_station(station)
@@ -178,6 +187,8 @@ function vtm_logic.schedule_station_refresh()
 
   global.station_update_table = game.get_train_stops()
   if next(global.station_update_table) then
+    LOG("Startet background station refresh")
+    game.print({"vtm.station-refresh-start"})
     global.station_k = 1
   end
 end
@@ -213,7 +224,6 @@ local function clear_older_force(force, older_than)
     end
   end
   last_sweep = game.tick
-
 end
 
 function vtm_logic.clear_older(player_index, older_than)
@@ -247,7 +257,6 @@ local function find_first_stop(schedule)
     end
   end
   return index
-
 end
 
 ---comment
@@ -255,16 +264,16 @@ end
 ---@return table
 local function new_current_log(train)
   return {
-    -- Required because front_stock might not be valid later
-    force_index = train.front_stock.force.index,
-    train = train,
-    started_at = game.tick,
-    last_change = game.tick,
-    composition = flib_train.get_composition_string(train),
-    prototype = train.front_stock.prototype,
-    sprite = "item/" .. gui_util.signal_for_entity(train.front_stock).name,
-    contents = {},
-    events = {}
+      -- Required because front_stock might not be valid later
+      force_index = train.front_stock.force.index,
+      train = train,
+      started_at = game.tick,
+      last_change = game.tick,
+      composition = flib_train.get_composition_string(train),
+      prototype = train.front_stock.prototype,
+      sprite = "item/" .. gui_util.signal_for_entity(train.front_stock).name,
+      contents = {},
+      events = {}
   }
 end
 
@@ -294,8 +303,8 @@ end
 
 function vtm_logic.get_logs(force)
   return tables.filter(global.trains, function(train_data)
-    return train_data.force_index == force.index
-  end)
+        return train_data.force_index == force.index
+      end)
 end
 
 local function add_log(train_data, log_event)
@@ -313,8 +322,8 @@ end
 
 local function read_contents(train)
   return {
-    items = train.get_contents(),
-    fluids = train.get_fluid_contents()
+      items = train.get_contents(),
+      fluids = train.get_fluid_contents()
   }
 end
 
@@ -337,9 +346,9 @@ local function on_train_changed_state(event)
   end
 
   local log = {
-    tick = game.tick,
-    old_state = event.old_state,
-    state = train.state
+      tick = game.tick,
+      old_state = event.old_state,
+      state = train.state
   }
 
   if train_data.last_station and event.old_state ~= defines.train_state.wait_station then
@@ -353,8 +362,8 @@ local function on_train_changed_state(event)
     local diff_fluids = diff(train_data.contents.fluids, train.get_fluid_contents())
     train_data.contents = read_contents(train)
     log.diff = {
-      items = diff_items,
-      fluids = diff_fluids
+        items = diff_items,
+        fluids = diff_fluids
     }
     log.station = train_data.last_station
     train_data.last_station = nil
@@ -392,20 +401,17 @@ local function on_train_changed_state(event)
     end
   end
   add_log(train_data, log)
-
 end
 
 local function on_trainstop_build(event)
   if event.created_entity.name == "train-stop" then
     -- add_new_station(event.entity)
-    game.print("build trainstop " .. event.created_entity.backer_name)
     -- create ne stop only if it has proper type
     local station_data = new_station(event.created_entity)
     if station_data.type ~= "ND" then
       global.stations[event.created_entity.unit_number] = station_data
     end
   end
-
 end
 
 local function on_trainstop_renamed(event)
@@ -424,13 +430,10 @@ local function on_trainstop_renamed(event)
       event.player_index = event.entity.last_user.index
     end
     script.raise_event(constants.refresh_event, {
-      event = event,
-      player_index = event.player_index
+        event = event,
+        player_index = event.player_index
     })
-    local force = event.entity.last_user.force
-    force.print("Trainstop renamed " .. event.entity.backer_name)
   end
-
 end
 
 local function on_train_schedule_changed(event)
@@ -441,14 +444,13 @@ local function on_train_schedule_changed(event)
   end
   local train_data = get_train_data(train, train_id)
   add_log(train_data, {
-    tick = game.tick,
-    schedule = train.schedule,
-    changed_by = event.player_index
+      tick = game.tick,
+      schedule = train.schedule,
+      changed_by = event.player_index
   })
   -- TODO trigger station refresh from train path_end_stop :/
   -- worth nothing if there is nothing ready to deliver
   -- better make that available in a different way
-
 end
 
 -- EVENTS
@@ -464,12 +466,12 @@ end)
 script.on_event(defines.events.on_built_entity, function(event)
   on_trainstop_build(event)
 end,
-  { { filter = "type", type = "train-stop" } })
+    { { filter = "type", type = "train-stop" } })
 
 script.on_event(defines.events.on_robot_built_entity, function(event)
   on_trainstop_build(event)
 end,
-  { { filter = "type", type = "train-stop" } })
+    { { filter = "type", type = "train-stop" } })
 
 script.on_event(defines.events.on_entity_renamed, function(event)
   if event.entity.type == "train-stop" then

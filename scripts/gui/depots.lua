@@ -293,8 +293,6 @@ local function handle_action(action, event)
     local player = game.players[event.player_index]
     if action.position then
       player.zoom_to_world(action.position, 0.5)
-    else
-      player.print("No position")
     end
   end
 end

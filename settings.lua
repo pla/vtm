@@ -13,7 +13,7 @@ data:extend({
     minimum_value = 10,
     maximum_value = 1000,
     default_value = 20,
-    order = "a",
+    order = "za",
   },
   {
     type = "string-setting",
@@ -58,12 +58,19 @@ data:extend({
     order = "g",
   },
   {
+    type = "bool-setting",
+    name = "vtm-no-undef-warning",
+    setting_type = "runtime-global",
+    default_value = false,
+    order = "h",
+  },
+  {
     type = "int-setting",
     name = "vtm-limit-auto-refresh",
     setting_type = "runtime-global",
     minimum_value = 0,
     maximum_value = 1000,
     default_value = 30,
-    order = "h",
+    order = "zb",
   },
 })

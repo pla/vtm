@@ -6,22 +6,22 @@ local vtm_logic = require("__vtm__.scripts.vtm_logic")
 local gui_util = require("__vtm__.scripts.gui.utils")
 local mod_gui = require("__core__.lualib.mod-gui")
 
+DEBUG = false
+function LOG(msg)
+  if __DebugAdapter or DEBUG then
+    log({ "", "[" .. game.tick .. "] ", msg })
+  end
+end
+
 local function init_player_data(player)
   if player.valid then
     -- init personal settings
     global.settings[player.index] = {
-      current_tab = "trains",
-      state = "closed",
-      pinned = false,
-      gui_refresh = ""
+        current_tab = "trains",
+        state = "closed",
+        pinned = false,
+        gui_refresh = ""
     }
-    -- init stats per force
-    if global.stats[player.force] == nil then
-      global.stats[player.force] = {
-        stations = {},
-        trains = {},
-      }
-    end
   end
 end
 
@@ -32,7 +32,6 @@ local function init_global_data()
   global.stations = {}
   global.settings = {}
   global.groups = {}
-  global.stats = {}
 end
 
 local function remove_mod_gui_button(player)
@@ -40,7 +39,6 @@ local function remove_mod_gui_button(player)
   if button_flow.vtm_button then
     button_flow.vtm_button.destroy()
   end
-
 end
 
 local function add_mod_gui_button(player)
@@ -52,52 +50,45 @@ local function add_mod_gui_button(player)
     return
   end
   button_flow.add {
-    type = "button",
-    name = "vtm_button",
-    style = mod_gui.button_style,
-    caption = "VTM",
-    tags = {
-      [script.mod_name] = {
-        flib = {
-          on_click = { type = "generic", action = "open-vtm" }
-        }
-      }
-    },
-    tooltip = { "vtm.mod-gui-tooltip" }
+      type = "button",
+      name = "vtm_button",
+      style = mod_gui.button_style,
+      caption = "VTM",
+      tags = {
+          [script.mod_name] = {
+              flib = {
+                  on_click = { type = "generic", action = "open-vtm" }
+              }
+          }
+      },
+      tooltip = { "vtm.mod-gui-tooltip" }
   }
 end
 
 local function on_configuration_changed(event)
   for _, player in pairs(game.players) do
     if player.valid then
-      if global.trains[1] ~= nil and global.trains[1].prototype == nil then
-        global.trains = {} -- FIXME: remove before release
-      end
       -- init personal settings
       if global.settings[player.index] == nil then
         init_player_data(player)
-        -- init stats per force
-        if global.stats[player.force] == nil then
-          global.stats[player.force] = {
-            stations = {},
-            trains = {},
-          }
-        end
       end
+      -- recreate gui
       local gui_id = gui_util.get_gui_id(player.index)
       if gui_id ~= nil then
         vtm_gui.destroy(player.index)
       end
       vtm_gui.create_gui(player)
       script.raise_event(constants.refresh_event, {
-        player_index = player.index,
+          player_index = player.index,
       })
+      -- do the button thing
       add_mod_gui_button(player)
     end
   end
   if global.station_refresh == "init" then
     return
   end
+  vtm_logic.load_guess_patterns()
   vtm_logic.update_all_stations("force")
 end
 
@@ -111,9 +102,13 @@ local function on_tick(event)
   -- station data refresh
   if global.station_k then
     global.station_k = tables.for_n_of(
-      global.station_update_table,
-      global.station_k, 10,
-      vtm_logic.update_station)
+            global.station_update_table,
+            global.station_k, 10,
+            vtm_logic.update_station)
+    if global.station_k == nil then
+      LOG("VTM Background station refresh is done")
+      game.print({ "vtm.station-refresh-end" })
+    end
   end
   if global.station_refresh == "init" then
     global.station_refresh = nil
@@ -126,11 +121,10 @@ local function on_tick(event)
     if global.settings[player.index].gui_refresh == "auto" and
         event.tick % (60 + 3 * player.index) == 0 then
       script.raise_event(constants.refresh_event, {
-        player_index = player.index,
+          player_index = player.index,
       })
     end
   end
-
 end
 
 -- local function on_load()
@@ -147,6 +141,7 @@ end)
 script.on_init(function()
   on_tick_n.init()
   init_global_data()
+  vtm_logic.load_guess_patterns()
   for _, player in pairs(game.players) do
     init_player_data(player)
   end
@@ -181,9 +176,9 @@ end)
 
 script.on_event("vtm-linked-focus-search", function(event)
   vtm_gui.handle_action({
-    type = "generic",
-    action = "focus_search",
-    gui_id = gui_util.get_gui_id(event.player_index)
+      type = "generic",
+      action = "focus_search",
+      gui_id = gui_util.get_gui_id(event.player_index)
   }, event)
 end)
 
@@ -196,14 +191,14 @@ end)
 
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
   if tables.find({
-    "vtm-requester-names",
-    "vtm-provider-names",
-    "vtm-depot-names",
-    "vtm-refuel-names",
-    "vtm-p-or-r-start"
-  }, event["setting"])
+          "vtm-requester-names",
+          "vtm-provider-names",
+          "vtm-depot-names",
+          "vtm-refuel-names",
+          "vtm-p-or-r-start"
+      }, event["setting"])
   then
-    vtm_logic.load_guess_pattern()
+    vtm_logic.load_guess_patterns()
     global.station_refresh = "all"
   end
   if event["setting"] == "vtm-showModgui" then
@@ -244,7 +239,6 @@ commands.add_command("vtm", { "vtm.command-help" }, function(event)
     global.history = {}
   elseif event.parameter == "del-stations" then
     global.stations = {}
-    game.print("Station data deleted by " .. game.players[event.player_index].name)
   elseif event.parameter == "del-settings" then
     global.settings = {}
   elseif event.parameter == "refresh-stations" then
