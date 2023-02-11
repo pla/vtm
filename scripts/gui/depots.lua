@@ -36,26 +36,6 @@ local function add_stock(stock, all_stock)
 
 end
 
-local function read_depot_cargo_old(station_data)
-  local station_stock = {}
-  if not station_data.station.valid then return {} end
-  local trains = station_data.station.get_train_stop_trains()
-  for _, t in pairs(trains) do
-    -- check if the train is at the station
-    for _, rail in pairs(station_data.rails) do
-      if t.front_rail.is_rail_in_same_rail_segment_as(rail) then
-        local stock = {}
-        stock.items = t.get_contents()
-        stock.fluids = t.get_fluid_contents()
-        add_stock(stock, station_stock)
-        goto continue
-      end
-    end
-    ::continue::
-  end
-  return station_stock
-end
-
 local function read_depot_cargo(station_data)
   local station_stock = {}
   if not station_data.station.valid then return {} end
@@ -66,7 +46,7 @@ local function read_depot_cargo(station_data)
     if entity and
         entity.valid and
         entity.backer_name and
-        -- entity.name == "train-stop" and
+        -- entity.type == "train-stop" and
         entity.backer_name == station_data.name
     then
       local stock = {}
@@ -80,22 +60,22 @@ end
 
 local function update_tab(gui_id)
   local vtm_gui = global.guis[gui_id]
+  local player = vtm_gui.player
+  local vgui=vtm_gui.gui
+  local surface = global.settings[player.index].surface or "All"
   local depots_compact = {}
   local depots = {}
   local limit
   local table_index = 0
-  local filters = {
-    -- item = vtm_gui.gui.filter.item.elem_value.name,
-    -- fluid = vtm_gui.gui.filter.fluid.elem_value,
-    search_field = vtm_gui.gui.filter.search_field.text:lower(),
-  }
 
   for _, station_data in pairs(global.stations) do
-    if station_data.force_index == vtm_gui.player.force.index and
+    if station_data.force_index == player.force.index and
         (station_data.type == "D" or
             station_data.type == "F")
     then
-      if station_data.station.valid then
+      if station_data.station.valid and
+      (surface == "All" or surface == station_data.station.surface.name)
+      then
         -- record present
         limit = station_data.station.trains_limit
         if limit == constants.MAX_LIMIT then
@@ -127,7 +107,7 @@ local function update_tab(gui_id)
     end
   end
   -- only valid stations from here
-  local scroll_pane = vtm_gui.gui.depots.scroll_pane
+  local scroll_pane = vgui.depots.scroll_pane
   local children = scroll_pane.children
   local width = constants.gui.depots
   -- new table to make sorting possible
@@ -146,7 +126,7 @@ local function update_tab(gui_id)
 
     if station_data.station.valid then
       table_index = table_index + 1
-      vtm_gui.gui.depots.warning.visible = false
+      vgui.depots.warning.visible = false
       -- get or create gui row
       local row = children[table_index]
       if not row then
@@ -181,6 +161,10 @@ local function update_tab(gui_id)
       local station_stock = {}
       if station_data.inbound > 0 and not settings.global["vtm-dont-read-depot-stock"].value then
         station_stock = read_depot_cargo(station_data)
+        if station_data.station.name=="se-space-elevator" then
+          station_stock = gui_util.read_inbound_trains(station_data)
+          
+        end
       end
       local limit_text, color = depot_limit(station_data)
 
@@ -198,13 +182,13 @@ local function update_tab(gui_id)
         },
         { elem_mods = { caption = station_data.type } }, --type
         -- {}, --pusher
-        gui_util.slot_table_update(row.stock_table, station_stock, vtm_gui.gui_id)
+        gui_util.slot_table_update(row.stock_table, station_stock, gui_id)
       })
     end
   end
-  vtm_gui.gui.tabs.depots_tab.badge_text = table_index
+  vgui.tabs.depots_tab.badge_text = table_index
   if table_index == 0 then
-    vtm_gui.gui.depots.warning.visible = true
+    vgui.depots.warning.visible = true
   end
   for child_index = table_index + 1, #children do
     children[child_index].destroy()

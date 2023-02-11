@@ -1,5 +1,4 @@
 -- stations.lua
-local misc = require("__flib__.misc")
 local tables = require("__flib__.table")
 local gui = require("__flib__.gui")
 local gui_util = require("__vtm__.scripts.gui.utils")
@@ -7,30 +6,39 @@ local match = require("__vtm__.scripts.match")
 local constants = require("__vtm__.scripts.constants")
 local vtm_logic = require("__vtm__.scripts.vtm_logic")
 
-local function read_inbound_trains(station_data)
-  local station = station_data.station
-  local contents = {}
-  if station.valid and station_data.incoming_trains then
-    local trains = station_data.incoming_trains
-    for train_id, _ in pairs(trains) do
-      local train_data = global.trains[train_id]
-      if train_data.path_end_stop == station.unit_number then
-        for type, item_data in pairs(train_data.contents) do
-          local row = {}
-          row.type = type == "items" and "item" or "fluid"
-          for name, count in pairs(item_data) do
-            row.name = name
-            row.count = count
-            row.color = "blue"
-            table.insert(contents, row)
-          end
-        end
-      end
-    end
-  end
-  return contents
-
-end
+-- local function read_inbound_trains(station_data)
+--   local station = station_data.station
+--   local contents = {}
+--   local inv_trains={}
+--   if station.valid and station_data.incoming_trains then
+--     local trains = station_data.incoming_trains
+--     for train_id, _ in pairs(trains) do
+--       local train_data = global.trains[train_id]
+--       if train_data and train_data.train.valid then
+--         if train_data.path_end_stop == station.unit_number then
+--           for type, item_data in pairs(train_data.contents) do
+--             local row = {}
+--             row.type = type == "items" and "item" or "fluid"
+--             for name, count in pairs(item_data) do
+--               row.name = name
+--               row.count = count
+--               row.color =  "blue"
+--               table.insert(contents, row)
+--             end
+--           end
+--         end
+--       else
+--         inv_trains.insert(train_id)
+--       end
+--     end
+--     -- delete invalid traindata
+--     for _, train_id in pairs(inv_trains) do
+--       global.trains[train_id]=nil
+--       station_data.incoming_trains[train_id]=nil
+--     end
+--   end
+--   return contents
+-- end
 
 local function read_station_network(station_data, return_virtual)
   local station = station_data.station --[[@as LuaEntity]]
@@ -50,10 +58,10 @@ local function read_station_network(station_data, return_virtual)
             goto continue
           end
           table.insert(contents, {
-            type = signal_data.signal.type,
-            name = signal_data.signal.name,
-            count = signal_data.count,
-            color = colors[wire]
+              type = signal_data.signal.type,
+              name = signal_data.signal.name,
+              count = signal_data.count,
+              color = colors[wire]
           })
           ::continue::
         end
@@ -63,7 +71,7 @@ local function read_station_network(station_data, return_virtual)
   return contents, set_trains_limit
 end
 
-local function station_limit(station_data,is_circuit_limit)
+local function station_limit(station_data, is_circuit_limit)
   local limit = station_data.station.trains_limit
   local inbound = station_data.station.trains_count
   local color = "green"
@@ -88,41 +96,40 @@ local function station_limit(station_data,is_circuit_limit)
     limit_text = limit_text .. " m"
   end
   return limit_text, color
-
 end
 
 local function update_tab(gui_id)
   local vtm_gui = global.guis[gui_id]
+  local surface = global.settings[global.guis[gui_id].player.index].surface or "All"
   local stations = {}
   local nd_stations = 0
   local table_index = 0
   local max_lines = settings.global["vtm-limit-auto-refresh"].value
 
   local filters = {
-    -- item = vtm_gui.gui.filter.item.elem_value.name,
-    -- fluid = vtm_gui.gui.filter.fluid.elem_value,
-    search_field = vtm_gui.gui.filter.search_field.text:lower(),
+      search_field = vtm_gui.gui.filter.search_field.text:lower(),
   }
 
   if not next(global.stations) then
     vtm_logic.init_stations()
   end
   for _, station_data in pairs(global.stations) do
-    if station_data.force_index == vtm_gui.player.force.index and
-        (station_data.type == "R" or
-            station_data.type == "P")
+    if station_data.station.valid and
+        (surface == "All" or surface == station_data.station.surface.name)
     then
-      if match.filter_stations(station_data, filters) then
-        if station_data.station.valid then
+      -- only valid stations from here
+      if station_data.force_index == vtm_gui.player.force.index and
+          (station_data.type == "R" or station_data.type == "P")
+      then
+        if match.filter_stations(station_data, filters) then
           table.insert(stations, station_data)
-          -- only valid stations from here
         end
+      elseif station_data.force_index == vtm_gui.player.force.index and
+          station_data.type == "ND"
+      then
+        -- TODO setting abfragen
+        nd_stations = nd_stations + 1
       end
-    elseif station_data.force_index == vtm_gui.player.force.index and
-        station_data.type == "ND"
-    then
-      -- TODO setting abfragen
-      nd_stations = nd_stations + 1
     end
   end
 
@@ -135,7 +142,6 @@ local function update_tab(gui_id)
   table.sort(stations, function(a, b) return a.station.backer_name < b.station.backer_name end)
 
   for _, station_data in pairs(stations) do
-
     if station_data.station.valid then
       if table_index >= max_lines and
           max_lines > 0 and
@@ -154,58 +160,58 @@ local function update_tab(gui_id)
       local row = children[table_index]
       if not row then
         row = gui.add(scroll_pane, {
-          type = "frame",
-          direction = "horizontal",
-          style = "vtm_table_row_frame",
-          {
-            type = "sprite-button",
-            style = "transparent_slot",
-            style_mods = { size = width.icon },
-            sprite = "vtm_train",
-            tooltip = { "vtm.open-station-gui-tooltip" },
-          },
-          {
-            type = "label",
-            style = "vtm_clickable_semibold_label_with_padding",
-            style_mods = { width = width.name },
-            tooltip = { "vtm.show-station-on-map-tooltip" },
-          },
-          {
-            type = "flow",
-            style = "flib_indicator_flow",
-            style_mods = { width = width.status, horizontal_align = "left" },
-            { type = "sprite", style = "flib_indicator" },
-            { type = "label", style = "vtm_semibold_label_with_padding" },
-          },
-          {
-            type = "label",
-            style = "vtm_semibold_label_with_padding",
-            style_mods = { width = width.since, horizontal_align = "right" },
-          },
-          {
-            type = "label",
-            style = "vtm_semibold_label_with_padding",
-            style_mods = { width = width.avg, horizontal_align = "right" },
-          },
-          {
-            type = "label",
-            style = "vtm_semibold_label_with_padding",
-            style_mods = { width = width.type, horizontal_align = "center" },
-            tooltip = { "vtm.type-tooltip" },
-          },
-          gui_util.slot_table(width, "light", "stock"),
-          gui_util.slot_table(width, "light", "in_transit"),
-        })
+                type = "frame",
+                direction = "horizontal",
+                style = "vtm_table_row_frame",
+                {
+                    type = "sprite-button",
+                    style = "transparent_slot",
+                    style_mods = { size = width.icon },
+                    sprite = "vtm_train",
+                    tooltip = { "vtm.open-station-gui-tooltip" },
+                },
+                {
+                    type = "label",
+                    style = "vtm_clickable_semibold_label_with_padding",
+                    style_mods = { width = width.name },
+                    tooltip = { "vtm.show-station-on-map-tooltip" },
+                },
+                {
+                    type = "flow",
+                    style = "flib_indicator_flow",
+                    style_mods = { width = width.status, horizontal_align = "left" },
+                    { type = "sprite", style = "flib_indicator" },
+                    { type = "label",  style = "vtm_semibold_label_with_padding" },
+                },
+                {
+                    type = "label",
+                    style = "vtm_semibold_label_with_padding",
+                    style_mods = { width = width.since, horizontal_align = "right" },
+                },
+                {
+                    type = "label",
+                    style = "vtm_semibold_label_with_padding",
+                    style_mods = { width = width.avg, horizontal_align = "right" },
+                },
+                {
+                    type = "label",
+                    style = "vtm_semibold_label_with_padding",
+                    style_mods = { width = width.type, horizontal_align = "center" },
+                    tooltip = { "vtm.type-tooltip" },
+                },
+                gui_util.slot_table(width, "light", "stock"),
+                gui_util.slot_table(width, "light", "in_transit"),
+            })
       end
       -- insert data
       -- name,status,since,avg,type,stock,intransit
       -- limit manual or circuit,type(PR),group
-      local stock_data,is_circuit_limit = read_station_network(station_data)
+      local stock_data, is_circuit_limit = read_station_network(station_data)
       local in_transit_data = {}
       if station_data.station.trains_count > 0 then
-        in_transit_data = read_inbound_trains(station_data)
+        in_transit_data = gui_util.read_inbound_trains(station_data)
       end
-      local limit_text, color = station_limit(station_data,is_circuit_limit)
+      local limit_text, color = station_limit(station_data, is_circuit_limit)
       local since = ""
       -- TODO Topic open requests
       -- if station_data.opened then
@@ -213,34 +219,33 @@ local function update_tab(gui_id)
       -- end
       local avg = "" --station_data.avg
       gui.update(row, {
-        { -- Station button
-          elem_mods = {
-            sprite = "item/" .. gui_util.signal_for_entity(station_data.station).name,
+          { -- Station button
+              elem_mods = {
+                  sprite = "item/" .. gui_util.signal_for_entity(station_data.station).name,
+              },
+              actions = {
+                  on_click = { type = "stations", action = "open-station", station_id = station_data.station.unit_number },
+              },
           },
-          actions = {
-            on_click = { type = "stations", action = "open-station", station_id = station_data.station.unit_number },
+          { -- name
+              elem_mods = { caption = station_data.station.backer_name },
+              actions = {
+                  on_click = { type = "stations", action = "position", position = station_data.station.position },
+              },
           },
-        },
-        { -- name
-          elem_mods = { caption = station_data.station.backer_name },
-          actions = {
-            on_click = { type = "stations", action = "position", position = station_data.station.position },
+          { --status: InTransit =blue, open yellow, TODO : open for too long red
+              { elem_mods = { sprite = "flib_indicator_" .. color } },
+              { elem_mods = { caption = limit_text } },
           },
-        },
-        { --status: InTransit =blue, open yellow, TODO : open for too long red
-          { elem_mods = { sprite = "flib_indicator_" .. color } },
-          { elem_mods = { caption = limit_text } },
-        },
-        { elem_mods = {
-          caption = since
-        } }, -- since
-        { elem_mods = { caption = avg } }, -- avg
-        { elem_mods = { caption = station_data.type } }, --type
+          { elem_mods = {
+              caption = since
+          } }, -- since
+          { elem_mods = { caption = avg } }, -- avg
+          { elem_mods = { caption = station_data.type } }, --type
       })
       gui_util.slot_table_update(row.stock_table, stock_data, vtm_gui.gui_id)
       gui_util.slot_table_update(row.in_transit_table, in_transit_data, vtm_gui.gui_id)
     end
-
   end
   ::continue::
   vtm_gui.gui.tabs.stations_tab.badge_text = table_index or 0
@@ -249,7 +254,6 @@ local function update_tab(gui_id)
       vtm_gui.gui.stations.warning.visible = true
       vtm_gui.gui.stations.warning_label.caption = { "vtm.station-warning", nd_stations }
     end
-
   else
     vtm_gui.gui.stations.warning.visible = true
   end
@@ -264,101 +268,101 @@ local function build_gui(gui_id)
   -- name,status,since,avg,type,stock,intransit
   -- limit manual or circuit,type(PR),group
   return {
-    tab = {
-      type = "tab",
-      caption = { "gui-trains.stations-tab" },
-      ref = { "tabs", "stations_tab" },
-      name = "stations",
-      actions = {
-        on_click = { type = "generic", action = "change_tab", tab = "stations" },
-      },
-    },
-    content = {
-      type = "frame",
-      style = "vtm_main_content_frame",
-      direction = "vertical",
-      ref = { "stations", "content_frame" },
-      -- table header
-      {
-        type = "frame",
-        style = "subheader_frame",
-        direction = "horizontal",
-        style_mods = { horizontally_stretchable = true },
-        {
-          type = "label",
-          style = "subheader_caption_label",
-          style_mods = { width = width.icon },
-        },
-        {
-          type = "label",
-          style = "subheader_caption_label",
-          caption = { "vtm.table-header-name" },
-          style_mods = { width = width.name },
-        },
-        {
-          type = "label",
-          style = "subheader_caption_label",
-          caption = { "vtm.table-header-status" },
-          style_mods = { width = width.status },
-        },
-        {
-          type = "label",
-          style = "subheader_caption_label",
-          -- caption = { "vtm.table-header-since" },
-          style_mods = { width = width.since },
-        },
-        {
-          type = "label",
-          style = "subheader_caption_label",
-          -- caption = { "vtm.table-header-avg" },
-          style_mods = { width = width.avg },
-        },
-        {
-          type = "label",
-          style = "subheader_caption_label",
-          caption = { "vtm.table-header-type" },
-          style_mods = { width = width.type },
-        },
-        {
-          type = "label",
-          style = "subheader_caption_label",
-          caption = { "vtm.table-header-stock" },
-          style_mods = { width = width.stock },
-        },
-        {
-          type = "label",
-          style = "subheader_caption_label",
-          caption = { "vtm.table-header-in-transit" },
-          style_mods = { width = width.in_transit },
-        },
-      },
-      {
-        type = "scroll-pane",
-        style = "vtm_table_scroll_pane",
-        ref = { "stations", "scroll_pane" },
-        vertical_scroll_policy = "always",
-        horizontal_scroll_policy = "never",
-        -- style_mods = {  },
-      },
-      {
-        type = "frame",
-        direction = "horizontal",
-        style = "negative_subheader_frame",
-        ref = { "stations", "warning" },
-        visible = true,
-        {
-          type = "flow",
-          style = "centering_horizontal_flow",
-          style_mods = { horizontally_stretchable = true },
-          {
-            type = "label",
-            style = "bold_label",
-            caption = { "", "[img=warning-white] ", { "gui-trains.no-stations" } },
-            ref = { "stations", "warning_label" },
+      tab = {
+          type = "tab",
+          caption = { "gui-trains.stations-tab" },
+          ref = { "tabs", "stations_tab" },
+          name = "stations",
+          actions = {
+              on_click = { type = "generic", action = "change_tab", tab = "stations" },
           },
-        },
       },
-    },
+      content = {
+          type = "frame",
+          style = "vtm_main_content_frame",
+          direction = "vertical",
+          ref = { "stations", "content_frame" },
+          -- table header
+          {
+              type = "frame",
+              style = "subheader_frame",
+              direction = "horizontal",
+              style_mods = { horizontally_stretchable = true },
+              {
+                  type = "label",
+                  style = "subheader_caption_label",
+                  style_mods = { width = width.icon },
+              },
+              {
+                  type = "label",
+                  style = "subheader_caption_label",
+                  caption = { "vtm.table-header-name" },
+                  style_mods = { width = width.name },
+              },
+              {
+                  type = "label",
+                  style = "subheader_caption_label",
+                  caption = { "vtm.table-header-status" },
+                  style_mods = { width = width.status },
+              },
+              {
+                  type = "label",
+                  style = "subheader_caption_label",
+                  -- caption = { "vtm.table-header-since" },
+                  style_mods = { width = width.since },
+              },
+              {
+                  type = "label",
+                  style = "subheader_caption_label",
+                  -- caption = { "vtm.table-header-avg" },
+                  style_mods = { width = width.avg },
+              },
+              {
+                  type = "label",
+                  style = "subheader_caption_label",
+                  caption = { "vtm.table-header-type" },
+                  style_mods = { width = width.type },
+              },
+              {
+                  type = "label",
+                  style = "subheader_caption_label",
+                  caption = { "vtm.table-header-stock" },
+                  style_mods = { width = width.stock },
+              },
+              {
+                  type = "label",
+                  style = "subheader_caption_label",
+                  caption = { "vtm.table-header-in-transit" },
+                  style_mods = { width = width.in_transit },
+              },
+          },
+          {
+              type = "scroll-pane",
+              style = "vtm_table_scroll_pane",
+              ref = { "stations", "scroll_pane" },
+              vertical_scroll_policy = "always",
+              horizontal_scroll_policy = "never",
+              -- style_mods = {  },
+          },
+          {
+              type = "frame",
+              direction = "horizontal",
+              style = "negative_subheader_frame",
+              ref = { "stations", "warning" },
+              visible = true,
+              {
+                  type = "flow",
+                  style = "centering_horizontal_flow",
+                  style_mods = { horizontally_stretchable = true },
+                  {
+                      type = "label",
+                      style = "bold_label",
+                      caption = { "", "[img=warning-white] ", { "gui-trains.no-stations" } },
+                      ref = { "stations", "warning_label" },
+                  },
+              },
+          },
+      },
   }
 end
 
@@ -375,7 +379,7 @@ local function handle_action(action, event)
 end
 
 return {
-  build_gui = build_gui,
-  update_tab = update_tab,
-  handle_action = handle_action
+    build_gui = build_gui,
+    update_tab = update_tab,
+    handle_action = handle_action
 }

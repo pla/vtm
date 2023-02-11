@@ -5,25 +5,16 @@ local vtm_gui = require("__vtm__.scripts.gui.main_gui")
 local vtm_logic = require("__vtm__.scripts.vtm_logic")
 local gui_util = require("__vtm__.scripts.gui.utils")
 local mod_gui = require("__core__.lualib.mod-gui")
+local migration = require("__flib__/migration")
+local migrations = require("__vtm__/migrations")
 
-DEBUG = false
+DEBUG = true
 function LOG(msg)
   if __DebugAdapter or DEBUG then
     log({ "", "[" .. game.tick .. "] ", msg })
   end
 end
 
-local function init_player_data(player)
-  if player.valid then
-    -- init personal settings
-    global.settings[player.index] = {
-        current_tab = "trains",
-        state = "closed",
-        pinned = false,
-        gui_refresh = ""
-    }
-  end
-end
 
 local function init_global_data()
   global.guis = {}
@@ -32,6 +23,10 @@ local function init_global_data()
   global.stations = {}
   global.settings = {}
   global.groups = {}
+  global.surfaces = {
+      ["All"] = "All",
+      ["nauvis"] = "Nauvis",
+  }
 end
 
 local function remove_mod_gui_button(player)
@@ -41,56 +36,35 @@ local function remove_mod_gui_button(player)
   end
 end
 
-local function add_mod_gui_button(player)
-  local button_flow = mod_gui.get_button_flow(player) --[[@as LuaGuiElement]]
-  if not settings.player["vtm-showModgui"] then
-    return
-  end
-  if button_flow.vtm_button then
-    return
-  end
-  button_flow.add {
-      type = "button",
-      name = "vtm_button",
-      style = mod_gui.button_style,
-      caption = "VTM",
-      tags = {
-          [script.mod_name] = {
-              flib = {
-                  on_click = { type = "generic", action = "open-vtm" }
-              }
-          }
-      },
-      tooltip = { "vtm.mod-gui-tooltip" }
-  }
-end
+migration.handle_on_configuration_changed(migrations.by_version, migrations.generic)
 
-local function on_configuration_changed(event)
-  for _, player in pairs(game.players) do
-    if player.valid then
-      -- init personal settings
-      if global.settings[player.index] == nil then
-        init_player_data(player)
-      end
-      -- recreate gui
-      local gui_id = gui_util.get_gui_id(player.index)
-      if gui_id ~= nil then
-        vtm_gui.destroy(player.index)
-      end
-      vtm_gui.create_gui(player)
-      script.raise_event(constants.refresh_event, {
-          player_index = player.index,
-      })
-      -- do the button thing
-      add_mod_gui_button(player)
-    end
-  end
-  if global.station_refresh == "init" then
-    return
-  end
-  vtm_logic.load_guess_patterns()
-  vtm_logic.update_all_stations("force")
-end
+
+-- local function on_configuration_changed(event)
+--   for _, player in pairs(game.players) do
+--     if player.valid then
+--       -- init personal settings
+--       if global.settings[player.index] == nil then
+--         migrations.init_player_data(player)
+--       end
+--       -- recreate gui
+--       local gui_id = gui_util.get_gui_id(player.index)
+--       if gui_id ~= nil then
+--         vtm_gui.destroy(player.index)
+--       end
+--       vtm_gui.create_gui(player)
+--       script.raise_event(constants.refresh_event, {
+--           player_index = player.index,
+--       })
+--       -- do the button thing
+--       add_mod_gui_button(player)
+--     end
+--   end
+--   if global.station_refresh == "init" then
+--     return
+--   end
+--   vtm_logic.load_guess_patterns()
+--   vtm_logic.update_all_stations("force")
+-- end
 
 local function on_tick(event)
   -- for _, task in pairs(on_tick_n.retrieve(event.tick) or {}) do
@@ -106,7 +80,6 @@ local function on_tick(event)
             global.station_k, 10,
             vtm_logic.update_station)
     if global.station_k == nil then
-      LOG("VTM Background station refresh is done")
       game.print({ "vtm.station-refresh-end" })
     end
   end
@@ -126,25 +99,47 @@ local function on_tick(event)
     end
   end
 end
+--- @class on_train_teleported
+--- @field train LuaTrain
+--- @field old_train_id_1 uint?
+--- @field old_surface_index uint
 
--- local function on_load()
--- end
+local function on_se_elevator()
+  if
+      script.active_mods["space-exploration"]
+      and remote.interfaces["space-exploration"]["get_on_train_teleport_started_event"]
+  then
+    script.on_event(
+        remote.call("space-exploration", "get_on_train_teleport_finished_event"),
+        --- @param event on_train_teleported
+        function(event)
+          -- migrate stuff and things
+          vtm_logic.migrate_train_SE(event)
+        end
+    )
+  end
+end
+
+script.on_load(function()
+  on_se_elevator()
+end)
 
 script.on_event(defines.events.on_tick, function(event)
   on_tick(event)
 end)
-
--- script.on_load(function()
---   on_load()
--- end)
 
 script.on_init(function()
   on_tick_n.init()
   init_global_data()
   vtm_logic.load_guess_patterns()
   for _, player in pairs(game.players) do
-    init_player_data(player)
+    migrations.init_player_data(player)
+    vtm_gui.create_gui(player)
+    -- do the button thing
+    migrations.add_mod_gui_button(player)
+
   end
+  on_se_elevator()
   global.station_refresh = "init"
 end)
 
@@ -170,9 +165,9 @@ script.on_event(defines.events.on_lua_shortcut, function(event)
   end
 end)
 
-script.on_configuration_changed(function(event)
-  on_configuration_changed(event)
-end)
+-- script.on_configuration_changed(function(event)
+--   on_configuration_changed(event)
+-- end)
 
 script.on_event("vtm-linked-focus-search", function(event)
   vtm_gui.handle_action({
@@ -184,8 +179,8 @@ end)
 
 script.on_event(defines.events.on_player_created, function(event)
   local player = game.players[event.player_index]
-  init_player_data(player)
-  add_mod_gui_button(player)
+  migrations.init_player_data(player)
+  migrations.add_mod_gui_button(player)
   vtm_gui.create_gui(player)
 end)
 
@@ -206,42 +201,47 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
     if settings.get_player_settings(event.player_index)["vtm-showModgui"].value == false then
       remove_mod_gui_button(player)
     else
-      add_mod_gui_button(player)
+      migrations.add_mod_gui_button(player)
     end
   end
 end)
 
 
 -- COMMANDS
--- TODO: clean or remove
-commands.add_command("vtm", { "vtm.command-help" }, function(event)
-  if event.parameter == "show-undef-stations" then
-    local player = game.get_player(event.player_index)
-    if player == nil then return end
-    local force = player.valid and player.force or 1
-    local table_index = 0
-    force.print({ "vtm.show-undef-stations" })
-    for _, station_data in pairs(global.stations) do
-      if station_data.station.valid and
-          station_data.force_index == player.force.index and
-          station_data.type == "ND"
-      then
-        table_index = table_index + 1
-        force.print("[train-stop=" .. station_data.station.unit_number .. "]")
-        if table_index == 10 then return end
-      end
-    end
-  elseif event.parameter == "count-history" then
-    local player = game.get_player(event.player_index)
-    if player == nil then return end
-    player.print("History Records: " .. table_size(global.history))
-  elseif event.parameter == "del-history" then
-    global.history = {}
-  elseif event.parameter == "del-stations" then
-    global.stations = {}
-  elseif event.parameter == "del-settings" then
-    global.settings = {}
-  elseif event.parameter == "refresh-stations" then
-    global.station_refresh = "all"
+commands.add_command("vtm-show-undef-stations", { "vtm.command-help" }, function(event)
+  local player = game.get_player(event.player_index)
+  if player == nil then return end
+  local force = player.valid and player.force or 1
+  local table_index = 0
+  force.print({ "vtm.show-undef-stations" })
+  if script.active_mods["space-exploration"] then
+    force.print({ "", { "vtm.filter-surface" }, ": ", global.settings[event.player_index].surface })
   end
+
+  for _, station_data in pairs(global.stations) do
+    if station_data.station.valid and
+        station_data.force_index == player.force.index and
+        station_data.type == "ND" and
+        (
+        script.active_mods["space-exploration"] and
+        station_data.station.surface.name == global.settings[event.player_index].surface
+        or
+        script.active_mods["space-exploration"] and
+        global.settings[event.player_index].surface == "All"
+        or
+        not script.active_mods["space-exploration"] and true
+        )
+    then
+      table_index = table_index + 1
+      force.print("[train-stop=" .. station_data.station.unit_number .. "]")
+      if table_index == 10 then return end
+    end
+  end
+end)
+
+commands.add_command("vtm-count-history", { "vtm.command-help" }, function(event)
+  local player = game.get_player(event.player_index)
+  if player == nil then return end
+  player.print("History Records: " .. table_size(global.history))
+
 end)

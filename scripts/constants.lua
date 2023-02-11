@@ -4,8 +4,14 @@ local constants = {
   gui_window_min_width = 990,
   MAX_LIMIT = 4294967295,
   refresh_event = nil,
-  tabs = {},
 }
+
+constants.hidden_surfaces = {
+  ["EE_TESTSURFACE_"]=true,-- Editor Extensions
+  ["BPL_TheLab"]=true,-- Blueprint Designer Lab
+  ["bpsb-lab"]=true,-- Blueprint Sandboxes
+}
+
 constants.gui = {
   trains = {
     train_id = 60,
@@ -43,6 +49,7 @@ constants.gui = {
   history = {
     train_id = 60,
     route = 454,
+    switch=150,
     depot = 160,
     runtime = 68,
     finished = 68,
@@ -58,14 +65,6 @@ constants.gui = {
     contents = 36 * 6,
   },
 
-}
-
-constants.station_type = {
-  "P", --"Production",
-  "D", -- "Depot",
-  "R", --"Requester",
-  "ND", -- "Other",
-  "F" -- "Fuel"
 }
 
 constants.interesting_states = {

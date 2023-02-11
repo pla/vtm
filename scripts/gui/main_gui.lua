@@ -14,131 +14,118 @@ local time_filter = require("__vtm__.scripts.filter-time")
 -- refresh sprite: refresh_white
 local function header(gui_id)
   return {
-    type = "flow",
-    ref = { "titlebar", "flow" },
-    actions = {
-      on_click = { type = "generic", action = "recenter", gui_id = gui_id },
-    },
-    children = {
-      { type = "label", style = "frame_title", caption = { "vtm.header" }, ignored_by_interaction = true },
-      { type = "empty-widget", style = "flib_titlebar_drag_handle", ignored_by_interaction = true },
-      {
-        type = "sprite-button",
-        name = "pin_button",
-        style = "frame_action_button",
-        sprite = "flib_pin_white",
-        hovered_sprite = "flib_pin_black",
-        clicked_sprite = "flib_pin_black",
-        ref = { "titlebar", "pin_button" },
-        actions = {
-          on_click = { type = "generic", action = "toggle_pinned", gui_id = gui_id },
-        },
-        tooltip = { "gui.flib-keep-open" }
+      type = "flow",
+      ref = { "titlebar", "flow" },
+      actions = {
+          on_click = { type = "generic", action = "recenter", gui_id = gui_id },
       },
-      {
-        type = "sprite-button",
-        name = "refresh_button",
-        style = "frame_action_button",
-        sprite = "vtm_refresh_white",
-        hovered_sprite = "vtm_refresh_black",
-        clicked_sprite = "vtm_refresh_black",
-        ref = { "titlebar", "refresh_button" },
-        actions = {
-          on_click = { type = "generic", action = "refresh", gui_id = gui_id },
-        },
-        tooltip = { "vtm.refresh" }
-      },
-      {
-        type = "sprite-button",
-        name = "close_button",
-        style = "frame_action_button",
-        sprite = "utility/close_white",
-        hovered_sprite = "utility/close_black",
-        clicked_sprite = "utility/close_black",
-        ref = { "titlebar", "close_button" },
-        actions = {
-          on_click = { type = "generic", action = "close-window", gui_id = gui_id },
-        },
-        tooltip = { "gui.close-instruction" }
-
+      children = {
+          { type = "label",
+              style = "frame_title",
+              caption = { "vtm.header" },
+              ignored_by_interaction = true
+          },
+          { type = "empty-widget",
+              style = "flib_titlebar_drag_handle",
+              ignored_by_interaction = true
+          },
+          {
+              type = "sprite-button",
+              name = "pin_button",
+              style = "frame_action_button",
+              sprite = "flib_pin_white",
+              hovered_sprite = "flib_pin_black",
+              clicked_sprite = "flib_pin_black",
+              ref = { "titlebar", "pin_button" },
+              actions = {
+                  on_click = { type = "generic", action = "toggle_pinned", gui_id = gui_id },
+              },
+              tooltip = { "gui.flib-keep-open" }
+          },
+          {
+              type = "sprite-button",
+              name = "refresh_button",
+              style = "frame_action_button",
+              sprite = "vtm_refresh_white",
+              hovered_sprite = "vtm_refresh_black",
+              clicked_sprite = "vtm_refresh_black",
+              ref = { "titlebar", "refresh_button" },
+              actions = {
+                  on_click = { type = "generic", action = "refresh", gui_id = gui_id },
+              },
+              tooltip = { "vtm.refresh" }
+          },
+          {
+              type = "sprite-button",
+              name = "close_button",
+              style = "frame_action_button",
+              sprite = "utility/close_white",
+              hovered_sprite = "utility/close_black",
+              clicked_sprite = "utility/close_black",
+              ref = { "titlebar", "close_button" },
+              actions = {
+                  on_click = { type = "generic", action = "close-window", gui_id = gui_id },
+              },
+              tooltip = { "gui.close-instruction" }
+          }
       }
-    }
   }
 end
 
 local function create_gui(player)
   local gui_id = player.index
   local gui_contents = {
-    {
-      type = "frame",
-      direction = "vertical",
-      name = "vtm_main_frame",
-      style_mods = { minimal_width = constants.gui_window_min_width },
-      ref = { "window" },
-      actions = {
-        on_closed = { type = "generic", action = "window_closed", gui_id = gui_id }
-      },
-      children = {
-        header(gui_id),
-        searchbar.build_gui(gui_id),
-        {
+      {
           type = "frame",
           direction = "vertical",
-          style = "inside_deep_frame_for_tabs",
-          style_mods = { horizontally_stretchable = true },
-          {
-            type = "tabbed-pane",
-            ref = { "tabs", "pane" },
-            style = "vtm_tabbed_pane",
-            -- tab trains
-            trains.build_gui(),
-            -- tab stations
-            stations.build_gui(),
-            -- tab depots
-            depots.build_gui(),
-            -- tab history
-            history.build_gui(),
-            -- tab statistic
-            -- {
-            --   tab = {
-            --     type = "tab",
-            --     caption = { "vtm.tab-statistic" },
-            --     ref = { "tabs", "statistic_tab" },
-            --     name = "statistic",
-            --     actions = {
-            --       on_click = { type = "generic", action = "change_tab", tab = "statistic" },
-            --     },
-            --   },
-            --   content = {
-            --     type = "flow",
-            --     direction = "vertical",
-            --     ref = { "tabs", "statistic_contents" },
-            --   }
-            -- },
-
-          }, -- end tabbed pane
-        },
+          name = "vtm_main_frame",
+          style_mods = { minimal_width = constants.gui_window_min_width },
+          ref = { "window" },
+          actions = {
+              on_closed = { type = "generic", action = "window_closed", gui_id = gui_id }
+          },
+          children = {
+              header(gui_id),
+              searchbar.build_gui(gui_id),
+              {
+                  type = "frame",
+                  direction = "vertical",
+                  style = "inside_deep_frame_for_tabs",
+                  style_mods = { horizontally_stretchable = true },
+                  {
+                      type = "tabbed-pane",
+                      ref = { "tabs", "pane" },
+                      style = "vtm_tabbed_pane",
+                      -- tab trains
+                      trains.build_gui(),
+                      -- tab stations
+                      stations.build_gui(),
+                      -- tab depots
+                      depots.build_gui(),
+                      -- tab history
+                      history.build_gui(),
+                  }, -- end tabbed pane
+              },
+          }
       }
-    }
   }
   local vgui = gui.build(player.gui.screen, gui_contents)
   global.guis[gui_id] = {
-    gui_id = gui_id,
-    gui = vgui,
-    player = player,
-    state = "closed"
+      gui_id = gui_id,
+      gui = vgui,
+      player = player,
+      state = "closed"
   }
   local tab_list = {}
   for key, value in pairs(vgui.tabs.pane.tabs) do
     tab_list[value.tab.name] = key
   end
-  constants.tabs = tab_list
   vgui.titlebar.flow.drag_target = vgui.window
+  searchbar.update(gui_id)
   local current_tab = global.settings[player.index].current_tab or "trains"
-  vgui.tabs.pane.selected_tab_index = constants.tabs[current_tab]
+  vgui.tabs.pane.selected_tab_index = tab_list[current_tab]
   vgui.window.force_auto_center()
   vgui.window.visible = false
-
 end
 
 ---Toggle auto refresh
@@ -180,7 +167,6 @@ local function open_gui(gui_id)
   if not vtm_gui.pinned then
     vtm_gui.player.opened = vtm_gui.gui.window
   end
-
 end
 
 local function close_gui(gui_id)
@@ -192,7 +178,6 @@ local function close_gui(gui_id)
     toggle_auto_refresh(gui_id, "off")
   end
   vtm_gui.player.opened = nil
-
 end
 
 local function destroy_gui(gui_id)
@@ -201,14 +186,14 @@ local function destroy_gui(gui_id)
   global.guis[gui_id] = nil
 end
 
-local function open_or_close_gui(player, center_gui)
+local function open_or_close_gui(player)
   local gui_id = gui_util.get_gui_id(player.index)
   if gui_id ~= nil then
     local vtm_gui = global.guis[gui_id]
     if vtm_gui.state ~= "open" then
       -- refresh tab before open
       script.raise_event(constants.refresh_event, {
-        player_index = player.index,
+          player_index = player.index,
       })
       open_gui(gui_id)
     else
@@ -253,6 +238,7 @@ local function dispatch_refresh(event)
   end
 
   local current_tab = global.settings[event.player_index].current_tab
+  searchbar.update(gui_id)
   if current_tab == "stations" then
     stations.update_tab(gui_id)
   elseif current_tab == "trains" then
@@ -262,9 +248,7 @@ local function dispatch_refresh(event)
   elseif current_tab == "history" then
     history.update_tab(gui_id)
   elseif current_tab == "requests" then
-  elseif current_tab == "statistic" then
   end
-
 end
 
 local function handle_action(action, event)
@@ -290,6 +274,9 @@ local function handle_action(action, event)
   elseif action.action == "open-vtm" then -- mod-gui-button
     local player = game.players[event.player_index]
     open_or_close_gui(player)
+  elseif action.action == "history_switch" then
+    global.settings[event.player_index].history_switch = event.element.switch_state
+    dispatch_refresh(event)
   elseif action.action == "recenter" then
     if event.button == defines.mouse_button_type.middle then
       local gui_data = global.guis[action.gui_id]
@@ -330,10 +317,10 @@ script.on_event(constants.refresh_event, function(event)
 end)
 
 return {
-  open_or_close_gui = open_or_close_gui,
-  open = open_gui,
-  close = close_gui,
-  destroy = destroy_gui,
-  create_gui = create_gui,
-  handle_action = handle_action
+    open_or_close_gui = open_or_close_gui,
+    open = open_gui,
+    close = close_gui,
+    destroy = destroy_gui,
+    create_gui = create_gui,
+    handle_action = handle_action
 }

@@ -20,10 +20,10 @@ function vtm_logic.load_guess_patterns()
     global.settings["patterns"] = {} --[[@as GuessPatterns ]]
   end
   global.settings["patterns"] = {
-      depot = util.split(settings.global["vtm-depot-names"].value, ","),
-      refuel = util.split(settings.global["vtm-refuel-names"].value, ","),
-      requester = util.split(settings.global["vtm-requester-names"].value, ","),
-      provider = util.split(settings.global["vtm-provider-names"].value, ","),
+      depot = util.split(settings.global["vtm-depot-names"].value:lower(), ","),
+      refuel = util.split(settings.global["vtm-refuel-names"].value:lower(), ","),
+      requester = util.split(settings.global["vtm-requester-names"].value:lower(), ","),
+      provider = util.split(settings.global["vtm-provider-names"].value:lower(), ","),
   }
 end
 
@@ -103,12 +103,24 @@ local function get_TCS_prio(backer_name)
   end
   return 9
 end
----comment
+
+local function register_surface(surface)
+  if surface.valid and not global.surfaces[surface.name] then
+    -- excluded sufaces, eg. Editor extensions
+    for key, _ in pairs(constants.hidden_surfaces) do
+      if surface.name:find(key, 1, true) then
+        return
+      end
+    end
+    global.surfaces[surface.name] = surface.name
+  end
+end
+---New Station template and surface registration
 ---@param station LuaEntity
 ---@return table
 local function new_station(station)
+  register_surface(station.surface)
   return {
-      -- TODO: refine me, limit, avg
       force_index = station.force.index,
       station = station,
       created = game.tick,
@@ -153,6 +165,7 @@ function vtm_logic.update_station(station)
     return 0, true
   end
   if global.stations[station.unit_number] then
+    register_surface(station.surface)
     local station_data = global.stations[station.unit_number]
     station_data.force_index = station.force.index
     station_data.station = station
@@ -187,8 +200,7 @@ function vtm_logic.schedule_station_refresh()
 
   global.station_update_table = game.get_train_stops()
   if next(global.station_update_table) then
-    LOG("Startet background station refresh")
-    game.print({"vtm.station-refresh-start"})
+    game.print({ "vtm.station-refresh-start" })
     global.station_k = 1
   end
 end
@@ -313,11 +325,48 @@ local function add_log(train_data, log_event)
 end
 
 local function finish_current_log(train, train_id, train_data)
+  local surface = train.front_stock.surface.name
+  train_data.surface = surface
   table.insert(global.history, 1, train_data)
+  if train_data.surface2 then
+    -- train passed SE elevator
+    local data = tables.deep_copy(train_data)
+    data.surface = data.surface2
+    table.insert(global.history, 1, data)
+  end
   local new_data = new_current_log(train)
   global.trains[train_id] = new_data
   trim_old_history(game.tick - MAX_KEEP)
   -- log(serpent.block(train_data)) --FIXME: remove line
+end
+
+function vtm_logic.migrate_train_SE(event)
+  local old_train_id = event.old_train_id_1
+  local train = event.train
+  local new_train_id = train.id
+  local old_train_data = global.trains[event.old_train_id_1]
+  if old_train_data then
+    old_train_data.surface2 = game.surfaces[event.old_surface_index].name
+    local log = {
+        tick = game.tick,
+        se_elevator = true,
+        position = event.train.front_stock.position,
+        old_tick = old_train_data.last_change,
+    }
+    local new_train_data = old_train_data
+    new_train_data.train = train
+    new_train_data.surface = train.front_stock.surface.name
+    add_log(new_train_data, log)
+
+    -- for train cargo in transit
+    if old_train_data.path_end_stop ~= nil then
+      global.stations[old_train_data.path_end_stop].incoming_trains[old_train_id] = nil
+      global.stations[old_train_data.path_end_stop].incoming_trains[new_train_id] = true
+    end
+    -- finally save new train and delete old data
+    global.trains[new_train_id] = new_train_data
+    global.trains[old_train_id] = nil
+  end
 end
 
 local function read_contents(train)
@@ -326,7 +375,6 @@ local function read_contents(train)
       fluids = train.get_fluid_contents()
   }
 end
-
 local function on_train_changed_state(event)
   local train = event.train
   local train_id = train.id
@@ -429,6 +477,7 @@ local function on_trainstop_renamed(event)
     if not event.player_index then
       event.player_index = event.entity.last_user.index
     end
+    -- LOG(serpent.block(event))
     script.raise_event(constants.refresh_event, {
         event = event,
         player_index = event.player_index

@@ -13,6 +13,40 @@ function util.get_gui_id(player_index)
   return nil
 end
 
+function util.read_inbound_trains(station_data)
+  local station = station_data.station
+  local contents = {}
+  local inv_trains={}
+  if station.valid and station_data.incoming_trains then
+    local trains = station_data.incoming_trains
+    for train_id, _ in pairs(trains) do
+      local train_data = global.trains[train_id]
+      if train_data and train_data.train.valid then
+        if train_data.path_end_stop == station.unit_number then
+          for type, item_data in pairs(train_data.contents) do
+            local row = {}
+            row.type = type == "items" and "item" or "fluid"
+            for name, count in pairs(item_data) do
+              row.name = name
+              row.count = count
+              row.color =  "blue"
+              table.insert(contents, row)
+            end
+          end
+        end
+      else
+        table.insert(inv_trains,train_id)
+      end
+    end
+    -- delete invalid traindata
+    for _, train_id in pairs(inv_trains) do
+      global.trains[train_id]=nil
+      station_data.incoming_trains[train_id]=nil
+    end
+  end
+  return contents
+end
+
 --- Creates a non-scrollable slot table.
 --- @param widths table
 --- @param color? string
