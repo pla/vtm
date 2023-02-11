@@ -65,6 +65,13 @@ data:extend({
     order = "h",
   },
   {
+    type = "bool-setting",
+    name = "vtm-force-surface-visible",
+    setting_type = "runtime-global",
+    default_value = false,
+    order = "h",
+  },
+  {
     type = "int-setting",
     name = "vtm-limit-auto-refresh",
     setting_type = "runtime-global",

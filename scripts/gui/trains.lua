@@ -30,19 +30,18 @@ local function select_station_from_schedule(train)
     local station = schedule.records[schedule.current].station
     if station == nil and schedule.records[schedule.current].rail ~= nil then --cybersyn method
       --if the rail connected to a station?
-      local front = schedule.records[schedule.current].rail.get_rail_segment_entity(defines.rail_direction.front,false)
-      local back = schedule.records[schedule.current].rail.get_rail_segment_entity(defines.rail_direction.back,false)
-      if front and front.type=="train-stop" then
+      local front = schedule.records[schedule.current].rail.get_rail_segment_entity(defines.rail_direction.front, false)
+      local back = schedule.records[schedule.current].rail.get_rail_segment_entity(defines.rail_direction.back, false)
+      if front and front.type == "train-stop" then
         station = front.backer_name
       end
-      if back and back.type=="train-stop" then
+      if back and back.type == "train-stop" then
         station = back.backer_name
       end
     end
     if station == nil and schedule.records[schedule.current].temporary then
       local position = "Position (" .. train.front_stock.position.x .. ", " .. train.front_stock.position.y .. ")"
       return position
-
     end
     if station == nil then
       local position = "Position (" .. train.front_stock.position.x .. ", " .. train.front_stock.position.y .. ")"
@@ -81,7 +80,6 @@ local function train_status_message(train_data)
         msg = { desc[train.state], station, distance }
       end
     end
-
   elseif state == def_state.wait_station then
     if train.station ~= nil then
       msg = { desc[train.state], train.station.backer_name }
@@ -116,8 +114,6 @@ local function train_status_message(train_data)
     msg = { "gui-train-state.no-path-to", select_station_from_schedule(train) }
   elseif state == def_state.no_schedule then
     msg = { "gui-train-state.no-schedule" }
-
-
   else
     -- default message for unhandled states
     msg = { "", inv_states[train.state], " : ", train.state }
@@ -129,22 +125,35 @@ end
 
 function trains.update_tab(gui_id)
   local vtm_gui = global.guis[gui_id]
+  local surface = global.settings[global.guis[gui_id].player.index].surface or "All"
   local train_datas = {}
+  local inv_trains = {}
   local table_index = 0
   local max_lines = settings.global["vtm-limit-auto-refresh"].value
   local filters = {
-    -- item = vtm_gui.gui.filter.item.elem_value.name,
-    -- fluid = vtm_gui.gui.filter.fluid.elem_value,
-    search_field = vtm_gui.gui.filter.search_field.text:lower(),
+      -- item = vtm_gui.gui.filter.item.elem_value.name,
+      -- fluid = vtm_gui.gui.filter.fluid.elem_value,
+      search_field = vtm_gui.gui.filter.search_field.text:lower(),
   }
 
-  for _, train_data in pairs(global.trains) do
-    if train_data.force_index == vtm_gui.player.force.index then
+  for train_id, train_data in pairs(global.trains) do
+    if not train_data.train.valid then
+      table.insert(inv_trains,train_id)
+    end
+    if train_data.force_index == vtm_gui.player.force.index and
+        train_data.train.valid and
+        (surface == "All" or surface == train_data.train.front_stock.surface.name)
+    then
       if match.filter_trains(train_data, filters) then
         table.insert(train_datas, train_data)
       end
     end
   end
+  -- delete invalid traindata
+  for _, train_id in pairs(inv_trains) do
+    global.trains[train_id] = nil
+  end
+
   table.sort(train_datas, function(a, b) return a.last_change > b.last_change end)
 
   local scroll_pane = vtm_gui.gui.trains.scroll_pane
@@ -152,7 +161,6 @@ function trains.update_tab(gui_id)
   local width = constants.gui.trains
 
   for _, train_data in pairs(train_datas) do
-
     if train_data.train.valid then
       if table_index >= max_lines and
           max_lines > 0 and
@@ -169,76 +177,69 @@ function trains.update_tab(gui_id)
       local row = children[table_index]
       if not row then
         row = gui.add(scroll_pane, {
-          type = "frame",
-          direction = "horizontal",
-          style = "vtm_table_row_frame",
-          {
-            type = "flow",
-            style_mods = { horizontal_align = "center", width = width.train_id },
-            {
-              type = "sprite-button",
-              style = "transparent_slot",
-              sprite = "vtm_train",
-              tooltip = { "vtm.train-removed" },
-              {
-                type = "label",
-                style = "vtm_trainid_label",
-              },
-            }
-          },
-          {
-            type = "label",
-            style = "vtm_semibold_label_with_padding",
-            style_mods = { width = width.status },
-          },
-          {
-            type = "label",
-            style = "vtm_semibold_label_with_padding",
-            style_mods = { width = width.since, horizontal_align = "center" },
-          },
-          {
-            type = "label",
-            style = "vtm_semibold_label_with_padding",
-            style_mods = { width = width.composition },
-          },
-          gui_util.slot_table(width, "light", "cargo"),
-        })
+                type = "frame",
+                direction = "horizontal",
+                style = "vtm_table_row_frame",
+                {
+                    type = "flow",
+                    style_mods = { horizontal_align = "center", width = width.train_id },
+                    {
+                        type = "sprite-button",
+                        style = "transparent_slot",
+                        sprite = "vtm_train",
+                        tooltip = { "vtm.train-removed" },
+                        {
+                            type = "label",
+                            style = "vtm_trainid_label",
+                        },
+                    }
+                },
+                {
+                    type = "label",
+                    style = "vtm_semibold_label_with_padding",
+                    style_mods = { width = width.status },
+                },
+                {
+                    type = "label",
+                    style = "vtm_semibold_label_with_padding",
+                    style_mods = { width = width.since, horizontal_align = "center" },
+                },
+                {
+                    type = "label",
+                    style = "vtm_semibold_label_with_padding",
+                    style_mods = { width = width.composition },
+                },
+                gui_util.slot_table(width, "light", "cargo"),
+            })
       end
-      -- insert data
-      -- force_index = train.front_stock.force.index,
-      -- train = train,
-      -- started_at = game.tick,
-      -- last_change = game.tick,
-      -- contents = {},
-      -- events = {}
       local status_string = train_status_message(train_data)
-      local since = format.time(game.tick - train_data.last_change--[[@as uint]] )
+      local since = format.time(game.tick - train_data.last_change --[[@as uint]])
       gui.update(row, {
-        { { -- train_id button
-          elem_mods = {
-            sprite = train_data.sprite,
-            tooltip = train_data.prototype.localised_name or "",
+          { { -- train_id button
+              elem_mods = {
+                  sprite = train_data.sprite,
+                  tooltip = train_data.prototype.localised_name or "",
+              },
+              {
+                  elem_mods = {
+                      caption = train_data.train.id
+                  },
+                  actions = {
+                      on_click = { type = "trains", action = "open-train", train_id = train_data.train.id },
+                  },
+                  tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", train_data.train.id },
+              },
+          } },
+          { --status
+              elem_mods = { caption = status_string,
+                  tooltip = { "", inv_states[train_data.train.state], " : ", train_data.train.state } }
           },
           {
-            elem_mods = {
-              caption = train_data.train.id
-            },
-            actions = {
-              on_click = { type = "trains", action = "open-train", train_id = train_data.train.id },
-            },
-            tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", train_data.train.id },
+              elem_mods = { caption = since }
           },
-        } },
-        { --status
-          elem_mods = { caption = status_string,
-            tooltip = { "", inv_states[train_data.train.state], " : ", train_data.train.state } }
-        },
-        {
-          elem_mods = { caption = since }
-        },
-        { --composition
-          elem_mods = { caption = train_data.composition }
-        }
+          { --composition
+              elem_mods = { caption = train_data.composition }
+          }
       })
       gui_util.slot_table_update_train(row.cargo_table, train_data.contents, vtm_gui.gui_id)
     end
@@ -251,95 +252,92 @@ function trains.update_tab(gui_id)
   for child_index = table_index + 1, #children do
     children[child_index].destroy()
   end
-
 end
 
-function trains.build_gui()
+function trains.build_gui(gui_id)
   local width = constants.gui.trains
   return {
-    tab = {
-      type = "tab",
-      caption = { "gui-trains.trains-tab" },
-      ref = { "tabs", "trains_tab" },
-      name = "trains",
-      style_mods = { badge_horizontal_spacing = 6 },
-      actions = {
-        on_click = { type = "generic", action = "change_tab", tab = "trains" },
+      tab = {
+          type = "tab",
+          caption = { "gui-trains.trains-tab" },
+          ref = { "tabs", "trains_tab" },
+          name = "trains",
+          style_mods = { badge_horizontal_spacing = 6 },
+          actions = {
+              on_click = { type = "generic", action = "change_tab", tab = "trains" },
+          },
       },
-    },
-    content = {
-      type = "frame",
-      style = "vtm_main_content_frame",
-      direction = "vertical",
-      ref = { "trains", "content_frame" },
-      -- table header
-      {
-        type = "frame",
-        style = "subheader_frame",
-        direction = "horizontal",
-        style_mods = { horizontally_stretchable = true },
-        children = {
+      content = {
+          type = "frame",
+          style = "vtm_main_content_frame",
+          direction = "vertical",
+          ref = { "trains", "content_frame" },
+          -- table header
           {
-            type = "label",
-            style = "subheader_caption_label",
-            caption = { "vtm.table-header-train-id" },
-            style_mods = { width = width.train_id },
+              type = "frame",
+              style = "subheader_frame",
+              direction = "horizontal",
+              style_mods = { horizontally_stretchable = true },
+              children = {
+                  {
+                      type = "label",
+                      style = "subheader_caption_label",
+                      caption = { "vtm.table-header-train-id" },
+                      style_mods = { width = width.train_id },
+                  },
+                  {
+                      type = "label",
+                      style = "subheader_caption_label",
+                      caption = { "vtm.table-header-status" },
+                      style_mods = { width = width.status },
+                  },
+                  {
+                      type = "label",
+                      style = "subheader_caption_label",
+                      caption = { "vtm.table-header-since" },
+                      style_mods = { width = width.since },
+                  },
+                  {
+                      type = "label",
+                      style = "subheader_caption_label",
+                      caption = { "vtm.table-header-composition" },
+                      style_mods = { width = width.composition },
+                  },
+                  {
+                      type = "label",
+                      style = "subheader_caption_label",
+                      caption = { "vtm.table-header-cargo" },
+                      style_mods = { width = width.cargo },
+                  },
+              }
           },
           {
-            type = "label",
-            style = "subheader_caption_label",
-            caption = { "vtm.table-header-status" },
-            style_mods = { width = width.status },
+              type = "scroll-pane",
+              style = "vtm_table_scroll_pane",
+              ref = { "trains", "scroll_pane" },
+              vertical_scroll_policy = "always",
+              horizontal_scroll_policy = "never",
           },
           {
-            type = "label",
-            style = "subheader_caption_label",
-            caption = { "vtm.table-header-since" },
-            style_mods = { width = width.since },
+              type = "frame",
+              direction = "horizontal",
+              style = "negative_subheader_frame",
+              ref = { "trains", "warning" },
+              visible = true,
+              {
+                  type = "flow",
+                  style = "centering_horizontal_flow",
+                  style_mods = { horizontally_stretchable = true },
+                  {
+                      type = "label",
+                      style = "bold_label",
+                      caption = { "", "[img=warning-white] ", { "gui-trains.no-trains" } },
+                      ref = { "trains", "warning_label" },
+                  },
+              },
           },
-          {
-            type = "label",
-            style = "subheader_caption_label",
-            caption = { "vtm.table-header-composition" },
-            style_mods = { width = width.composition },
-          },
-          {
-            type = "label",
-            style = "subheader_caption_label",
-            caption = { "vtm.table-header-cargo" },
-            style_mods = { width = width.cargo },
-          },
-        }
-      },
-      {
-        type = "scroll-pane",
-        style = "vtm_table_scroll_pane",
-        ref = { "trains", "scroll_pane" },
-        vertical_scroll_policy = "always",
-        horizontal_scroll_policy = "never",
-        -- style_mods = { vertically_stretchable = true},
-      },
-      {
-        type = "frame",
-        direction = "horizontal",
-        style = "negative_subheader_frame",
-        ref = { "trains", "warning" },
-        visible = true,
-        {
-          type = "flow",
-          style = "centering_horizontal_flow",
-          style_mods = { horizontally_stretchable = true },
-          {
-            type = "label",
-            style = "bold_label",
-            caption = { "", "[img=warning-white] ", { "gui-trains.no-trains" } },
-            ref = { "trains", "warning_label" },
-          },
-        },
-      },
-    }
+      }
   }
-
 end
 
 function trains.handle_action(action, event)
