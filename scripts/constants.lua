@@ -1,15 +1,22 @@
-local constants = {
 
-  gui_content_frame_height = 700,
-  gui_window_min_width = 990,
-  MAX_LIMIT = 4294967295,
-  refresh_event = nil,
+local constants = {
+  gui_content_frame_height       = 700,
+  gui_window_min_width           = 990,
+  MAX_LIMIT                      = 4294967295,
+  refresh_event                  = nil,
+  group_exist_suffix             = "[img=utility/check_mark_green]",
+  button_style_red               = "tool_button_red",
+  button_style_green             = "tool_button_green",
+  list_box_button_style          = "vtm_list_box_item",
+  list_box_button_style_selected = "vtm_list_box_item_selected",
+  blue = {0, 0, 0.5, 0.5},
+
 }
 
 constants.hidden_surfaces = {
-  ["EE_TESTSURFACE_"]=true,-- Editor Extensions
-  ["BPL_TheLab"]=true,-- Blueprint Designer Lab
-  ["bpsb-lab"]=true,-- Blueprint Sandboxes
+  ["EE_TESTSURFACE_"] = true, -- Editor Extensions
+  ["BPL_TheLab"] = true, -- Blueprint Designer Lab
+  ["bpsb-lab"] = true, -- Blueprint Sandboxes
 }
 
 constants.gui = {
@@ -27,12 +34,11 @@ constants.gui = {
     name = 283,
     status = 53,
     since = 50,
-    avg = 50,
     type = 50,
     stock = 36 * 5,
     stock_columns = 5,
-    in_transit = 36 * 5,
-    in_transit_columns = 5,
+    in_transit = 36 * 4,
+    in_transit_columns = 4,
     appendix = 17,
   },
   depots = {
@@ -49,7 +55,7 @@ constants.gui = {
   history = {
     train_id = 60,
     route = 454,
-    switch=150,
+    switch = 150,
     depot = 160,
     runtime = 68,
     finished = 68,
@@ -64,7 +70,26 @@ constants.gui = {
     type = 230,
     contents = 36 * 6,
   },
+  groups = {
+    window_min_width = 150,
+    top_rows = 3,
+    bottom_rows = 10,
+    checkbox = 30,
+    type = 10,
 
+  },
+  groups_tab = {
+    group_list = 300,
+    detail_list = 700,
+    content_height = 308,
+    icon = 28,
+    name = 280,
+    map = 260,
+    detail_frame = 270,
+    member_name = 200,
+    member_stock = 36 * 2,
+    member_stock_columns = 2,
+  },
 }
 
 constants.interesting_states = {
@@ -94,17 +119,17 @@ constants.state_description = {
 }
 
 constants.state_description2 = {
-  { defines.train_state.on_the_path, { "vtm.train_state-on_the_path" } },
-  { defines.train_state.path_lost, { "vtm.train_state-path_lost" } },
-  { defines.train_state.no_schedule, { "vtm.train_state-no_schedule" } },
-  { defines.train_state.no_path, { "vtm.train_state-no_path" } },
-  { defines.train_state.arrive_signal, { "vtm.train_state-arrive_signal" } },
-  { defines.train_state.wait_signal, { "vtm.train_state-wait_signal" } },
-  { defines.train_state.arrive_station, { "vtm.train_state-arrive_station" } },
-  { defines.train_state.wait_station, { "vtm.train_state-wait_station" } },
+  { defines.train_state.on_the_path,         { "vtm.train_state-on_the_path" } },
+  { defines.train_state.path_lost,           { "vtm.train_state-path_lost" } },
+  { defines.train_state.no_schedule,         { "vtm.train_state-no_schedule" } },
+  { defines.train_state.no_path,             { "vtm.train_state-no_path" } },
+  { defines.train_state.arrive_signal,       { "vtm.train_state-arrive_signal" } },
+  { defines.train_state.wait_signal,         { "vtm.train_state-wait_signal" } },
+  { defines.train_state.arrive_station,      { "vtm.train_state-arrive_station" } },
+  { defines.train_state.wait_station,        { "vtm.train_state-wait_station" } },
   { defines.train_state.manual_control_stop, { "vtm.train_state-manual_control_stop" } },
-  { defines.train_state.manual_control, { "vtm.train_state-manual_control" } },
-  { defines.train_state.destination_full, { "vtm.train_state-destination_full" } },
+  { defines.train_state.manual_control,      { "vtm.train_state-manual_control" } },
+  { defines.train_state.destination_full,    { "vtm.train_state-destination_full" } },
 }
 
 return constants

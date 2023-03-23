@@ -10,20 +10,15 @@ local last_sweep = 0
 
 local vtm_logic = {}
 
----@class GuessPatterns
----@field depot table
----@field refuel table
----@field requester table
----@field provider table
 function vtm_logic.load_guess_patterns()
   if not global.settings["patterns"] then
     global.settings["patterns"] = {} --[[@as GuessPatterns ]]
   end
   global.settings["patterns"] = {
-      depot = util.split(settings.global["vtm-depot-names"].value:lower(), ","),
-      refuel = util.split(settings.global["vtm-refuel-names"].value:lower(), ","),
-      requester = util.split(settings.global["vtm-requester-names"].value:lower(), ","),
-      provider = util.split(settings.global["vtm-provider-names"].value:lower(), ","),
+    depot = util.split(tostring(settings.global["vtm-depot-names"].value):lower(), ","),
+    refuel = util.split(tostring(settings.global["vtm-refuel-names"].value):lower(), ","),
+    requester = util.split(tostring(settings.global["vtm-requester-names"].value):lower(), ","),
+    provider = util.split(tostring(settings.global["vtm-provider-names"].value):lower(), ","),
   }
 end
 
@@ -86,7 +81,7 @@ end
 
 ---extra sort criteria to sort depots tab, TCS Depot always first
 ---@param backer_name string
----@return integer
+---@return uint
 local function get_TCS_prio(backer_name)
   if game.active_mods["Train_Control_Signals"] then
     local tcs_refuel = "[virtual-signal=refuel-signal]"
@@ -115,25 +110,27 @@ local function register_surface(surface)
     global.surfaces[surface.name] = surface.name
   end
 end
+
 ---New Station template and surface registration
 ---@param station LuaEntity
----@return table
+---@return table StationData
 local function new_station(station)
   register_surface(station.surface)
   return {
-      force_index = station.force.index,
-      station = station,
-      created = game.tick,
-      last_changed = game.tick,
-      opened = "",
-      closed = "",
-      avg = 0, --TODO : calculate on finish log
-      train_front_rail = nil,
-      type = guess_station_type(station), -- one of P R D F H or ND
-      sort_prio = get_TCS_prio(station.backer_name),
-      incoming_trains = {},
-      stock = {},
-      in_transit = {},
+    force_index = station.force_index,
+    station = station,
+    created = game.tick,
+    last_changed = game.tick,
+    opened = 0,
+    closed = 0,
+    sprite = "item/" .. gui_util.signal_for_entity(station).name,
+    train_front_rail = nil,
+    type = guess_station_type(station), -- one of P R D F H or ND
+    sort_prio = get_TCS_prio(station.backer_name),
+    incoming_trains = {},
+    stock = {},
+    in_transit = {},
+    registered_stock = {},
   }
 end
 
@@ -159,6 +156,105 @@ function vtm_logic.update_station_limit(unit_number, station)
   end
 end
 
+---comment
+---@param station_data StationData
+---@param type "item"|"fluid"|"virtual" signalID type
+---@param name string signalID name
+local function register_item(station_data, type, name)
+  local found = false
+  -- check item is valid
+  if not game.is_valid_sprite_path(type .. "/" .. name) then return end
+  -- register item
+  for _, row in pairs(station_data.registered_stock) do
+    if row.type == type and row.name == name then
+      found = true
+      break
+    end
+  end
+  if not found then
+    table.insert(station_data.registered_stock, { type = type, name = name, count = 0 })
+  end
+end
+
+---Read items from Station circuit network
+---@param station_data StationData
+---@param return_virtual boolean?
+---@return SlotTableDef
+---@return boolean --Is the limit set by circuit (true)or manual(false)
+function vtm_logic.read_station_network(station_data, return_virtual)
+  local station = station_data.station
+  ---@type SlotTableDef
+  local contents = {}
+  local colors = tables.invert(defines.wire_type)
+  local set_trains_limit = false
+  local cb = station.get_or_create_control_behavior() --[[@as LuaTrainStopControlBehavior]]
+  if station.valid then
+    set_trains_limit = cb.set_trains_limit
+    -- TODO use get_merged_signals
+    for _, wire in pairs({ defines.wire_type.red, defines.wire_type.green }) do
+      local cn = station.get_circuit_network(wire)
+      -- cn - signals (type,name),wire_type
+      if cn ~= nil and cn.signals ~= nil then
+        for _, signal_data in pairs(cn.signals) do
+          if signal_data.signal.type ~= "virtual" or return_virtual == true then
+            register_item(station_data, signal_data.signal.type, signal_data.signal.name)
+            table.insert(contents, {
+              type = signal_data.signal.type,
+              name = signal_data.signal.name,
+              count = signal_data.count,
+              color = colors[wire]
+            })
+          end
+        end
+      end
+    end
+  end
+  return contents, set_trains_limit
+end
+
+---@param group_id uint
+---@param read_stock boolean?
+---@return GroupData|nil
+function vtm_logic.read_group(group_id, read_stock)
+  local p_station = global.stations[group_id].station
+  local group_data = global.groups[p_station.force_index][p_station.unit_number] --[[@as GroupData]]
+  if not group_data then return end
+
+  if group_data then
+    for _, station_data in pairs(group_data.members) do
+      if station_data and station_data.station and station_data.station.valid then
+        if station_data.stock_tick <= game.tick - 60 and read_stock then
+          ---@type SlotTableDef
+          local items = vtm_logic.read_station_network(station_data)
+          station_data.stock_tick = game.tick
+          station_data.stock = items
+          
+        end
+      end
+    end
+  end
+  return group_data
+end
+
+function vtm_logic.read_group_id(station)
+  if station.valid then
+    local group_data = global.groups[station.force_index][station.unit_number]
+    if group_data then
+      return group_data.group_id
+    end
+  end
+end
+
+function vtm_logic.get_or_create_station_data(station)
+  ---@type StationData
+  local station_data = global.stations[station.unit_number]
+  if not station_data then
+    station_data = new_station(station)
+    global.stations[station.unit_number] = station_data
+  end
+  return station_data
+end
+
 function vtm_logic.update_station(station)
   -- special function for for_n_of
   if not station.valid then
@@ -172,8 +268,16 @@ function vtm_logic.update_station(station)
     station_data.last_changed = game.tick
     station_data.type = guess_station_type(station) or "ND" -- one of P R D F or ND
     station_data.sort_prio = get_TCS_prio(station.backer_name)
+    station_data.stock = {}
+    station_data.in_transit = {}
+    if station_data.registered_stock == nil then
+      station_data.registered_stock = {}
+    end
     if station_data.incoming_trains == nil then
       station_data.incoming_trains = {}
+    end
+    if station_data.sprite == nil then
+      station_data.sprite = "item/" .. gui_util.signal_for_entity(station_data.station).name
     end
   else
     global.stations[station.unit_number] = new_station(station)
@@ -273,19 +377,20 @@ end
 
 ---comment
 ---@param train LuaTrain
----@return table
+---@return table|nil
 local function new_current_log(train)
+  local loco = flib_train.get_main_locomotive(train)
+  if not loco then return end
   return {
-      -- Required because front_stock might not be valid later
-      force_index = train.front_stock.force.index,
-      train = train,
-      started_at = game.tick,
-      last_change = game.tick,
-      composition = flib_train.get_composition_string(train),
-      prototype = train.front_stock.prototype,
-      sprite = "item/" .. gui_util.signal_for_entity(train.front_stock).name,
-      contents = {},
-      events = {}
+    force_index = loco.force_index,
+    train = train,
+    started_at = game.tick,
+    last_change = game.tick,
+    composition = flib_train.get_composition_string(train),
+    prototype = loco.prototype,
+    sprite = "item/" .. gui_util.signal_for_entity(loco).name,
+    contents = {},
+    events = {}
   }
 end
 
@@ -315,8 +420,8 @@ end
 
 function vtm_logic.get_logs(force)
   return tables.filter(global.trains, function(train_data)
-        return train_data.force_index == force.index
-      end)
+    return train_data.force_index == force.index
+  end)
 end
 
 local function add_log(train_data, log_event)
@@ -324,8 +429,12 @@ local function add_log(train_data, log_event)
   table.insert(train_data.events, log_event)
 end
 
+---Finish the current log for the train, put it in history and create a new log
+---@param train LuaTrain
+---@param train_id uint
+---@param train_data TrainData
 local function finish_current_log(train, train_id, train_data)
-  local surface = train.front_stock.surface.name
+  local surface = train.carriages[1].surface.name
   train_data.surface = surface
   table.insert(global.history, 1, train_data)
   if train_data.surface2 then
@@ -348,14 +457,14 @@ function vtm_logic.migrate_train_SE(event)
   if old_train_data then
     old_train_data.surface2 = game.surfaces[event.old_surface_index].name
     local log = {
-        tick = game.tick,
-        se_elevator = true,
-        position = event.train.front_stock.position,
-        old_tick = old_train_data.last_change,
+      tick = game.tick,
+      se_elevator = true,
+      position = event.train.carriages[1].position,
+      old_tick = old_train_data.last_change,
     }
     local new_train_data = old_train_data
     new_train_data.train = train
-    new_train_data.surface = train.front_stock.surface.name
+    new_train_data.surface = train.carriages[1].surface.name
     add_log(new_train_data, log)
 
     -- for train cargo in transit
@@ -371,15 +480,15 @@ end
 
 local function read_contents(train)
   return {
-      items = train.get_contents(),
-      fluids = train.get_fluid_contents()
+    items = train.get_contents(),
+    fluids = train.get_fluid_contents()
   }
 end
 local function on_train_changed_state(event)
   local train = event.train
   local train_id = train.id
   local train_data = get_train_data(train, train_id)
-
+  if not train_data then return end -- some SE crap, just ignore it
   local new_state = train.state
   local interesting_event = constants.interesting_states[event.old_state] or constants.interesting_states[new_state]
   if not interesting_event then
@@ -394,9 +503,10 @@ local function on_train_changed_state(event)
   end
 
   local log = {
-      tick = game.tick,
-      old_state = event.old_state,
-      state = train.state
+    tick = game.tick,
+    old_state = event.old_state,
+    state = train.state,
+    position = train.carriages[1].position
   }
 
   if train_data.last_station and event.old_state ~= defines.train_state.wait_station then
@@ -404,22 +514,18 @@ local function on_train_changed_state(event)
   end
 
   if event.old_state == defines.train_state.wait_station then
-    log.position = train.front_stock.position
-
     local diff_items = diff(train_data.contents.items, train.get_contents())
     local diff_fluids = diff(train_data.contents.fluids, train.get_fluid_contents())
     train_data.contents = read_contents(train)
     log.diff = {
-        items = diff_items,
-        fluids = diff_fluids
+      items = diff_items,
+      fluids = diff_fluids
     }
     log.station = train_data.last_station
     train_data.last_station = nil
   end
 
   if new_state == defines.train_state.wait_station then
-    -- always log position
-    log.position = train.front_stock.position
     if train.station then
       train_data.contents = read_contents(train)
       train_data.last_station = train.station
@@ -456,9 +562,9 @@ local function on_trainstop_build(event)
     -- add_new_station(event.entity)
     -- create ne stop only if it has proper type
     local station_data = new_station(event.created_entity)
-    if station_data.type ~= "ND" then
-      global.stations[event.created_entity.unit_number] = station_data
-    end
+    -- if station_data.type ~= "ND" then
+    global.stations[event.created_entity.unit_number] = station_data
+    -- end
   end
 end
 
@@ -477,11 +583,11 @@ local function on_trainstop_renamed(event)
     if not event.player_index then
       event.player_index = event.entity.last_user.index
     end
-    -- LOG(serpent.block(event))
-    script.raise_event(constants.refresh_event, {
-        event = event,
-        player_index = event.player_index
-    })
+    -- log(serpent.block(event))
+    -- script.raise_event(constants.refresh_event, {
+    --   event = event,
+    --   player_index = event.player_index
+    -- })
   end
 end
 
@@ -493,9 +599,9 @@ local function on_train_schedule_changed(event)
   end
   local train_data = get_train_data(train, train_id)
   add_log(train_data, {
-      tick = game.tick,
-      schedule = train.schedule,
-      changed_by = event.player_index
+    tick = game.tick,
+    schedule = train.schedule,
+    changed_by = event.player_index
   })
   -- TODO trigger station refresh from train path_end_stop :/
   -- worth nothing if there is nothing ready to deliver
@@ -513,14 +619,14 @@ end)
 -- end)
 
 script.on_event(defines.events.on_built_entity, function(event)
-  on_trainstop_build(event)
-end,
-    { { filter = "type", type = "train-stop" } })
+    on_trainstop_build(event)
+  end,
+  { { filter = "type", type = "train-stop" } })
 
 script.on_event(defines.events.on_robot_built_entity, function(event)
-  on_trainstop_build(event)
-end,
-    { { filter = "type", type = "train-stop" } })
+    on_trainstop_build(event)
+  end,
+  { { filter = "type", type = "train-stop" } })
 
 script.on_event(defines.events.on_entity_renamed, function(event)
   if event.entity.type == "train-stop" then

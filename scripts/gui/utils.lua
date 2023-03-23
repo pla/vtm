@@ -1,5 +1,6 @@
 -- gui/util.lua
 local gui = require("__flib__.gui")
+local flib_box = require("__flib__.bounding-box")
 
 local util = {}
 
@@ -13,10 +14,33 @@ function util.get_gui_id(player_index)
   return nil
 end
 
+function util.default_list_box(name, action, item_data, items_num, refs_table, style)
+  if item_data == nil then
+    --default list
+    item_data = {}
+  end
+  local content = {
+    type = "list-box",
+    style = style,
+    ref = refs_table,
+    name = name,
+    style_mods = {
+      minimal_height           = items_num * 28,
+      maximal_height           = items_num * 28,
+      horizontally_stretchable = true
+    },
+    items = item_data,
+    actions = {
+      on_selection_state_changed = { type = action.type, action = action.action, gui_id = action.gui_id }
+    },
+  }
+  return content
+end
+
 function util.read_inbound_trains(station_data)
   local station = station_data.station
   local contents = {}
-  local inv_trains={}
+  local inv_trains = {}
   if station.valid and station_data.incoming_trains then
     local trains = station_data.incoming_trains
     for train_id, _ in pairs(trains) do
@@ -29,33 +53,52 @@ function util.read_inbound_trains(station_data)
             for name, count in pairs(item_data) do
               row.name = name
               row.count = count
-              row.color =  "blue"
+              row.color = "blue"
               table.insert(contents, row)
             end
           end
         end
       else
-        table.insert(inv_trains,train_id)
+        table.insert(inv_trains, train_id)
       end
     end
     -- delete invalid traindata
     for _, train_id in pairs(inv_trains) do
-      global.trains[train_id]=nil
-      station_data.incoming_trains[train_id]=nil
+      global.trains[train_id] = nil
+      station_data.incoming_trains[train_id] = nil
     end
   end
   return contents
 end
 
+---Slave table will be added to master table
+---@param master SlotTableDef[]
+---@param slave SlotTableDef[]
+function util.merge_slot_tables(master, slave)
+  if table_size(slave) == 0 then return end
+  for _, add in pairs(slave) do
+    local found = false
+    for _, row in pairs(master) do
+      if row.type == add.type and row.name == add.name then
+        row.count = row.count + add.count
+        found = true
+      end
+    end
+    if not found then
+      table.insert(master, add)
+    end
+  end
+end
+
 --- Creates a non-scrollable slot table.
 --- @param widths table
---- @param color? string
+--- @param style? string
 --- @param name string
-function util.slot_table(widths, color, name)
+function util.slot_table(widths, style, name)
   return {
     type = "table",
     name = name .. "_table",
-    style = "slot_table",
+    style = style and game.styles[style] or "slot_table",
     style_mods = {
       width = widths[name],
       minimal_height = 36,
@@ -68,28 +111,19 @@ function util.slot_table(widths, color, name)
   }
 end
 
---- A dataset to put into a slot table.
----
---- @class SlotTableDef
---- @field type string
---- @field name string
---- @field count number
---- @field color string
-
 --- Updates a slot table based on the passed criteria.
 --- @param icon_table LuaGuiElement
 --- @param sources SlotTableDef[]
---- @param gui_id string
-function util.slot_table_update(icon_table, sources, gui_id)
+--- @param gui_id uint
+--- @param max_lines uint?
+function util.slot_table_update(icon_table, sources, gui_id, max_lines)
   local children = icon_table.children
   local i = 0
   for _, source_data in pairs(sources) do
     i = i + 1
     local button = children[i]
     if not button then
-
       button = gui.add(icon_table, { type = "sprite-button" })
-
     end
     util.update_sprite_button(
       button,
@@ -100,6 +134,7 @@ function util.slot_table_update(icon_table, sources, gui_id)
       gui_id
     )
     -- button.enabled = false
+    if max_lines and i == (icon_table.column_count * max_lines) then break end
   end
 
   for i = i + 1, #children do
@@ -153,7 +188,7 @@ function util.update_sprite_button(button, type, name, amount, color, gui_id)
     prototype = game.virtual_signal_prototypes[name]
   end
   local sprite, tooltip, style
-  if prototype then
+  if prototype and game.is_valid_sprite_path(type .. "/" .. name) then
     sprite = type .. "/" .. name
     if color ~= nil and (color == "red" or color == "green") then
       local color_item = game.item_prototypes[color .. "-wire"]
@@ -178,13 +213,11 @@ function util.update_sprite_button(button, type, name, amount, color, gui_id)
       on_click = { type = "searchbar", action = "filter", filter = type, value = name, gui_id = gui_id }
     },
   })
-
 end
 
 function util.slot_table_update_train(icon_table, sources, gui_id)
   local new_table = {}
   for k, y in pairs(sources) do
-
     local type = k == "items" and "item" or "fluid"
     for name, count in pairs(y) do
       local row = {}
@@ -197,17 +230,45 @@ function util.slot_table_update_train(icon_table, sources, gui_id)
   end
 
   util.slot_table_update(icon_table, new_table, gui_id)
+end
 
+---Return Zoom level for minimap
+---@param area BoundingBox
+---@return double
+function util.get_zoom_from_area(area)
+  local zoom = 1.0
+  if area then
+    local width = flib_box.width(area)
+    local height = flib_box.height(area)
+    local max = math.max(width, height)
+    --[[
+      zoom=1 - 130 *2 = 260
+      zoom1.5 - 86 *2 = 172
+      zoom=2 - 65 *2 = 130
+      zoom=3 - 44 *2 = 88
+      ]]
+    if max > 260 then
+      zoom = 0.5
+    elseif max > 172 then
+      zoom = 1
+    elseif max > 130 then
+      zoom = 1.5
+    elseif max > 88 then
+      zoom = 2
+    elseif max <= 88 then
+      zoom = 3
+    end
+  end
+
+  return zoom
 end
 
 function util.signal_for_entity(entity)
   local empty_signal = { type = "virtual", name = "signal-0" }
   if not entity then return empty_signal end
   if not entity.valid then return empty_signal end
-
-  local k, v = next(entity.prototype.items_to_place_this)
-  if k then
-    return { type = "item", name = v.name }
+  if game.is_valid_sprite_path("item/" .. entity.prototype.name) then
+    return { type = "item", name = entity.prototype.name }
   end
   return empty_signal
 end
@@ -254,11 +315,11 @@ function util.iterate_backwards(tbl)
   return util.iterate_backwards_iterator, tbl, table_size(tbl) + 1
 end
 
---- Open train GUI for one player.
+--- Open entity GUI for one player. eg LuaTrain
 --- @param player_index number
 --- @param entity LuaEntity
---- @return boolean gui_opened If the GUI was opened.
-function util.open_gui(player_index, entity)
+--- @return boolean --gui_opened If the GUI was opened.
+function util.open_entity_gui(player_index, entity)
   if entity and entity.valid and game.players[player_index] then
     game.players[player_index].opened = entity
     return true
@@ -266,19 +327,58 @@ function util.open_gui(player_index, entity)
   return false
 end
 
----Split inputstr by sep and return a table, thanks Internet
----@param inputstr any
----@param sep string
----@return table
-function util.split(inputstr, sep)
-  if sep == nil then
-    sep = "%s"
+---view station with Navsat on SE
+---@param player LuaPlayer
+---@param surface_name string LuaSurface.name
+---@param position MapPosition
+function util.show_remote_position(player, surface_name, position)
+  if not player or not surface or not position then return end
+  if script.active_mods["space-exploration"]
+      and remote.interfaces["space-exploration"]["remote_view_start"]
+  then
+    remote.call("space-exploration", "remote_view_start", {
+      player = player,
+      zone_name = global.surfaces[surface_name],
+      position = position,
+      -- location_name="Point of Interest",
+      -- freeze_history=true
+    })
   end
-  local t = {}
-  for str in string.gmatch(inputstr, "([^" .. sep .. "]+)") do
-    table.insert(t, str)
+end
+
+--- show train with Navsat on SE
+---@param player LuaPlayer
+---@param loco LuaEntity
+function util.follow_remote_train(player, loco)
+  if not player or not loco or not loco.valid then return end
+  if script.active_mods["space-exploration"]
+      and remote.interfaces["space-exploration"]["remote_view_start"]
+  then
+    remote.call("space-exploration", "remote_view_start", {
+      player = player,
+      zone_name = global.surfaces[loco.surface.name],
+      position = loco.position,
+      -- location_name="Point of Interest",
+      -- freeze_history=true
+    })
   end
-  return t
+end
+
+--- set a style for the given LuaGuiElement
+---@param element LuaGuiElement
+---@param style string must be a gui-style name
+function util.set_style(element, style)
+  gui.update(element, {
+    style = style
+  })
+end
+
+---Check if string ends with given string
+---@param str string
+---@param search string
+---@return boolean
+function util.string_ends_with(str, search)
+  return string.sub(str, (string.len(search) * -1)) == search
 end
 
 return util
