@@ -33,7 +33,6 @@ local function add_stock(stock, all_stock)
       all_stock[item] = { type = "fluid", name = item, count = amount, color = nil }
     end
   end
-
 end
 
 local function read_depot_cargo(station_data)
@@ -42,7 +41,7 @@ local function read_depot_cargo(station_data)
   local trains = station_data.station.get_train_stop_trains()
   for _, t in pairs(trains) do
     -- check if the train is at the station
-    local entity = t.front_rail.get_rail_segment_entity(t.rail_direction_from_front_rail,false)
+    local entity = t.front_rail.get_rail_segment_entity(t.rail_direction_from_front_rail, false)
     if entity and
         entity.valid and
         entity.backer_name and
@@ -61,7 +60,7 @@ end
 local function update_tab(gui_id)
   local vtm_gui = global.guis[gui_id]
   local player = vtm_gui.player
-  local vgui=vtm_gui.gui
+  local vgui = vtm_gui.gui
   local surface = global.settings[player.index].surface or "All"
   local depots_compact = {}
   local depots = {}
@@ -71,10 +70,10 @@ local function update_tab(gui_id)
   for _, station_data in pairs(global.stations) do
     if station_data.force_index == player.force.index and
         (station_data.type == "D" or
-            station_data.type == "F")
+        station_data.type == "F")
     then
       if station_data.station.valid and
-      (surface == "All" or surface == station_data.station.surface.name)
+          (surface == "All" or surface == station_data.station.surface.name)
       then
         -- record present
         limit = station_data.station.trains_limit
@@ -83,10 +82,10 @@ local function update_tab(gui_id)
         end
         if depots_compact[station_data.station.backer_name] then
           depots_compact[station_data.station.backer_name].limit =
-          depots_compact[station_data.station.backer_name].limit + limit
+              depots_compact[station_data.station.backer_name].limit + limit
 
           depots_compact[station_data.station.backer_name].inbound =
-          depots_compact[station_data.station.backer_name].inbound +
+              depots_compact[station_data.station.backer_name].inbound +
               station_data.station.trains_count
           tables.insert(depots_compact[station_data.station.backer_name].rails,
             station_data.station.connected_rail)
@@ -107,7 +106,7 @@ local function update_tab(gui_id)
     end
   end
   -- only valid stations from here
-  local scroll_pane = vgui.depots.scroll_pane
+  local scroll_pane = vgui.depots.scroll_pane or {}
   local children = scroll_pane.children
   local width = constants.gui.depots
   -- new table to make sorting possible
@@ -123,7 +122,6 @@ local function update_tab(gui_id)
   end
 
   for _, station_data in pairs(depots) do
-
     if station_data.station.valid then
       table_index = table_index + 1
       vgui.depots.warning.visible = false
@@ -134,7 +132,6 @@ local function update_tab(gui_id)
           type = "frame",
           direction = "horizontal",
           style = "vtm_table_row_frame",
-          -- style = "vtm_table_row_frame_" .. color,
           {
             type = "label",
             style = "vtm_clickable_semibold_label_with_padding",
@@ -146,7 +143,7 @@ local function update_tab(gui_id)
             style = "flib_indicator_flow",
             style_mods = { width = width.status, },
             { type = "sprite", style = "flib_indicator" },
-            { type = "label", style = "vtm_semibold_label_with_padding" },
+            { type = "label",  style = "vtm_semibold_label_with_padding" },
           },
           {
             type = "label",
@@ -154,16 +151,15 @@ local function update_tab(gui_id)
             style_mods = { width = width.type, horizontal_align = "center", },
             tooltip = { "vtm.type-depot-tooltip" },
           },
-          gui_util.slot_table(width, "light", "stock"),
+          gui_util.slot_table(width, nil, "stock"),
         })
       end
       -- read cargo from trains parking at depot
       local station_stock = {}
       if station_data.inbound > 0 and not settings.global["vtm-dont-read-depot-stock"].value then
         station_stock = read_depot_cargo(station_data)
-        if station_data.station.name=="se-space-elevator" then
+        if station_data.station.name == "se-space-elevator" then
           station_stock = gui_util.read_inbound_trains(station_data)
-          
         end
       end
       local limit_text, color = depot_limit(station_data)
@@ -181,7 +177,6 @@ local function update_tab(gui_id)
           { elem_mods = { caption = limit_text } },
         },
         { elem_mods = { caption = station_data.type } }, --type
-        -- {}, --pusher
         gui_util.slot_table_update(row.stock_table, station_stock, gui_id)
       })
     end

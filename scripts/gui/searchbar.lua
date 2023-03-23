@@ -94,7 +94,8 @@ local function build_gui(gui_id)
   return {
       type = "frame",
       direction = "horizontal",
-      style = "inside_shallow_frame_with_padding",
+      style = "vtm_searchbar_frame",
+      -- style = "inside_shallow_frame_with_padding",
       children = {
           { -- search flow
               type = "flow",
@@ -104,7 +105,7 @@ local function build_gui(gui_id)
                   {
                       type = "label",
                       style = "vtm_semibold_label_with_padding",
-                      caption = { "vtm.filter-search" }
+                      caption = { "gui.search" }
                   },
                   {
                       type = "textfield",
@@ -125,7 +126,7 @@ local function build_gui(gui_id)
                   {
                       type = "label",
                       style = "vtm_semibold_label_with_padding",
-                      caption = { "vtm.filter-item-label" }
+                      caption = { "gui.select-filter" }
                   },
                   {
                       type = "choose-elem-button",

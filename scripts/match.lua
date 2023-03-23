@@ -64,4 +64,20 @@ function match.filter_stations(station_data, filters)
   return false
 end
 
+function match.filter_group_set(set_name, filters)
+  local matches_station = filters.search_field == ""
+  if matches_station then
+    -- no filters set
+    return true
+  end
+  local search_string = set_name or ""
+  if not matches_station then
+    if search_string:lower():find(filters.search_field, 1, true) then
+      matches_station = true
+      return true
+    end
+  end
+  return false
+end
+
 return match
