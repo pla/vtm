@@ -2,6 +2,7 @@
 Version: 0.1.5
 Date: 2023-03-23
   Changes:
+    - Groups Tab now removes groups with invalid main station
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.4
 Date: 2023-03-23

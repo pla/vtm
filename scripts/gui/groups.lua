@@ -357,20 +357,13 @@ local function create_group_tags(gui_id)
     global.group_tags[force.index] = {}
   end
 
-  for _, group in pairs(global.groups[force.index]) do
-    if group.surface == surface then
-      local position = flib_box.center(group.area)
-      -- local tag = force.add_chart_tag(surface, {
-      --   position = position,
-      --   icon = { type = "virtual", name = "signal-check" },
-      --   text = tostring(group.group_id),
-      --   last_user = player.index
-      -- })
-      -- if tag and tag.valid then
-      --   table.insert(global.group_tags[force.index], tag)
-      -- end
-      local tag = create_map_tag(force, surface, position, tostring(group.group_id), player.index)
-    end
+  for group_id, group in pairs(global.groups[force.index]) do
+    -- if group.main_station and group.main_station.station.valid then
+      if group.surface == surface then
+        local position = flib_box.center(group.area)
+        local tag = create_map_tag(force, surface, position, tostring(group.group_id), player.index)
+      end
+    -- end
   end
 end
 
@@ -591,7 +584,7 @@ local function add_group_overlay(gui_id, group_data, show)
     local force = player.force --[[@as LuaForce]]
     local surface = player.surface.name
     local position = flib_box.center(group_data.area)
-    local text=tostring(group_data.group_id)
+    local text = tostring(group_data.group_id)
     local id = draw_group_rectangle(constants.blue, group_data.surface, group_data.area)
     local tag = create_map_tag(force, surface, position, text, player.index)
   end

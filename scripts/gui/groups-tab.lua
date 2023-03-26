@@ -393,6 +393,10 @@ local function set_members_for_display(set, force_index, group_list)
     if set_member and set_member.main_station and set_member.main_station.station.valid then
       validate_group(set_member) --check members and tags for validity
       table.insert(group_list, set_member)
+    else
+      -- delete invalid group
+      global.groups[force_index][group_id]=nil
+      set[_]=nil
     end
   end
 end
