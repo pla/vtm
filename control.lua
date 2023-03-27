@@ -67,11 +67,11 @@ local function on_tick(event)
     global.station_refresh = nil
     vtm_logic.schedule_station_refresh()
   end
-  for _, player in pairs(game.players) do
-    if global.settings[player.index].gui_refresh == "auto" and
-        event.tick % (60 + 3 * player.index) == 0 then
+  for player_index, record in pairs(global.settings) do
+    if record.gui_refresh == "auto" and
+        event.tick % (60 + 3 * player_index) == 0 then
       script.raise_event(constants.refresh_event, {
-        player_index = player.index,
+        player_index = player_index,
       })
     end
   end
