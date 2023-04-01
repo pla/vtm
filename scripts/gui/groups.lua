@@ -359,10 +359,10 @@ local function create_group_tags(gui_id)
 
   for group_id, group in pairs(global.groups[force.index]) do
     -- if group.main_station and group.main_station.station.valid then
-      if group.surface == surface then
-        local position = flib_box.center(group.area)
-        local tag = create_map_tag(force, surface, position, tostring(group.group_id), player.index)
-      end
+    if group.surface == surface then
+      local position = flib_box.center(group.area)
+      local tag = create_map_tag(force, surface, position, tostring(group.group_id), player.index)
+    end
     -- end
   end
 end
@@ -528,7 +528,7 @@ local function open_gui(action, clear)
     update_gui_from_group(action.gui_id, action.group_id)
     return
   end
-  -- FIXME: that might not work anymore
+  -- TODO: that might not work anymore
   if clear then
     clear_selected_data(action.gui_id)
   end
@@ -702,6 +702,13 @@ local function toggle_tool_mode_button(action, event)
   end
 end
 
+local function give_selector(player)
+  if player.clear_cursor() then
+    player.cursor_stack.set_stack({ name = "vtm-station-group-selector" })
+    player.cursor_stack_temporary = true
+  end
+end
+
 local function close_gui(gui_id)
   local vgui = global.guis[gui_id]
   local edit = global.settings[vgui.player.index].group_edit
@@ -711,6 +718,7 @@ local function close_gui(gui_id)
   edit.show_overlay = false
   remove_overlay()
   remove_group_tags(vgui.player)
+  vgui.player.clear_cursor()
 end
 
 local function destroy_gui(gui_id)
@@ -729,6 +737,7 @@ local function toggle_groups_gui(player_index)
       global.guis[gui_id].state_groups and
       global.guis[gui_id].state_groups == "closed" then
     open_gui({ gui_id = gui_id })
+    give_selector(global.guis[gui_id].player)
   else
     close_gui(gui_id)
   end
@@ -955,7 +964,10 @@ local function on_station_selection(event)
     local gui_id = gui_util.get_gui_id(player.index)
     if selected_stations and gui_id then
       local edit = global.settings[player.index].group_edit
-      player.clear_cursor()
+      if player.mod_settings["vtm-dismiss-tool"].value then
+        player.clear_cursor()
+      end
+
       if not edit.add_to_selection or edit.selected_stations == nil then
         edit.selected_stations = {}
       end
@@ -1013,10 +1025,7 @@ local function handle_action(action, event)
   elseif action.action == "select_area" then
     local player = game.get_player(event.player_index)
     if not player then return end
-    if player.clear_cursor() then
-      player.cursor_stack.set_stack({ name = "vtm-station-group-selector" })
-      player.cursor_stack_temporary = true
-    end
+    give_selector(player)
   elseif action.action == "save" then
     save_groups(action, event)
     -- todo give better feedback on error

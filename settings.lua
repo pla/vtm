@@ -87,7 +87,14 @@ data:extend({
     minimum_value = 0,
     maximum_value = 1000,
     admin = true,
-    default_value = 30,
-    order = "zb",
+    default_value = 50,
+    order = "i",
+  },
+  {
+    type = "bool-setting",
+    name = "vtm-dismiss-tool",
+    setting_type = "runtime-per-user",
+    default_value = false,
+    order = "j",
   },
 })
