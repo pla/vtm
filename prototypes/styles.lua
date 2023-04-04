@@ -71,6 +71,17 @@ styles.vtm_minimap_frame = {
   parent = "train_with_minimap_frame",
   graphical_set = styles.deep_frame_in_shallow_frame.graphical_set,
 }
+
+styles.vtm_deep_frame = {
+  type = "frame_style",
+  parent = "deep_frame_in_shallow_frame",
+  horizontal_flow_style = {
+    type = "horizontal_flow_style",
+    vertical_align = "center",
+    horizontally_stretchable = "on",
+  }
+}
+
 -- SCROLL PANE STYLES
 styles.vtm_list_box_scroll_pane = {
   type = "scroll_pane_style",

@@ -84,6 +84,7 @@ constants.gui = {
     content_height = 308,
     icon = 28,
     name = 280,
+    main_station_name=164,
     map = 260,
     detail_frame = 270,
     member_name = 200,

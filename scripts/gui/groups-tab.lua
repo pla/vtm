@@ -119,14 +119,15 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
           -- frame for minimap
           type = "flow",
           direction = "vertical",
+          name = "left_side",
           style_mods = {
             horizontally_stretchable = false,
             vertically_stretchable = true,
             height = width.content_height,
             vertical_spacing = 12
           },
-          -- style = "train_with_minimap_frame",
           {
+            -- the minimap
             type = "frame",
             style = "deep_frame_in_shallow_frame",
             style_mods = { horizontal_align = "center", vertical_align = "center" },
@@ -142,20 +143,49 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
               },
             },
           },
+          -- { -- main station
+          --   type = "frame",
+          --   style = "deep_frame_in_shallow_frame",
+          --   -- style_mods = { horizontally_stretchable = true, },
+          --   style_mods = { width = width.map, horizontal_align = "left" },
+          --   {
+          --     type = "button",
+          --     style = "train_status_button",
+          --     name = "main_station",
+          --     style_mods = { width = width.map, height = 36 },
+          --   },
+          -- },
+
           {
+            -- main station
             type = "frame",
-            style = "deep_frame_in_shallow_frame",
-            -- style_mods = { horizontally_stretchable = true, },
-            style_mods = { width = width.map, horizontal_align = "left" },
-            {
-              type = "button",
-              style = "train_status_button",
-              name = "main_station",
-              style_mods = { width = width.map, height = 36 },
+            style = "vtm_deep_frame",
+            name = "main_station_frame",
+            style_mods = {
+              -- horizontally_stretchable = true,
+              height = 36,
+              left_padding = 8,
+              right_padding = 8,
             },
-          },
+            {
+              type = "label",
+              style = "vtm_clickable_semibold_label",
+              name = "main_station",
+              style_mods = {
+                width = width.main_station_name,
+              },
+              tooltip = { "gui-train.open-in-map" },
+            },
+            {
+              type = "empty-widget",
+              style = "flib_horizontal_pusher",
+              ignored_by_interaction = true
+            },
+            gui_util.slot_table(width, nil, "member_stock"),
+          }
         },
         {
+          --listbox style display for group members
           type = "frame",
           style = "deep_frame_in_shallow_frame",
           name = "list_frame",
@@ -215,7 +245,7 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
     local tooltip
     gui_util.merge_slot_tables(group_data.main_station.stock, group_data.main_station.registered_stock)
     table.sort(group_data.main_station.stock, function(a, b) return a.count < b.count end)
-    tooltip = create_stock_tooltip(group_data.main_station.stock)
+    tooltip = create_stock_tooltip(group_data.main_station.stock) --TODO: format number
     -- insert data
     gui.update(row,
       {
@@ -232,9 +262,12 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
               },
             },
           },
-          {
+          { -- main station
             {
-              elem_mods = { caption = group_data.main_station.station.backer_name, tooltip = tooltip },
+              elem_mods = {
+                caption = group_data.main_station.station.backer_name,
+                tooltip = tooltip
+              },
               actions = {
                 on_click = {
                   type = "stations",
@@ -256,7 +289,8 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
           },
         },
       })
-
+    gui_util.slot_table_update(row.left_side.main_station_frame.member_stock_table, group_data.main_station.stock, gui_id,
+      1)
     local scroll_pane_member = row.list_frame.scroll_pane_member or {}
     local member_children = scroll_pane_member.children or {}
     local member_index = 0
@@ -395,8 +429,8 @@ local function set_members_for_display(set, force_index, group_list)
       table.insert(group_list, set_member)
     else
       -- delete invalid group
-      global.groups[force_index][group_id]=nil
-      set[_]=nil
+      global.groups[force_index][group_id] = nil
+      set[_] = nil
     end
   end
 end
@@ -458,7 +492,7 @@ local function update_tab(gui_id, group_id)
       if not vsettings.selected_group_set then
         vsettings.selected_group_set = set_name
       end
-      -- select entry for detail view
+      -- select entries for detail view
       if vsettings.selected_group_set == set_name then
         set_members_for_display(set, player.force_index, group_list)
       end
