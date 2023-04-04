@@ -139,30 +139,15 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
               {
                 type = "button",
                 style = "vtm_minimap_button",
-                -- tooltip = { "vtm.open-station-gui-tooltip" }
               },
             },
           },
-          -- { -- main station
-          --   type = "frame",
-          --   style = "deep_frame_in_shallow_frame",
-          --   -- style_mods = { horizontally_stretchable = true, },
-          --   style_mods = { width = width.map, horizontal_align = "left" },
-          --   {
-          --     type = "button",
-          --     style = "train_status_button",
-          --     name = "main_station",
-          --     style_mods = { width = width.map, height = 36 },
-          --   },
-          -- },
-
           {
             -- main station
             type = "frame",
             style = "vtm_deep_frame",
             name = "main_station_frame",
             style_mods = {
-              -- horizontally_stretchable = true,
               height = 36,
               left_padding = 8,
               right_padding = 8,
@@ -215,11 +200,6 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
               style = "subheader_caption_label",
               style_mods = { width = width.icon },
             },
-            -- {
-            --   type = "empty-widget",
-            --   style = "flib_horizontal_pusher",
-            --   ignored_by_interaction = true
-            -- },
           },
           {
             -- member scroll pane
@@ -468,7 +448,6 @@ local function update_tab(gui_id, group_id)
   local player = vtm_gui.player
   local vsettings = global.settings[global.guis[gui_id].player.index]
   local surface = vsettings.surface or "All"
-  -- local max_lines = settings.global["vtm-limit-auto-refresh"].value
 
   local filters = {
     search_field = vtm_gui.gui.filter.search_field.text:lower(),
@@ -515,7 +494,7 @@ local function update_tab(gui_id, group_id)
 
   local scroll_left = vtm_gui.gui.groups.scroll_pane_left or {}
   local scroll_right = vtm_gui.gui.groups.scroll_pane_right or {}
-  -- TODO: switch compact view maybe
+  -- TODO: ?switch compact view maybe
 
   --left side
   update_group_list(gui_id, scroll_left, group_set_list)
@@ -636,13 +615,6 @@ local function build_gui()
       },
     },
   }
-end
-local function get_group_set_name(force_index, group_id)
-  if force_index and group_id then
-    return global.groups[player.force_index][action.group_id].main_station.station.backer_name
-  else
-    return nil
-  end
 end
 
 ---comment
