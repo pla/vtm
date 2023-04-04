@@ -240,6 +240,17 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
                 zoom = zoom or 1,
                 surface_index = group_data.main_station.station.surface_index
               },
+              {}, -- label
+              { --button
+                actions = {
+                  on_click = {
+                    type = "stations",
+                    action = "position",
+                    station_id = group_data.main_station.station.unit_number
+                  },
+                },
+  
+              },
             },
           },
           { -- main station
