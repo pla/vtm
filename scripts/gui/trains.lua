@@ -223,7 +223,7 @@ function trains.update_tab(gui_id)
           {
             elem_mods = {
               caption = train_data.train.id,
-              tooltip = {"vtm.train-open-ui-folow-train", train_data.train.id },
+              tooltip = {"vtm.train-open-ui-follow-train", train_data.train.id },
             },
             actions = {
               on_click = { type = "trains", action = "open-train", train_id = train_data.train.id },
