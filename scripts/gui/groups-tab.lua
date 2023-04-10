@@ -84,7 +84,7 @@ local function create_stock_tooltip(stock_table)
   local tooltip
   tooltip = ""
   for _, item in pairs(stock_table) do
-    tooltip = tooltip .. "[" .. item.type .. "=" .. item.name .. "] x " .. item.count .. "\n"
+    tooltip = tooltip .. "[" .. item.type .. "=" .. item.name .. "] x " .. util.format_number(item.count, true) .. "\n"
   end
   if tooltip ~= "" then
     tooltip = string.sub(tooltip, 1, -2)
@@ -225,7 +225,7 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
     local tooltip
     gui_util.merge_slot_tables(group_data.main_station.stock, group_data.main_station.registered_stock)
     table.sort(group_data.main_station.stock, function(a, b) return a.count < b.count end)
-    tooltip = create_stock_tooltip(group_data.main_station.stock) --TODO: format number
+    tooltip = create_stock_tooltip(group_data.main_station.stock)
     -- insert data
     gui.update(row,
       {
@@ -241,7 +241,8 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
                 surface_index = group_data.main_station.station.surface_index
               },
               {}, -- label
-              { --button
+              {
+                  --button
                 actions = {
                   on_click = {
                     type = "stations",
@@ -249,11 +250,10 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
                     station_id = group_data.main_station.station.unit_number
                   },
                 },
-  
               },
             },
           },
-          { -- main station
+          { -- main station frame
             {
               elem_mods = {
                 caption = group_data.main_station.station.backer_name,
