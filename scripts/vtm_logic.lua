@@ -187,27 +187,26 @@ function vtm_logic.read_station_network(station_data, return_virtual)
   local contents = {}
   local set_trains_limit = false
   local cb = station.get_or_create_control_behavior() --[[@as LuaTrainStopControlBehavior]]
-  if station.valid then
-    set_trains_limit = cb.set_trains_limit
-    -- TODO use get_merged_signals
-    for _, wire in pairs({ defines.wire_type.red, defines.wire_type.green }) do
-      local cn = station.get_circuit_network(wire)
-      -- cn - signals (type,name),wire_type
-      if cn ~= nil and cn.signals ~= nil then
-        for _, signal_data in pairs(cn.signals) do
-          if signal_data.signal.type ~= "virtual" or return_virtual == true then
-            register_item(station_data, signal_data.signal.type, signal_data.signal.name)
-            table.insert(contents, {
-              type = signal_data.signal.type,
-              name = signal_data.signal.name,
-              count = signal_data.count,
-              color = constants.wire_colors[wire]
-            })
-          end
+  set_trains_limit = cb.set_trains_limit
+  -- argue against get_merged_signals- loose wire color info
+  for _, wire in pairs({ defines.wire_type.red, defines.wire_type.green }) do
+    local cn = station.get_circuit_network(wire)
+    -- cn - signals (type,name),wire_type
+    if cn ~= nil and cn.signals ~= nil then
+      for _, signal_data in pairs(cn.signals) do
+        if signal_data.signal.type ~= "virtual" or return_virtual == true then
+          register_item(station_data, signal_data.signal.type, signal_data.signal.name)
+          table.insert(contents, {
+            type = signal_data.signal.type,
+            name = signal_data.signal.name,
+            count = signal_data.count,
+            color = constants.wire_colors[wire]
+          })
         end
       end
     end
   end
+
   return contents, set_trains_limit
 end
 
