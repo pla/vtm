@@ -185,7 +185,6 @@ function vtm_logic.read_station_network(station_data, return_virtual)
   local station = station_data.station
   ---@type SlotTableDef
   local contents = {}
-  local colors = tables.invert(defines.wire_type)
   local set_trains_limit = false
   local cb = station.get_or_create_control_behavior() --[[@as LuaTrainStopControlBehavior]]
   if station.valid then
@@ -202,7 +201,7 @@ function vtm_logic.read_station_network(station_data, return_virtual)
               type = signal_data.signal.type,
               name = signal_data.signal.name,
               count = signal_data.count,
-              color = colors[wire]
+              color = constants.wire_colors[wire]
             })
           end
         end
@@ -228,7 +227,6 @@ function vtm_logic.read_group(group_id, read_stock)
           local items = vtm_logic.read_station_network(station_data)
           station_data.stock_tick = game.tick
           station_data.stock = items
-          
         end
       end
     end

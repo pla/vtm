@@ -1,4 +1,3 @@
-
 local constants = {
   gui_content_frame_height       = 700,
   gui_window_min_width           = 990,
@@ -9,14 +8,13 @@ local constants = {
   button_style_green             = "tool_button_green",
   list_box_button_style          = "vtm_list_box_item",
   list_box_button_style_selected = "vtm_list_box_item_selected",
-  blue = {0, 0, 0.5, 0.5},
-
+  blue                           = { 0, 0, 0.5, 0.5 },
 }
 
 constants.hidden_surfaces = {
   ["EE_TESTSURFACE_"] = true, -- Editor Extensions
-  ["BPL_TheLab"] = true, -- Blueprint Designer Lab
-  ["bpsb-lab"] = true, -- Blueprint Sandboxes
+  ["BPL_TheLab"] = true,      -- Blueprint Designer Lab
+  ["bpsb-lab"] = true,        -- Blueprint Sandboxes
 }
 
 constants.gui = {
@@ -76,7 +74,6 @@ constants.gui = {
     bottom_rows = 10,
     checkbox = 30,
     type = 10,
-
   },
   groups_tab = {
     group_list = 300,
@@ -84,7 +81,7 @@ constants.gui = {
     content_height = 308,
     icon = 28,
     name = 280,
-    main_station_name=164,
+    main_station_name = 164,
     map = 260,
     detail_frame = 270,
     member_name = 200,
@@ -133,4 +130,9 @@ constants.state_description2 = {
   { defines.train_state.destination_full,    { "vtm.train_state-destination_full" } },
 }
 
+constants.wire_colors = {
+  [defines.wire_type.copper] = "copper",
+  [defines.wire_type.red] = "red",
+  [defines.wire_type.green] = "green",
+}
 return constants
