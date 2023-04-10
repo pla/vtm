@@ -333,8 +333,7 @@ end
 ---@param position MapPosition
 function util.show_remote_position(player, surface_name, position)
   if not player or not surface or not position then return end
-  if script.active_mods["space-exploration"]
-      and remote.interfaces["space-exploration"]["remote_view_start"]
+  if global.SE_active and remote.interfaces["space-exploration"]["remote_view_start"]
   then
     remote.call("space-exploration", "remote_view_start", {
       player = player,
@@ -351,8 +350,7 @@ end
 ---@param loco LuaEntity
 function util.follow_remote_train(player, loco)
   if not player or not loco or not loco.valid then return end
-  if script.active_mods["space-exploration"]
-      and remote.interfaces["space-exploration"]["remote_view_start"]
+  if global.SE_active and remote.interfaces["space-exploration"]["remote_view_start"]
   then
     remote.call("space-exploration", "remote_view_start", {
       player = player,

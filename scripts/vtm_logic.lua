@@ -83,7 +83,7 @@ end
 ---@param backer_name string
 ---@return uint
 local function get_TCS_prio(backer_name)
-  if game.active_mods["Train_Control_Signals"] then
+  if global.TCS_active then
     local tcs_refuel = "[virtual-signal=refuel-signal]"
     local tcs_depot = "[virtual-signal=depot-signal]"
     -- local tcs_skip = "[virtual-signal=skip-signal]"
@@ -162,8 +162,6 @@ end
 ---@param name string signalID name
 local function register_item(station_data, type, name)
   local found = false
-  -- check item is valid
-  if not game.is_valid_sprite_path(type .. "/" .. name) then return end
   -- register item
   for _, row in pairs(station_data.registered_stock) do
     if row.type == type and row.name == name then
@@ -351,13 +349,13 @@ end
 local function find_first_stop(schedule)
   local index = 1
   if schedule ~= nil and schedule.records then
-    if game.active_mods["cybersyn"] then
+    if global.cybersyn_active then
       -- timings will be off because of the depot waiting time
       if schedule.current == 2 then
         index = schedule.current
       end
       -- search with TCS signals in mind
-    elseif game.active_mods["Train_Control_Signals"] then
+    elseif global.TCS_active then
       local pattern = "[virtual-signal=skip-signal]"
       for key, record in pairs(schedule.records) do
         if record.station ~= nil then

@@ -31,6 +31,9 @@ local function init_global_data()
     ["All"] = "All",
     ["nauvis"] = "Nauvis",
   }
+  global.TCS_active = game.active_mods["Train_Control_Signals"]
+  global.cybersyn_active = game.active_mods["cybersyn"]
+  global.SE_active = script.active_mods["space-exploration"]
 end
 
 local function remove_mod_gui_button(player)

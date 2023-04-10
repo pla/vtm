@@ -114,7 +114,7 @@ local function update_tab(gui_id)
     table.insert(depots, value)
   end
   --sorting by name and type
-  if game.active_mods["Train_Control_Signals"] then
+  if global.TCS_active then
     -- special sort for TCS icons, depots always first
     table.sort(depots, function(a, b) return a.sort_prio .. a.name < b.sort_prio .. b.name end)
   else
