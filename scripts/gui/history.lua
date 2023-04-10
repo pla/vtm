@@ -351,8 +351,10 @@ local function update_tab(gui_id)
         sprite = "item/se-space-elevator"
       end
 
-      local runtime = util.formattime(history_data.last_change - history_data.started_at --[[@as uint]])
-      local finished = util.formattime(game.tick - history_data.last_change --[[@as uint]])
+      -- local runtime = util.formattime(history_data.last_change - history_data.started_at --[[@as uint]])
+      local runtime = format.time(history_data.last_change - history_data.started_at --[[@as uint]])
+      -- local finished = util.formattime(game.tick - history_data.last_change --[[@as uint]])
+      local finished = format.time(game.tick - history_data.last_change --[[@as uint]])
 
       gui.update(row, {
         { {
