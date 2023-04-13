@@ -22,6 +22,15 @@ function vtm_logic.load_guess_patterns()
   }
 end
 
+function vtm_logic.cache_generic_settings()
+  global.surface_selector_visible = settings.global["vtm-force-surface-visible"].value
+  global.max_hist                 = settings.global["vtm-history-length"].value
+  global.max_lines                = settings.global["vtm-limit-auto-refresh"].value
+  global.show_undef_warn          = settings.global["vtm-show-undef-warning"].value
+  global.dont_read_depot_stock    = settings.global["vtm-dont-read-depot-stock"].value
+  global.pr_from_start            = settings.global["vtm-p-or-r-start"].value
+end
+
 ---Try to guess the station type: Requester, Provider, Depot or Refuel
 ---@param station LuaEntity
 ---@return string

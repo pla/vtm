@@ -8,10 +8,13 @@ local groups     = require("__vtm__.scripts.gui.groups")
 local migrations = {}
 
 function migrations.generic()
+  -- refresh cached mods availability
   global.TCS_active = game.active_mods["Train_Control_Signals"]
   global.cybersyn_active = game.active_mods["cybersyn"]
   global.SE_active = script.active_mods["space-exploration"]
-
+  --refresh cached settings
+  vtm_logic.cache_generic_settings()
+  
   if global.surfaces == nil or table_size(global.surfaces) < 2 then
     global.surfaces = {
       ["All"] = "All",

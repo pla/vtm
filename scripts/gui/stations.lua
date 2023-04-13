@@ -46,7 +46,7 @@ local function update_tab(gui_id)
   local stations = {}
   local nd_stations = 0
   local table_index = 0
-  local max_lines = settings.global["vtm-limit-auto-refresh"].value
+  local max_lines = global.max_lines
 
   local filters = {
     search_field = vtm_gui.gui.filter.search_field.text:lower(),
@@ -229,7 +229,7 @@ local function update_tab(gui_id)
   end
   vtm_gui.gui.tabs.stations_tab.badge_text = table_index or 0
   if table_index > 0 then
-    if nd_stations > 10 and settings.global["vtm-show-undef-warning"].value then
+    if nd_stations > 10 and global.show_undef_warn  then
       vtm_gui.gui.stations.warning.visible = true
       vtm_gui.gui.stations.warning_label.caption = { "vtm.station-warning", nd_stations }
     end

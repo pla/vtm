@@ -15,7 +15,7 @@ local function update(gui_id)
   local flow = global.guis[gui_id].gui.filter.surface_flow --[[@as LuaGuiElement]]
   local dropdown = global.guis[gui_id].gui.filter.surface --[[@as LuaGuiElement]]
   local surface = global.settings[global.guis[gui_id].player.index].surface or "All"
-  local visible = settings.global["vtm-force-surface-visible"].value --[[@as boolean]]
+  local visible = global.surface_selector_visible --[[@as boolean]]
   if global.SE_active then
     visible = true
   end

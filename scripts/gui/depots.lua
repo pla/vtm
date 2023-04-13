@@ -156,7 +156,7 @@ local function update_tab(gui_id)
       end
       -- read cargo from trains parking at depot
       local station_stock = {}
-      if station_data.inbound > 0 and not settings.global["vtm-dont-read-depot-stock"].value then
+      if station_data.inbound > 0 and not global.dont_read_depot_stock then
         station_stock = read_depot_cargo(station_data)
         if station_data.station.name == "se-space-elevator" then
           station_stock = gui_util.read_inbound_trains(station_data)

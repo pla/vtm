@@ -31,9 +31,12 @@ local function init_global_data()
     ["All"] = "All",
     ["nauvis"] = "Nauvis",
   }
+  -- cache relevant mods
   global.TCS_active = game.active_mods["Train_Control_Signals"]
   global.cybersyn_active = game.active_mods["cybersyn"]
   global.SE_active = script.active_mods["space-exploration"]
+  --cache relevant settings
+  vtm_logic.cache_generic_settings()
 end
 
 local function remove_mod_gui_button(player)
@@ -190,6 +193,8 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
       migrations.add_mod_gui_button(player)
     end
   end
+  --refresh cached settings
+  vtm_logic.cache_generic_settings()
 end)
 
 

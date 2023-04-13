@@ -129,7 +129,7 @@ function trains.update_tab(gui_id)
   local train_datas = {}
   local inv_trains = {}
   local table_index = 0
-  local max_lines = settings.global["vtm-limit-auto-refresh"].value
+  local max_lines = global.max_lines
   local filters = {
     -- item = vtm_gui.gui.filter.item.elem_value.name,
     -- fluid = vtm_gui.gui.filter.fluid.elem_value,

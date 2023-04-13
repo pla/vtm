@@ -265,7 +265,7 @@ local function update_tab(gui_id)
   local vsettings = global.settings[player.index]
   local surface = vsettings.surface or "All"
   local history = {}
-  local max_hist = settings.global["vtm-history-length"].value
+  local max_hist = global.max_hist
   local table_index = 0
   local filters = { search_field = vtm_gui.gui.filter.search_field.text:lower() }
 
