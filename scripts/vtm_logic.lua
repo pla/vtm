@@ -12,7 +12,7 @@ local vtm_logic = {}
 
 function vtm_logic.load_guess_patterns()
   if not global.settings["patterns"] then
-    global.settings["patterns"] = {} --[[@as GuessPatterns ]]
+    global.settings["patterns"] = {} --[[@type GuessPatterns ]]
   end
   global.settings["patterns"] = {
     depot = util.split(tostring(settings.global["vtm-depot-names"].value):lower(), ","),
@@ -190,8 +190,7 @@ end
 ---@return boolean --Is the limit set by circuit (true)or manual(false)
 function vtm_logic.read_station_network(station_data, return_virtual)
   local station = station_data.station
-  ---@type SlotTableDef
-  local contents = {}
+  local contents = {} --[[@type SlotTableDef[] ]]
   local set_trains_limit = false
   local cb = station.get_or_create_control_behavior() --[[@as LuaTrainStopControlBehavior]]
   set_trains_limit = cb.set_trains_limit
