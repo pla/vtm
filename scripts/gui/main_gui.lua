@@ -124,8 +124,6 @@ local function create_gui(player)
     gui = refs,
     player = player,
     state = "closed",
-    state_groups = "closed",
-    pinned = false,
   }
   local tab_list = {}
   for key, value in pairs(refs.tabs.pane.tabs) do
