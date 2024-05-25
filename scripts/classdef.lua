@@ -8,6 +8,7 @@
 ---@field group_gui table<string,LuaGuiElement>?
 ---@field state_groups string open or closed state of the edit groups gui
 ---@field pinned boolean
+---@field filter_history table Queue of previous search patterns
 
 ---@class PlayerSettings
 ---@field current_tab string
@@ -48,7 +49,7 @@
 ---@field train_front_rail LuaEntity Rail to check if a train is at station, still needed?
 ---@field type "P"|"R"|"D"|"F"|"H"|"ND" Station type Requester, Provider, Hidden, ND for undefined
 ---@field sort_prio uint used to manipulate the sort order of depots
----@field incoming_trains {[uint]:boolean} train_ids the are headed for the station
+---@field incoming_trains {[uint]:boolean} train_ids headed for the station
 ---@field stock SlotTableDef[] 
 ---@field stock_tick uint
 ---@field in_transit SlotTableDef[] unused for now

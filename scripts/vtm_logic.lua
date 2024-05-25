@@ -336,7 +336,7 @@ end
 local function clear_older_force(force, older_than)
   local force_index = force.index
   local size = table_size(global.history)
-  while global.history[size].last_change <= older_than and size > 1 do
+  while size > 1 and global.history[size].last_change <= older_than do
     if global.history[size].force_index == force_index then
       table.remove(global.history, size)
       size = size - 1

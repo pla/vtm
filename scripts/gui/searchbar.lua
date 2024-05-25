@@ -38,6 +38,7 @@ end
 local function handle_action(action, event)
   local vtm = global.guis[action.gui_id]
   local gui = global.guis[action.gui_id].gui
+  local filter_history = vtm.filter_history
   if action.action == "focus_search" then
     if gui and vtm.state == "open" and not vtm.pinned then
       gui.filter.search_field.focus()
@@ -63,6 +64,16 @@ local function handle_action(action, event)
       action.action = "apply-filter"
     end
   end
+  if action.action == "prev-filter" then
+    
+    -- get history table
+    if #filter_history > 0  then
+    -- fetch last entry
+    
+    -- remove entry from history  
+    end
+    
+  end
   if action.action == "apply-filter" then
     if filter ~= "search_field" then
       local filter_guis = gui.filter
@@ -76,6 +87,10 @@ local function handle_action(action, event)
       -- if event.button and event.button == defines.mouse_button_type.right then
       --   filter_guis.search_field.text = ("=" .. filter_guis.item.elem_value.name .. "]") or ""
       -- end
+      table.insert(filter_history,1,filter_guis.search_field.text)
+      while #filter_history > 10 do
+        table.remove(filter_history,11)
+      end
     end
     refresh(action)
     return
