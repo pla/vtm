@@ -273,6 +273,13 @@ function util.signal_for_entity(entity)
   return empty_signal
 end
 
+function util.signal_to_sprite(signal)
+  if not signal then return nil end
+  if game.is_valid_sprite_path(signal.type .. "/" .. signal.name) then
+    return signal.type .. "/" .. signal.name
+  end
+
+end
 function util.matches_filter(result, filters)
   if result.last_change < filters.time_period then
     return false
