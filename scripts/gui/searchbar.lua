@@ -67,7 +67,8 @@ local function handle_action(action, event)
   if action.action == "prev-filter" then
     -- check history table
     if #filter_history > 0 then
-      if gui.filter.item.elem_value.name ~= filter_history[1].name then
+      if not gui.filter.item.elem_value or
+          gui.filter.item.elem_value and gui.filter.item.elem_value.name ~= filter_history[1].name then
         -- set first entry to filter if different
         gui.filter.item.elem_value = filter_history[1]
         -- remove entry from history
@@ -99,7 +100,7 @@ local function handle_action(action, event)
       --   filter_guis.search_field.text = ("=" .. filter_guis.item.elem_value.name .. "]") or ""
       -- end
       -- TODO only insert if different from prev entry
-      if #filter_history == 0 or ( #filter_history > 0 and gui.filter.item.elem_value.name ~= filter_history[1].name ) then
+      if #filter_history == 0 or (#filter_history > 0 and gui.filter.item.elem_value.name ~= filter_history[1].name) then
         table.insert(filter_history, 1, filter_guis.item.elem_value)
       end
       while #filter_history > 10 do
