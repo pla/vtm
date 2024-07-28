@@ -69,7 +69,7 @@ migrations.by_version = {
     for _, player in pairs(game.players) do
       if player.valid then
         global.groups[player.force_index] = {}
-        global.settings[player.index].group_edit = {}
+        global.settings[player.index].group_edit = {} --[[@as GroupEditData[] ]]
       end
     end
   end,
@@ -83,7 +83,7 @@ function migrations.init_player_data(player)
       gui_refresh = "",
       surface = "All",
       history_switch = "left",
-      group_edit = {}
+      group_edit = {}  --[[@as GroupEditData[] ]]
     }
     if not global.groups[player.force_index] then
       global.groups[player.force_index] = {}

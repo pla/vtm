@@ -124,6 +124,8 @@ local function create_gui(player)
     gui = refs,
     player = player,
     state = "closed",
+    state_groups = "closed",
+    pinned = false,
   }
   local tab_list = {}
   for key, value in pairs(refs.tabs.pane.tabs) do
@@ -231,7 +233,7 @@ local function toggle_pinned(event)
 end
 
 
---- @param event CustomEventDef|EventData|EventData.on_gui_click
+--- @param event EventData|EventData.on_gui_click
 local function dispatch_refresh(event)
   local gui_id = gui_util.get_gui_id(event.player_index)
   if gui_id == nil then

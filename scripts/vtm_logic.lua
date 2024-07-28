@@ -12,7 +12,7 @@ local vtm_logic = {}
 
 function vtm_logic.load_guess_patterns()
   if not global.settings["patterns"] then
-    global.settings["patterns"] = {} -- [[@as GuessPatterns ]]
+    global.settings["patterns"] = {} --[[@type GuessPatterns ]]
   end
   global.settings["patterns"] = {
     depot = util.split(tostring(settings.global["vtm-depot-names"].value):lower(), ","),
@@ -190,8 +190,7 @@ end
 ---@return boolean --Is the limit set by circuit (true)or manual(false)
 function vtm_logic.read_station_network(station_data, return_virtual)
   local station = station_data.station
-  ---@type SlotTableDef
-  local contents = {}
+  local contents = {} --[[@type SlotTableDef[] ]]
   local set_trains_limit = false
   local cb = station.get_or_create_control_behavior() --[[@as LuaTrainStopControlBehavior]]
   set_trains_limit = cb.set_trains_limit
@@ -337,7 +336,7 @@ end
 local function clear_older_force(force, older_than)
   local force_index = force.index
   local size = table_size(global.history)
-  while global.history[size].last_change <= older_than and size > 1 do
+  while size > 1 and global.history[size].last_change <= older_than do
     if global.history[size].force_index == force_index then
       table.remove(global.history, size)
       size = size - 1

@@ -37,6 +37,7 @@ end
 local function handle_action(action, event)
   local vtm = global.guis[action.gui_id]
   local gui = global.guis[action.gui_id].gui
+  local filter_history = vtm.filter_history
   if action.action == "focus_search" then
     if gui and vtm.state == "open" and not vtm.pinned then
       gui.filter.search_field.focus()
@@ -62,6 +63,28 @@ local function handle_action(action, event)
       action.action = "apply-filter"
     end
   end
+  if action.action == "prev-filter" then
+    -- check history table
+    if #filter_history > 0 then
+      if not gui.filter.item.elem_value or
+          gui.filter.item.elem_value and gui.filter.item.elem_value.name ~= filter_history[1].name then
+        -- set first entry to filter if different
+        gui.filter.item.elem_value = filter_history[1]
+        -- remove entry from history
+        table.remove(filter_history, 1)
+      else -- first is current
+        if #filter_history > 1 then
+          --set second entry if there is one
+          gui.filter.item.elem_value = filter_history[2]
+          -- remove two entries
+          table.remove(filter_history, 1)
+          table.remove(filter_history, 1)
+        end
+      end
+
+      action.action = "apply-filter"
+    end
+  end
   if action.action == "apply-filter" then
     if filter ~= "search_field" then
       local filter_guis = gui.filter
@@ -75,6 +98,13 @@ local function handle_action(action, event)
       -- if event.button and event.button == defines.mouse_button_type.right then
       --   filter_guis.search_field.text = ("=" .. filter_guis.item.elem_value.name .. "]") or ""
       -- end
+      -- TODO only insert if different from prev entry
+      if #filter_history == 0 or (#filter_history > 0 and gui.filter.item.elem_value.name ~= filter_history[1].name) then
+        table.insert(filter_history, 1, filter_guis.item.elem_value)
+      end
+      while #filter_history > 10 do
+        table.remove(filter_history, 11)
+      end
     end
     refresh(action)
     return
