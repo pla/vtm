@@ -1,3 +1,4 @@
+---@meta
 --Alias definitions at the bottom
 
 ---@class GuiData
@@ -130,6 +131,11 @@
 ---@alias GlobalStationData {[unit_number]:StationData}
 ---@alias GlobalPlayerSettings {[player_index]:PlayerSettings}
 ---@alias GlobalGroups {[force_index]:{[group_id]:GroupData}}
+
+--- @class on_train_teleported
+--- @field train LuaTrain
+--- @field old_train_id_1 uint?
+--- @field old_surface_index uint
 
 --[[
 

@@ -632,6 +632,7 @@ local function save_groups(action, event)
       surface = p_station.surface.name,
       area = edit.group_area,
       resource_tags = tag_list,
+      zoom = 1
     }
     global.groups[p_station.force_index][p_station.unit_number] = group_data
     register_group_set(p_station.backer_name, p_station.unit_number)
@@ -665,7 +666,7 @@ local function on_gui_elem_changed(event)
   if event.element.name == "top_list" then
     bottom_list.selected_index = 0
     -- check for existing group
-    local str = top_list.get_item(event.element.selected_index)
+    local str = top_list.get_item(event.element.selected_index)  --[[@as string]]
     -- enable delgrp_button
     if gui_util.string_ends_with(str, constants.group_exist_suffix) then
       top_buttons.delgrp_button.enabled = true

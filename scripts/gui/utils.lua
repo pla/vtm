@@ -50,7 +50,7 @@ function util.read_inbound_trains(station_data)
           for type, item_data in pairs(train_data.contents) do
             local row = {}
             row.type = type == "items" and "item" or "fluid"
-            for name, count in pairs(item_data) do
+            for name, count in pairs(item_data) do --FIXME
               row.name = name
               row.count = count
               row.color = "blue"

@@ -79,7 +79,6 @@ data:extend {
     type = "selection-tool",
     name = "vtm-station-group-selector",
     subgroup = "tool",
-    show_in_library = false,
     icons = {
       {
         icon = "__base__/graphics/icons/train-stop.png",
@@ -88,9 +87,8 @@ data:extend {
         -- tint = { r = 0.5, g = 0, b = 0, a = 0.5 } --red
       }
     },
-    flags = { "only-in-cursor", "spawnable" },
+    flags = { "only-in-cursor", "spawnable" }, ---@type ItemPrototypeFlags
     stack_size = 1,
-    stackable = false,
     selection_color = { r = 0.72, g = 0.45, b = 0.2, a = 1 },
     alt_selection_color = { r = 0.72, g = 0.22, b = 0.1, a = 1 },
     selection_mode = { "buildable-type", "same-force" },
