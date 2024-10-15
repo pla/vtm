@@ -632,7 +632,7 @@ local function save_groups(action, event)
       surface = p_station.surface.name,
       area = edit.group_area,
       resource_tags = tag_list,
-      zoom = gui_util.get_zoom_from_area(edit.group_area)
+      zoom = 1
     }
     global.groups[p_station.force_index][p_station.unit_number] = group_data
     register_group_set(p_station.backer_name, p_station.unit_number)
@@ -910,9 +910,7 @@ local function on_alt_station_selection(event)
           end
         end
         i, entity = next(event.entities, i)
-        if remove then -- is the selected station in old selection, then remove
-          edit.selected_stations[remove] = nil
-        end
+        edit.selected_stations[remove] = nil
       end
       update_gui(gui_id, edit.selected_stations)
     else

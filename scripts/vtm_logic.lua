@@ -132,7 +132,7 @@ local function new_station(station)
     last_changed = game.tick,
     opened = 0,
     closed = 0,
-    sprite = "item/" .. gui_util.signal_for_entity(station).name,
+    sprite = gui_util.signal_to_sprite(gui_util.signal_for_entity(station)),
     train_front_rail = nil,
     type = guess_station_type(station), -- one of P R D F H or ND
     sort_prio = get_TCS_prio(station.backer_name),
@@ -280,7 +280,7 @@ function vtm_logic.update_station(station)
       station_data.incoming_trains = {}
     end
     if station_data.sprite == nil then
-      station_data.sprite = "item/" .. gui_util.signal_for_entity(station_data.station).name
+      station_data.sprite = gui_util.signal_to_sprite(gui_util.signal_for_entity(station_data.station)) or "item/train-stop"
     end
   else
     global.stations[station.unit_number] = new_station(station)

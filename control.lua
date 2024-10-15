@@ -82,10 +82,6 @@ local function on_tick(event)
     end
   end
 end
---- @class on_train_teleported
---- @field train LuaTrain
---- @field old_train_id_1 uint?
---- @field old_surface_index uint
 
 local function on_se_elevator()
   if
@@ -214,13 +210,13 @@ commands.add_command("vtm-show-undef-stations", { "vtm.command-help" }, function
         station_data.force_index == player.force.index and
         station_data.type == "ND" and
         (
-        script.active_mods["space-exploration"] and
-        station_data.station.surface.name == global.settings[event.player_index].surface
-        or
-        script.active_mods["space-exploration"] and
-        global.settings[event.player_index].surface == "All"
-        or
-        not script.active_mods["space-exploration"] and true
+          script.active_mods["space-exploration"] and
+          station_data.station.surface.name == global.settings[event.player_index].surface
+          or
+          script.active_mods["space-exploration"] and
+          global.settings[event.player_index].surface == "All"
+          or
+          not script.active_mods["space-exploration"] and true
         )
     then
       table_index = table_index + 1

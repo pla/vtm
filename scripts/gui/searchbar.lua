@@ -2,12 +2,11 @@
 local constants = require("__vtm__.scripts.constants")
 local vtm_logic = require("__vtm__.scripts.vtm_logic")
 local tables = require("__flib__.table")
-local queue = require("__flib__.queue")
 
 local function refresh(action)
   script.raise_event(constants.refresh_event, {
-    action = action,
-    player_index = global.guis[action.gui_id].player.index
+      action = action,
+      player_index = global.guis[action.gui_id].player.index
   })
 end
 ---refresh surface drop down
@@ -245,8 +244,8 @@ local function build_gui(gui_id)
 end
 
 return {
-  handle_action = handle_action,
-  build_gui = build_gui,
-  refresh = refresh,
-  update = update,
+    handle_action = handle_action,
+    build_gui = build_gui,
+    refresh = refresh,
+    update = update,
 }

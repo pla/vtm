@@ -1,3 +1,4 @@
+---@meta
 --Alias definitions at the bottom
 
 ---@class GuiData
@@ -5,7 +6,7 @@
 ---@field gui table<string,LuaGuiElement>
 ---@field player LuaPlayer
 ---@field state string open or closed state of the main gui
----@field group_gui table<string,LuaGuiElement>?
+---@field group_gui table<string,LuaGuiElement>
 ---@field state_groups string open or closed state of the edit groups gui
 ---@field pinned boolean
 ---@field filter_history table Queue of previous search patterns
@@ -130,6 +131,11 @@
 ---@alias GlobalStationData {[unit_number]:StationData}
 ---@alias GlobalPlayerSettings {[player_index]:PlayerSettings}
 ---@alias GlobalGroups {[force_index]:{[group_id]:GroupData}}
+
+--- @class on_train_teleported
+--- @field train LuaTrain
+--- @field old_train_id_1 uint?
+--- @field old_surface_index uint
 
 --[[
 

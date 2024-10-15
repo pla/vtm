@@ -70,7 +70,7 @@ local function update_tab(gui_id)
   for _, station_data in pairs(global.stations) do
     if station_data.force_index == player.force.index and
         (station_data.type == "D" or
-        station_data.type == "F")
+          station_data.type == "F")
     then
       if station_data.station.valid and
           (surface == "All" or surface == station_data.station.surface.name)

@@ -69,7 +69,7 @@ migrations.by_version = {
     for _, player in pairs(game.players) do
       if player.valid then
         global.groups[player.force_index] = {}
-        global.settings[player.index].group_edit = {} --[[@as GroupEditData[] ]]
+        global.settings[player.index].group_edit = {} --[[@type GroupEditData[] ]]
       end
     end
   end,
@@ -83,7 +83,7 @@ function migrations.init_player_data(player)
       gui_refresh = "",
       surface = "All",
       history_switch = "left",
-      group_edit = {}  --[[@as GroupEditData[] ]]
+      group_edit = {}  --[[@type GroupEditData[] ]]
     }
     if not global.groups[player.force_index] then
       global.groups[player.force_index] = {}
@@ -92,7 +92,7 @@ function migrations.init_player_data(player)
 end
 
 function migrations.add_mod_gui_button(player)
-  local button_flow = mod_gui.get_button_flow(player) --[[@as LuaGuiElement]]
+  local button_flow = mod_gui.get_button_flow(player) --[[@type LuaGuiElement]]
   if not settings.player["vtm-showModgui"] then
     return
   end

@@ -50,7 +50,7 @@ function util.read_inbound_trains(station_data)
           for type, item_data in pairs(train_data.contents) do
             local row = {}
             row.type = type == "items" and "item" or "fluid"
-            for name, count in pairs(item_data) do
+            for name, count in pairs(item_data) do --FIXME
               row.name = name
               row.count = count
               row.color = "blue"
@@ -273,6 +273,13 @@ function util.signal_for_entity(entity)
   return empty_signal
 end
 
+function util.signal_to_sprite(signal)
+  if not signal then return nil end
+  if game.is_valid_sprite_path(signal.type .. "/" .. signal.name) then
+    return signal.type .. "/" .. signal.name
+  end
+
+end
 function util.matches_filter(result, filters)
   if result.last_change < filters.time_period then
     return false
