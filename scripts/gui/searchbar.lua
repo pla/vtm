@@ -193,7 +193,6 @@ local function build_gui(gui_id)
             caption = { "vtm.filter-prev" },
             tooltip = { "vtm.filter-prev-tooltip" },
             mouse_button_filter = { "left" },
-            -- style_mods = { size = 28, },
             actions = {
               on_click = { type = "searchbar", action = "prev-filter", gui_id = gui_id }
             }
