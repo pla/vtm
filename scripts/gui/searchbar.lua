@@ -122,102 +122,124 @@ end
 
 local function build_gui(gui_id)
   return {
-      type = "frame",
-      direction = "horizontal",
-      style = "vtm_searchbar_frame",
-      -- style = "inside_shallow_frame_with_padding",
-      children = {
-          { -- search flow
-              type = "flow",
-              direction = "horizontal",
-              style_mods = { vertical_align = "center", },
-              children = {
-                  {
-                      type = "label",
-                      style = "vtm_semibold_label_with_padding",
-                      caption = { "gui.search" }
-                  },
-                  {
-                      type = "textfield",
-                      tooltip = { "vtm.filter-station-name-tooltip" },
-                      clear_and_focus_on_right_click = true,
-                      ref = { "filter", "search_field" },
-                      actions = {
-                          on_confirmed = {
-                              type = "searchbar", action = "apply-filter", gui_id = gui_id,
-                              filter = "search_field"
-                          },
-                          on_click = {
-                              type = "searchbar", action = "clear-filter", gui_id = gui_id,
-                              button = "right"
-                          }
-                      }
-                  },
-                  {
-                      type = "label",
-                      style = "vtm_semibold_label_with_padding",
-                      caption = { "gui.select-filter" }
-                  },
-                  {
-                      type = "choose-elem-button",
-                      style = "slot_button_in_shallow_frame",
-                      style_mods = { size = 32, },
-                      elem_type = "signal",
-                      tooltip = { "vtm.filter-item-tooltip" },
-                      ref = { "filter", "item" },
-                      actions = {
-                          on_elem_changed = {
-                              type = "searchbar", action = "apply-filter", gui_id = gui_id,
-                              filter = "item", button = "right"
-                          },
-                          on_click = {
-                              type = "searchbar", action = "clear-filter", gui_id = gui_id,
-                              button = "right"
-                          }
-                      }
-                  },
-                  {
-                      type = "button",
-                      caption = { "vtm.filter-clear" },
-                      tooltip = { "vtm.filter-clear" },
-                      actions = {
-                          on_click = { type = "searchbar", action = "clear-filter", gui_id = gui_id }
-                      }
-                  }
-              }
-          }, -- end search flow
+    type = "frame",
+    direction = "horizontal",
+    style = "vtm_searchbar_frame",
+    -- style = "inside_shallow_frame_with_padding",
+    children = {
+      {
+        -- search flow
+        type = "flow",
+        direction = "horizontal",
+        style_mods = { vertical_align = "center", horizontal_spacing = 8 },
+        children = {
           {
-              type = "empty-widget",
-              style = "flib_horizontal_pusher",
+            type = "label",
+            style = "vtm_semibold_label_with_padding",
+            caption = { "gui.search" }
           },
-          { -- Surface flow
-              type = "flow",
-              direction = "horizontal",
-              ref = { "filter", "surface_flow" },
-              visible = false,
-              style_mods = { vertical_align = "center", horizontal_align = "right", },
-              children = {
-                  {
-                      type = "label",
-                      style = "vtm_semibold_label_with_padding",
-                      caption = { "vtm.filter-surface" }
-                  },
-                  {
-                      type = "drop-down",
-                      tooltip = { "vtm.filter-surface-tooltip" },
-                      ref = { "filter", "surface" },
-                      actions = {
-                          on_selection_state_changed = {
-                              type = "searchbar", action = "apply-surface", gui_id = gui_id,
-                          },
-                          -- on_click = {
-                          --   type = "searchbar", action = "clear-filter", gui_id = gui_id,
-                          -- }
-                      }
-                  },
+          {
+            type = "textfield",
+            tooltip = { "vtm.filter-station-name-tooltip" },
+            clear_and_focus_on_right_click = true,
+            ref = { "filter", "search_field" },
+            actions = {
+              on_confirmed = {
+                type = "searchbar",
+                action = "apply-filter",
+                gui_id = gui_id,
+                filter = "search_field"
+              },
+              on_click = {
+                type = "searchbar",
+                action = "clear-filter",
+                gui_id = gui_id,
+                button = "right"
               }
-          } -- end surface flow
-      }
+            }
+          },
+          {
+            type = "label",
+            style = "vtm_semibold_label_with_padding",
+            caption = { "gui.select-filter" }
+          },
+          {
+            type = "choose-elem-button",
+            style = "slot_button_in_shallow_frame",
+            style_mods = { size = 32, },
+            elem_type = "signal",
+            tooltip = { "vtm.filter-item-tooltip" },
+            ref = { "filter", "item" },
+            actions = {
+              on_elem_changed = {
+                type = "searchbar",
+                action = "apply-filter",
+                gui_id = gui_id,
+                filter = "item",
+                button = "right"
+              },
+              on_click = {
+                type = "searchbar",
+                action = "clear-filter",
+                gui_id = gui_id,
+                button = "right"
+              }
+            }
+          },
+          {
+            type = "button",
+            style = "tool_button",
+            caption = { "vtm.filter-prev" },
+            tooltip = { "vtm.filter-prev-tooltip" },
+            mouse_button_filter = { "left" },
+            actions = {
+              on_click = { type = "searchbar", action = "prev-filter", gui_id = gui_id }
+            }
+          },
+          {
+            type = "button",
+            caption = { "vtm.filter-clear" },
+            mouse_button_filter = { "left" },
+            tooltip = { "vtm.filter-clear" },
+            actions = {
+              on_click = { type = "searchbar", action = "clear-filter", gui_id = gui_id }
+            }
+          },
+        }
+      }, -- end search flow
+      {
+        type = "empty-widget",
+        style = "flib_horizontal_pusher",
+      },
+      {
+        -- Surface flow
+        type = "flow",
+        direction = "horizontal",
+        ref = { "filter", "surface_flow" },
+        visible = false,
+        style_mods = { vertical_align = "center", horizontal_align = "right", },
+        children = {
+          {
+            type = "label",
+            style = "vtm_semibold_label_with_padding",
+            caption = { "vtm.filter-surface" }
+          },
+          {
+            type = "drop-down",
+            tooltip = { "vtm.filter-surface-tooltip" },
+            ref = { "filter", "surface" },
+            actions = {
+              on_selection_state_changed = {
+                type = "searchbar", action = "apply-surface", gui_id = gui_id,
+              },
+              -- on_click = {
+              --   type = "searchbar", action = "clear-filter", gui_id = gui_id,
+              -- }
+            }
+          },
+        }
+      } -- end surface flow
+    }
   }
 end
 
