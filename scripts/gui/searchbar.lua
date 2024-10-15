@@ -5,8 +5,8 @@ local tables = require("__flib__.table")
 
 local function refresh(action)
   script.raise_event(constants.refresh_event, {
-      action = action,
-      player_index = global.guis[action.gui_id].player.index
+    action = action,
+    player_index = global.guis[action.gui_id].player.index
   })
 end
 ---refresh surface drop down

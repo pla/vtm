@@ -280,6 +280,7 @@ function util.signal_to_sprite(signal)
   end
 
 end
+
 function util.matches_filter(result, filters)
   if result.last_change < filters.time_period then
     return false
