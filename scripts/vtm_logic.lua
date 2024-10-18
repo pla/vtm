@@ -1,7 +1,7 @@
 local on_tick_n = require("__flib__.on-tick-n")
 local tables = require("__flib__.table")
-local constants = require("__vtm__.scripts.constants")
-local gui_util = require("__vtm__.scripts.gui.utils")
+local constants = require("__virtm__.scripts.constants")
+local gui_util = require("__virtm__.scripts.gui.utils")
 local util = require("__core__.lualib.util")
 local flib_train = require("__flib__.train")
 
@@ -12,6 +12,7 @@ local vtm_logic = {}
 
 function vtm_logic.load_guess_patterns()
   if not global.settings["patterns"] then
+---@diagnostic disable-next-line: missing-fields
     global.settings["patterns"] = {} --[[@type GuessPatterns ]]
   end
   global.settings["patterns"] = {

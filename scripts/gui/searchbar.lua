@@ -1,6 +1,6 @@
 --searchbar.lua
-local constants = require("__vtm__.scripts.constants")
-local vtm_logic = require("__vtm__.scripts.vtm_logic")
+local constants = require("__virtm__.scripts.constants")
+local vtm_logic = require("__virtm__.scripts.vtm_logic")
 local tables = require("__flib__.table")
 
 local function refresh(action)

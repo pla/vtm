@@ -1,5 +1,5 @@
 local data_util = require("__flib__.data-util")
-require("__vtm__.prototypes.styles")
+require("__virtm__.prototypes.styles")
 
   data:extend {
     {
@@ -63,9 +63,9 @@ data:extend {
   {
     type                     = "shortcut",
     name                     = "vtm-open",
-    icon                     = data_util.build_sprite(nil, nil, "__vtm__/graphics/icons/shortcut.png", { 32, 32 }),
-    small_icon               = data_util.build_sprite(nil, nil, "__vtm__/graphics/icons/shortcut_black24.png", { 24, 24 }),
-    disabled_small_icon      = data_util.build_sprite(nil, nil, "__vtm__/graphics/icons/shortcut_black24.png", { 24, 24 }),
+    icon                     = data_util.build_sprite(nil, nil, "__virtm__/graphics/icons/shortcut.png", { 32, 32 }),
+    small_icon               = data_util.build_sprite(nil, nil, "__virtm__/graphics/icons/shortcut_black24.png", { 24, 24 }),
+    disabled_small_icon      = data_util.build_sprite(nil, nil, "__virtm__/graphics/icons/shortcut_black24.png", { 24, 24 }),
     toggleable               = false,
     action                   = "lua",
     associated_control_input = "vtm-open",

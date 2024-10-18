@@ -1,4 +1,4 @@
-local constants = require("__vtm__.scripts.constants")
+local constants = require("__virtm__.scripts.constants")
 local styles = data.raw["gui-style"]["default"]
 
 styles.vtm_main_content_frame = {

@@ -1,9 +1,9 @@
 -- history.lua
 local util = require("__core__.lualib.util")
 local gui = require("__flib__.gui")
-local gui_util = require("__vtm__.scripts.gui.utils")
-local match = require("__vtm__.scripts.match")
-local constants = require("__vtm__.scripts.constants")
+local gui_util = require("__virtm__.scripts.gui.utils")
+local match = require("__virtm__.scripts.match")
+local constants = require("__virtm__.scripts.constants")
 local format = require("__flib__.format")
 
 local function material_icon_list(event)

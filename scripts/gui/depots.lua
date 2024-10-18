@@ -1,8 +1,8 @@
 -- depots.lua
-local constants = require("__vtm__.scripts.constants")
+local constants = require("__virtm__.scripts.constants")
 local tables = require("__flib__.table")
 local gui = require("__flib__.gui")
-local gui_util = require("__vtm__.scripts.gui.utils")
+local gui_util = require("__virtm__.scripts.gui.utils")
 
 local function depot_limit(station_data)
   local limit = station_data.limit

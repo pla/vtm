@@ -1,10 +1,10 @@
 -- groups.lua station groups
 local table     = require("__flib__.table")
 local gui       = require("__flib__.gui")
-local gui_util  = require("__vtm__.scripts.gui.utils")
+local gui_util  = require("__virtm__.scripts.gui.utils")
 local util      = require("__core__.lualib.util")
-local constants = require("__vtm__.scripts.constants")
-local vtm_logic = require("__vtm__.scripts.vtm_logic")
+local constants = require("__virtm__.scripts.constants")
+local vtm_logic = require("__virtm__.scripts.vtm_logic")
 local flib_box  = require("__flib__.bounding-box")
 
 

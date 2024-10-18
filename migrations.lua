@@ -1,9 +1,9 @@
-local vtm_gui    = require("__vtm__.scripts.gui.main_gui")
-local vtm_logic  = require("__vtm__.scripts.vtm_logic")
-local gui_util   = require("__vtm__.scripts.gui.utils")
+local vtm_gui    = require("__virtm__.scripts.gui.main_gui")
+local vtm_logic  = require("__virtm__.scripts.vtm_logic")
+local gui_util   = require("__virtm__.scripts.gui.utils")
 local mod_gui    = require("__core__.lualib.mod-gui")
-local constants  = require("__vtm__.scripts.constants")
-local groups     = require("__vtm__.scripts.gui.groups")
+local constants  = require("__virtm__.scripts.constants")
+local groups     = require("__virtm__.scripts.gui.groups")
 
 local migrations = {}
 

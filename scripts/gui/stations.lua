@@ -1,11 +1,11 @@
 -- stations.lua
 local tables    = require("__flib__.table")
 local gui       = require("__flib__.gui")
-local gui_util  = require("__vtm__.scripts.gui.utils")
-local match     = require("__vtm__.scripts.match")
-local constants = require("__vtm__.scripts.constants")
-local vtm_logic = require("__vtm__.scripts.vtm_logic")
-local groups    = require("__vtm__.scripts.gui.groups")
+local gui_util  = require("__virtm__.scripts.gui.utils")
+local match     = require("__virtm__.scripts.match")
+local constants = require("__virtm__.scripts.constants")
+local vtm_logic = require("__virtm__.scripts.vtm_logic")
+local groups    = require("__virtm__.scripts.gui.groups")
 
 ---comment
 ---@param station_data StationData
