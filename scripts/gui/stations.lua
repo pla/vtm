@@ -1,6 +1,7 @@
 -- stations.lua
 local tables    = require("__flib__.table")
-local gui       = require("__flib__.gui")
+-- local gui         = require("__flib__.gui")
+local gui         = require("__virtm__.scripts.flib-gui")
 local gui_util  = require("__virtm__.scripts.gui.utils")
 local match     = require("__virtm__.scripts.match")
 local constants = require("__virtm__.scripts.constants")

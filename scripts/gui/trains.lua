@@ -1,10 +1,11 @@
 local flib_train = require("__flib__.train")
-local tables = require("__flib__.table")
-local gui = require("__flib__.gui")
-local gui_util = require("__virtm__.scripts.gui.utils")
-local constants = require("__virtm__.scripts.constants")
-local match = require("__virtm__.scripts.match")
-local format = require("__flib__.format")
+local tables     = require("__flib__.table")
+-- local gui         = require("__flib__.gui")
+local gui        = require("__virtm__.scripts.flib-gui")
+local gui_util   = require("__virtm__.scripts.gui.utils")
+local constants  = require("__virtm__.scripts.constants")
+local match      = require("__virtm__.scripts.match")
+local format     = require("__flib__.format")
 
 
 local inv_states = tables.invert(defines.train_state)
@@ -223,7 +224,7 @@ function trains.update_tab(gui_id)
           {
             elem_mods = {
               caption = train_data.train.id,
-              tooltip = {"vtm.train-open-ui-follow-train", train_data.train.id },
+              tooltip = { "vtm.train-open-ui-follow-train", train_data.train.id },
             },
             actions = {
               on_click = { type = "trains", action = "open-train", train_id = train_data.train.id },

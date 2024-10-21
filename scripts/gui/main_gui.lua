@@ -1,5 +1,6 @@
 local constants   = require("__virtm__.scripts.constants")
-local gui         = require("__flib__.gui")
+-- local gui         = require("__flib__.gui")
+local gui         = require("__virtm__.scripts.flib-gui")
 local searchbar   = require("__virtm__.scripts.gui.searchbar")
 local trains      = require("__virtm__.scripts.gui.trains")
 local stations    = require("__virtm__.scripts.gui.stations")

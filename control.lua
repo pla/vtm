@@ -89,6 +89,7 @@ local function on_se_elevator()
       and remote.interfaces["space-exploration"]["get_on_train_teleport_started_event"]
   then
     script.on_event(
+---@diagnostic disable-next-line: param-type-mismatch
       remote.call("space-exploration", "get_on_train_teleport_finished_event"),
       --- @param event on_train_teleported
       function(event)

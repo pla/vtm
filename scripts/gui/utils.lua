@@ -1,8 +1,9 @@
 -- gui/util.lua
-local gui = require("__flib__.gui")
+-- local gui         = require("__flib__.gui")
+local gui      = require("__virtm__.scripts.flib-gui")
 local flib_box = require("__flib__.bounding-box")
 
-local util = {}
+local util     = {}
 
 function util.get_gui_id(player_index)
   local player = game.get_player(player_index)
@@ -47,10 +48,10 @@ function util.read_inbound_trains(station_data)
       local train_data = global.trains[train_id]
       if train_data and train_data.train.valid then
         if train_data.path_end_stop == station.unit_number then
-          for type, item_data in pairs(train_data.contents) do
+            for type, item_data in pairs(train_data.contents) do
             local row = {}
             row.type = type == "items" and "item" or "fluid"
-            for name, count in pairs(item_data) do --FIXME
+            for name, count in pairs(item_data) do
               row.name = name
               row.count = count
               row.color = "blue"
@@ -278,7 +279,6 @@ function util.signal_to_sprite(signal)
   if game.is_valid_sprite_path(signal.type .. "/" .. signal.name) then
     return signal.type .. "/" .. signal.name
   end
-
 end
 
 function util.matches_filter(result, filters)
@@ -343,6 +343,7 @@ function util.show_remote_position(player, surface_name, position)
   if not player or not surface or not position then return end
   if global.SE_active and remote.interfaces["space-exploration"]["remote_view_start"]
   then
+---@diagnostic disable-next-line: missing-fields
     remote.call("space-exploration", "remote_view_start", {
       player = player,
       zone_name = global.surfaces[surface_name],
@@ -360,6 +361,7 @@ function util.follow_remote_train(player, loco)
   if not player or not loco or not loco.valid then return end
   if global.SE_active and remote.interfaces["space-exploration"]["remote_view_start"]
   then
+---@diagnostic disable-next-line: missing-fields
     remote.call("space-exploration", "remote_view_start", {
       player = player,
       zone_name = global.surfaces[loco.surface.name],
