@@ -125,19 +125,19 @@ local function train_status_message(train_data)
 end
 
 function trains.update_tab(gui_id)
-  local vtm_gui = global.guis[gui_id]
-  local surface = global.settings[global.guis[gui_id].player.index].surface or "All"
+  local vtm_gui = storage.guis[gui_id]
+  local surface = storage.settings[storage.guis[gui_id].player.index].surface or "All"
   local train_datas = {}
   local inv_trains = {}
   local table_index = 0
-  local max_lines = global.max_lines
+  local max_lines = storage.max_lines
   local filters = {
     -- item = vtm_gui.gui.filter.item.elem_value.name,
     -- fluid = vtm_gui.gui.filter.fluid.elem_value,
     search_field = vtm_gui.gui.filter.search_field.text:lower(),
   }
 
-  for train_id, train_data in pairs(global.trains) do
+  for train_id, train_data in pairs(storage.trains) do
     if not train_data.train.valid then
       table.insert(inv_trains, train_id)
     end
@@ -152,7 +152,7 @@ function trains.update_tab(gui_id)
   end
   -- delete invalid traindata
   for _, train_id in pairs(inv_trains) do
-    global.trains[train_id] = nil
+    storage.trains[train_id] = nil
   end
 
   table.sort(train_datas, function(a, b) return a.last_change > b.last_change end)
@@ -165,7 +165,7 @@ function trains.update_tab(gui_id)
     if train_data.train.valid then
       if table_index >= max_lines and
           max_lines > 0 and
-          global.settings[vtm_gui.player.index].gui_refresh == "auto" and
+          storage.settings[vtm_gui.player.index].gui_refresh == "auto" and
           filters.search_field == ""
       then
         -- max entries
@@ -329,7 +329,7 @@ function trains.build_gui(gui_id)
         visible = true,
         {
           type = "flow",
-          style = "centering_horizontal_flow",
+          style = "compact_horizontal_flow",
           style_mods = { horizontally_stretchable = true },
           {
             type = "label",
@@ -348,8 +348,8 @@ end
 ---@param event EventData.on_gui_click
 function trains.handle_action(action, event)
   if action.action == "open-train" then
-    if global.trains[action.train_id] then
-      local train = global.trains[action.train_id].train
+    if storage.trains[action.train_id] then
+      local train = storage.trains[action.train_id].train
       if not train.valid then return end
       local loco = flib_train.get_main_locomotive(train)
       local player = game.players[event.player_index]

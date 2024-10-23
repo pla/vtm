@@ -141,7 +141,7 @@
 
 
   ---@type {[uint]:{[uint]:GroupData}}
-  global.groups = {}
+  storage.groups = {}
 
 
 ]]

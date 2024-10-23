@@ -13,11 +13,11 @@ local function material_icon_list(event)
   -- diff only after leaving station
   if event.diff then
     for item, amount in pairs(event.diff.items or {}) do
-      result = result .. util.format_number(amount, "k") .. " [item=" .. item .. "], "
+      result = result .. util.format_number(amount, true) .. " [item=" .. item .. "], "
       zero = zero + amount
     end
     for fluid, amount in pairs(event.diff.fluids or {}) do
-      result = result .. util.format_number(math.ceil(amount), "k") .. " [fluid=" .. fluid .. "], "
+      result = result .. util.format_number(math.ceil(amount), true) .. " [fluid=" .. fluid .. "], "
       zero = zero + amount
     end
   end
@@ -49,7 +49,7 @@ local function create_history_msg(event, compact)
   if event.state == defines.train_state.wait_station and event.station and event.station.valid then
     msg = { "vtm.histstory-arrived", event.station.backer_name, cargo }
     if compact then
-      local station_data = global.stations[event.station.unit_number]
+      local station_data = storage.stations[event.station.unit_number]
       skip = station_data.type == "D" or station_data.type == "F"
     end
   elseif event.diff then
@@ -246,7 +246,7 @@ local function build_gui()
         visible = true,
         {
           type = "flow",
-          style = "centering_horizontal_flow",
+          style = "compact_horizontal_flow",
           style_mods = { horizontally_stretchable = true },
           {
             type = "label",
@@ -261,12 +261,12 @@ local function build_gui()
 end
 
 local function update_tab(gui_id)
-  local vtm_gui = global.guis[gui_id]
-  local player = global.guis[gui_id].player
-  local vsettings = global.settings[player.index]
+  local vtm_gui = storage.guis[gui_id]
+  local player = storage.guis[gui_id].player
+  local vsettings = storage.settings[player.index]
   local surface = vsettings.surface or "All"
   local history = {}
-  local max_hist = global.max_hist
+  local max_hist = storage.max_hist
   local table_index = 0
   local filters = { search_field = vtm_gui.gui.filter.search_field.text:lower() }
 
@@ -277,7 +277,7 @@ local function update_tab(gui_id)
   local width = constants.gui.history
 
   vtm_gui.gui.history.switch.switch_state = switch_state
-  history = global.history
+  history = storage.history
 
   -- filter
   for _, history_data in pairs(history) do
@@ -348,7 +348,7 @@ local function update_tab(gui_id)
         sprite = history_data.sprite
         train_id = tostring(history_data.train.id)
         tooltip = prototype.localised_name
-      elseif history_data.surface2 and game.is_valid_sprite_path("item/se-space-elevator") then
+      elseif history_data.surface2 and helpers.is_valid_sprite_path("item/se-space-elevator") then
         sprite = "item/se-space-elevator"
       end
 

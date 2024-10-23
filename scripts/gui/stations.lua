@@ -41,22 +41,22 @@ local function station_limit(station_data, is_circuit_limit)
 end
 
 local function update_tab(gui_id)
-  local vtm_gui = global.guis[gui_id]
-  local surface = global.settings[global.guis[gui_id].player.index].surface or "All"
+  local vtm_gui = storage.guis[gui_id]
+  local surface = storage.settings[storage.guis[gui_id].player.index].surface or "All"
   ---@type table<uint,StationData>
   local stations = {}
   local nd_stations = 0
   local table_index = 0
-  local max_lines = global.max_lines
+  local max_lines = storage.max_lines
 
   local filters = {
     search_field = vtm_gui.gui.filter.search_field.text:lower(),
   }
 
-  if not next(global.stations) then
+  if not next(storage.stations) then
     vtm_logic.init_stations()
   end
-  for _, station_data in pairs(global.stations) do
+  for _, station_data in pairs(storage.stations) do
     if station_data.station.valid and
         (surface == "All" or surface == station_data.station.surface.name)
     then
@@ -88,7 +88,7 @@ local function update_tab(gui_id)
     if station_data.station.valid then
       if table_index >= max_lines and
           max_lines > 0 and
-          global.settings[vtm_gui.player.index].gui_refresh == "auto" and
+          storage.settings[vtm_gui.player.index].gui_refresh == "auto" and
           filters.search_field == ""
       then
         -- max entries, loop verlasen
@@ -230,7 +230,7 @@ local function update_tab(gui_id)
   end
   vtm_gui.gui.tabs.stations_tab.badge_text = table_index or 0
   if table_index > 0 then
-    if nd_stations > 10 and global.show_undef_warn  then
+    if nd_stations > 10 and storage.show_undef_warn  then
       vtm_gui.gui.stations.warning.visible = true
       vtm_gui.gui.stations.warning_label.caption = { "vtm.station-warning", nd_stations }
     end
@@ -326,7 +326,7 @@ local function build_gui(gui_id)
         visible = true,
         {
           type = "flow",
-          style = "centering_horizontal_flow",
+          style = "compact_horizontal_flow",
           style_mods = { horizontally_stretchable = true },
           {
             type = "label",
@@ -345,8 +345,8 @@ end
 ---@param event EventData|any
 local function handle_action(action, event)
   if action.action == "open-station" then
-    if global.stations[action.station_id] then
-      local station = global.stations[action.station_id].station --[[@as LuaEntity]]
+    if storage.stations[action.station_id] then
+      local station = storage.stations[action.station_id].station --[[@as LuaEntity]]
       if not station.valid then return end
       gui_util.open_entity_gui(event.player_index, station)
     end
@@ -354,7 +354,7 @@ local function handle_action(action, event)
     local player = game.players[event.player_index]
     local position, surface
     if action.station_id then
-      local station = global.stations[action.station_id].station --[[@as LuaEntity]]
+      local station = storage.stations[action.station_id].station --[[@as LuaEntity]]
       if not station.valid then return end
       position = station.position --[[@as MapPosition]]
       surface = station.surface.name --[[@as string]]

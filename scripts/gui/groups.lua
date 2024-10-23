@@ -33,7 +33,7 @@ local function header(gui_id)
         type = "sprite-button",
         name = "close_button",
         style = "frame_action_button",
-        sprite = "utility/close_white",
+        sprite = "utility/close",
         mouse_button_filter = { "left" },
         hovered_sprite = "utility/close_black",
         clicked_sprite = "utility/close_black",
@@ -236,17 +236,17 @@ local function build_gui(gui_id, name)
 end
 
 local function create_gui(gui_id)
-  local vtm_gui = global.guis[gui_id]
+  local vtm_gui = storage.guis[gui_id]
   local player = vtm_gui.player
-  if global.groups[player.index] == nil then
-    global.groups[player.index] = {}
+  if storage.groups[player.index] == nil then
+    storage.groups[player.index] = {}
   end
   local ui = build_gui(gui_id)
   local refs = gui.build(player.gui.screen, ui)
   refs.titlebar.flow.drag_target = refs.groups_window
   refs.groups_window.visible = false
-  global.guis[gui_id].group_gui = refs
-  global.guis[gui_id].state_groups = "closed"
+  storage.guis[gui_id].group_gui = refs
+  storage.guis[gui_id].state_groups = "closed"
   gui.update(refs.groups_window, {
     elem_mods = {
       location = { 10, 150 }
@@ -260,9 +260,9 @@ local function split_stations(stations)
   ---@type table<uint,LuaEntity>
   local requester = {}
   for _, station in pairs(stations or {}) do
-    if global.stations[station.unit_number].type == "P" then
+    if storage.stations[station.unit_number].type == "P" then
       table.insert(provider, station)
-    elseif global.stations[station.unit_number].type == "R" then
+    elseif storage.stations[station.unit_number].type == "R" then
       table.insert(requester, station)
     end
   end
@@ -294,13 +294,13 @@ end
 --- clear all temp data
 ---@param gui_id uint
 local function clear_selected_data(gui_id)
-  local vgui = global.guis[gui_id]
+  local vgui = storage.guis[gui_id]
   local group_gui = vgui.group_gui
   if not group_gui then return end
   local top_buttons = group_gui.top_buttons
   local top_list = group_gui.top_list
   local bottom_list = group_gui.bottom_list
-  local edit = global.settings[vgui.player.index].group_edit
+  local edit = storage.settings[vgui.player.index].group_edit
   edit.selected_stations = nil
   edit.selected_tags = nil
   edit.selected_group_id = nil
@@ -311,17 +311,17 @@ local function clear_selected_data(gui_id)
   top_buttons.remove_button.enabled = false
 end
 local function remove_group_tags(player)
-  if not global.group_tags or not player then return end
+  if not storage.group_tags or not player then return end
   local force = player.force
-  if not global.group_tags[force.index] then return end
+  if not storage.group_tags[force.index] then return end
   -- local surface = player.surface.name
   -- only one surface, and one user per force can show tags, to keep it simple
-  for _, tag in pairs(global.group_tags[force.index]) do
+  for _, tag in pairs(storage.group_tags[force.index]) do
     if tag.valid then
       tag.destroy()
     end
   end
-  global.group_tags[force.index] = {}
+  storage.group_tags[force.index] = {}
 end
 
 ---create a chart tag
@@ -340,25 +340,25 @@ local function create_map_tag(force, surface, position, text, player_index)
     last_user = player_index
   })
   if tag and tag.valid then
-    table.insert(global.group_tags[force.index], tag)
+    table.insert(storage.group_tags[force.index], tag)
   end
   return tag
 end
 
 local function create_group_tags(gui_id)
-  local vgui = global.guis[gui_id]
+  local vgui = storage.guis[gui_id]
   local player = vgui.player
   local force = player.force --[[@as LuaForce]]
   local surface = player.surface.name
 
-  if not global.group_tags then
-    global.group_tags = {}
+  if not storage.group_tags then
+    storage.group_tags = {}
   end
-  if not global.group_tags[force.index] then
-    global.group_tags[force.index] = {}
+  if not storage.group_tags[force.index] then
+    storage.group_tags[force.index] = {}
   end
 
-  for group_id, group in pairs(global.groups[force.index]) do
+  for group_id, group in pairs(storage.groups[force.index]) do
     -- if group.main_station and group.main_station.station.valid then
     if group.surface == surface then
       local position = flib_box.center(group.area)
@@ -387,10 +387,10 @@ local function draw_group_rectangle(color, surface, area, ttl)
   return id
 end
 local function show_overlay(gui_id)
-  local vgui = global.guis[gui_id]
+  local vgui = storage.guis[gui_id]
   local player = vgui.player
   local surface = player.surface.name
-  for _, group in pairs(global.groups[player.force_index]) do
+  for _, group in pairs(storage.groups[player.force_index]) do
     if group.surface == surface then
       -- local id = rendering.draw_rectangle({
       --   color = constants.blue,
@@ -415,7 +415,7 @@ end
 ---@param action GuiAction
 ---@param event EventData.on_gui_click
 local function toggle_overlay(action, event)
-  local edit = global.settings[event.player_index].group_edit
+  local edit = storage.settings[event.player_index].group_edit
   if edit and edit.show_overlay then
     event.element.style = "tool_button"
     edit.show_overlay = false
@@ -433,10 +433,10 @@ end
 ---@param gui_id uint
 ---@param station_list_temp? table<uint,LuaEntity>
 local function update_gui(gui_id, station_list_temp)
-  local vtm_gui = global.guis[gui_id]
-  local surface = global.settings[vtm_gui.player.index].surface or "All"
+  local vtm_gui = storage.guis[gui_id]
+  local surface = storage.settings[vtm_gui.player.index].surface or "All"
   local top_buttons = vtm_gui.group_gui.top_buttons
-  local edit = global.settings[vtm_gui.player.index].group_edit
+  local edit = storage.settings[vtm_gui.player.index].group_edit
 
   local top_names = {}
   local bottom_names = {}
@@ -457,7 +457,7 @@ local function update_gui(gui_id, station_list_temp)
     top_index = top_index + 1
     --check for existing group
     local name = station.backer_name
-    if global.groups[station.force_index][station.unit_number] then
+    if storage.groups[station.force_index][station.unit_number] then
       name = name .. constants.group_exist_suffix
     end
     table.insert(top_names, name)
@@ -492,8 +492,8 @@ end
 ---@param gui_id uint
 ---@param group_id uint
 local function update_gui_from_group(gui_id, group_id)
-  local vtm_gui = global.guis[gui_id]
-  local edit = global.settings[vtm_gui.player.index].group_edit
+  local vtm_gui = storage.guis[gui_id]
+  local edit = storage.settings[vtm_gui.player.index].group_edit
 
   if group_id then
     local stations = {}
@@ -522,7 +522,7 @@ end
 ---@param clear? boolean
 local function open_gui(action, clear)
   local gui_id = action.gui_id
-  local gui = global.guis[gui_id]
+  local gui = storage.guis[gui_id]
   gui.group_gui.groups_window.visible = true
   gui.state_groups = "open"
   if action.group_id then
@@ -541,15 +541,15 @@ end
 ---@param group_id uint
 local function register_group_set(name, group_id)
   if not name or not group_id then return end
-  if not global.group_set[name] then
-    global.group_set[name] = {}
+  if not storage.group_set[name] then
+    storage.group_set[name] = {}
   end
-  for _, value in pairs(global.group_set[name]) do
+  for _, value in pairs(storage.group_set[name]) do
     if value == group_id then
       return
     end
   end
-  table.insert(global.group_set[name], group_id)
+  table.insert(storage.group_set[name], group_id)
 end
 
 ---Validate group members and tags
@@ -580,7 +580,7 @@ end
 ---@param show boolean show_overlay
 local function add_group_overlay(gui_id, group_data, show)
   if show then
-    local vgui = global.guis[gui_id]
+    local vgui = storage.guis[gui_id]
     local player = vgui.player
     local force = player.force --[[@as LuaForce]]
     local surface = player.surface.name
@@ -597,7 +597,7 @@ end
 local function save_groups(action, event)
   local player = game.get_player(event.player_index)
   if not player then return false end
-  local edit = global.settings[event.player_index].group_edit
+  local edit = storage.settings[event.player_index].group_edit
   -- validate data
   if not validate_group_data(edit) then
     player.create_local_flying_text({
@@ -635,7 +635,7 @@ local function save_groups(action, event)
       resource_tags = tag_list,
       zoom = gui_util.get_zoom_from_area(edit.group_area)
     }
-    global.groups[p_station.force_index][p_station.unit_number] = group_data
+    storage.groups[p_station.force_index][p_station.unit_number] = group_data
     register_group_set(p_station.backer_name, p_station.unit_number)
     player.print({ "vtm.groups-saved", p_station.unit_number })
     add_group_overlay(action.gui_id, group_data, edit.show_overlay)
@@ -656,7 +656,7 @@ end
 ---@param event EventData.on_gui_elem_changed
 local function on_gui_elem_changed(event)
   local gui_id      = gui_util.get_gui_id(event.player_index)
-  local group_gui   = global.guis[gui_id].group_gui
+  local group_gui   = storage.guis[gui_id].group_gui
   ---@type LuaGuiElement
   local top_buttons = group_gui.top_buttons
   ---@type LuaGuiElement
@@ -694,7 +694,7 @@ end
 ---@param action table
 ---@param event EventData.on_gui_click
 local function toggle_tool_mode_button(action, event)
-  local edit = global.settings[event.player_index].group_edit
+  local edit = storage.settings[event.player_index].group_edit
   if edit and edit.add_to_selection then
     event.element.style = "tool_button"
     edit.add_to_selection = false
@@ -712,8 +712,8 @@ local function give_selector(player)
 end
 
 local function close_gui(gui_id)
-  local vgui = global.guis[gui_id]
-  local edit = global.settings[vgui.player.index].group_edit
+  local vgui = storage.guis[gui_id]
+  local edit = storage.settings[vgui.player.index].group_edit
   local refs = vgui.group_gui
   refs.groups_window.visible = false
   vgui.state_groups = "closed"
@@ -725,7 +725,7 @@ end
 
 local function destroy_gui(gui_id)
   close_gui(gui_id)
-  local vgui = global.guis[gui_id]
+  local vgui = storage.guis[gui_id]
   vgui.group_gui.groups_window.destroy()
   vgui.group_gui = nil
   clear_selected_data(gui_id)
@@ -736,19 +736,19 @@ local function toggle_groups_gui(player_index)
   if not gui_id then return end
 
   if gui_id and
-      global.guis[gui_id].state_groups and
-      global.guis[gui_id].state_groups == "closed" then
+      storage.guis[gui_id].state_groups and
+      storage.guis[gui_id].state_groups == "closed" then
     open_gui({ gui_id = gui_id })
-    give_selector(global.guis[gui_id].player)
+    give_selector(storage.guis[gui_id].player)
   else
     close_gui(gui_id)
   end
 end
 
 local function remove_station_from_list(action, event)
-  local edit                = global.settings[event.player_index].group_edit
+  local edit                = storage.settings[event.player_index].group_edit
   local gui_id              = action.gui_id
-  local group_gui           = global.guis[gui_id].group_gui
+  local group_gui           = storage.guis[gui_id].group_gui
   local top_buttons         = group_gui.top_buttons
   local top_list            = group_gui.top_list
   local bottom_list         = group_gui.bottom_list
@@ -793,7 +793,7 @@ end
 
 local function remove_group_from_set(station)
   if not station.valid then return end
-  local set = global.group_set[station.backer_name]
+  local set = storage.group_set[station.backer_name]
   if not set then return end
   local remove
   for key, group_id in pairs(set) do
@@ -803,7 +803,7 @@ local function remove_group_from_set(station)
   end
   table.remove(set, remove)
   if table_size(set) == 0 then
-    global.group_set[station.backer_name] = nil
+    storage.group_set[station.backer_name] = nil
   end
 end
 
@@ -811,9 +811,9 @@ end
 ---@param event table
 local function delete_group(action, event)
   --two steps
-  local edit        = global.settings[event.player_index].group_edit
+  local edit        = storage.settings[event.player_index].group_edit
   local player      = game.get_player(event.player_index)
-  local group_gui   = global.guis[action.gui_id].group_gui
+  local group_gui   = storage.guis[action.gui_id].group_gui
   local top_buttons = group_gui.top_buttons
   local button      = top_buttons.delgrp_button
   local top_list    = group_gui.top_list
@@ -832,7 +832,7 @@ local function delete_group(action, event)
       end
     end
   else
-    p_station = global.stations[group_id] and global.stations[group_id].station
+    p_station = storage.stations[group_id] and storage.stations[group_id].station
   end
 
   if not button or not button.enabled or not p_station or not player then return end
@@ -842,7 +842,7 @@ local function delete_group(action, event)
     -- delete set entry
     remove_group_from_set(p_station)
     --delete the group
-    global.groups[p_station.force_index][p_station.unit_number] = nil
+    storage.groups[p_station.force_index][p_station.unit_number] = nil
     clear_selected_data(action.gui_id)
     update_gui(action.gui_id, {})
     player.print({ "vtm.groups-group-deleted", p_station.unit_number })
@@ -895,7 +895,7 @@ local function on_alt_station_selection(event)
     local gui_id = gui_util.get_gui_id(player.index)
     --TODO no elevator
     if selected_stations and gui_id then
-      local edit = global.settings[player.index].group_edit
+      local edit = storage.settings[player.index].group_edit
       player.clear_cursor()
       if edit.selected_stations == nil or edit.selected_stations == {} then
         return
@@ -948,7 +948,7 @@ local function on_tag_selection(event)
     filter_own_tags(selected_tags)
   end
   if next(selected_tags) and gui_id then
-    local edit = global.settings[player.index].group_edit
+    local edit = storage.settings[player.index].group_edit
     player.clear_cursor()
     if not edit.add_to_selection or edit.selected_tags == nil then
       edit.selected_tags = {}
@@ -967,7 +967,7 @@ local function on_station_selection(event)
     local selected_stations = extract_train_stops(event)
     local gui_id = gui_util.get_gui_id(player.index)
     if selected_stations and gui_id then
-      local edit = global.settings[player.index].group_edit
+      local edit = storage.settings[player.index].group_edit
       if player.mod_settings["vtm-dismiss-tool"].value then
         player.clear_cursor()
       end
@@ -1014,7 +1014,7 @@ local function on_player_alt_selected_area(event)
 end
 
 local function reload_group(action, event)
-  local edit = global.settings[event.player_index].group_edit
+  local edit = storage.settings[event.player_index].group_edit
   update_gui_from_group(action.gui_id, edit.selected_group_id)
 end
 

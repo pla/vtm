@@ -13,28 +13,28 @@ local groups     = require("__virtm__.scripts.gui.groups")
 local function init_global_data()
   -- definitions see classdef.lua
   ---@type GlobalGuis
-  global.guis = {}
+  storage.guis = {}
   ---@type GlobalHistoryData
-  global.history = {}
+  storage.history = {}
   ---@type GlobalTrainData
-  global.trains = {}
+  storage.trains = {}
   ---@type GlobalStationData
-  global.stations = {}
+  storage.stations = {}
   ---@type GlobalPlayerSettings
-  global.settings = {}
+  storage.settings = {}
   ---@type GlobalGroups
-  global.groups = {}
+  storage.groups = {}
   ---@type GroupSet
-  global.group_set = {}
+  storage.group_set = {}
   ---@type {[string]:string}
-  global.surfaces = {
+  storage.surfaces = {
     ["All"] = "All",
     ["nauvis"] = "Nauvis",
   }
   -- cache relevant mods
-  global.TCS_active = game.active_mods["Train_Control_Signals"]
-  global.cybersyn_active = game.active_mods["cybersyn"]
-  global.SE_active = script.active_mods["space-exploration"]
+  --storage.TCS_active = script.active_mods["Train_Control_Signals"]
+  storage.cybersyn_active = script.active_mods ["cybersyn"]
+  storage.SE_active = script.active_mods["space-exploration"]
   --cache relevant settings
   vtm_logic.cache_generic_settings()
 end
@@ -56,24 +56,24 @@ local function on_tick(event)
   -- end
 
   -- station data refresh
-  if global.station_k then
-    global.station_k = tables.for_n_of(
-      global.station_update_table,
-      global.station_k, 10,
+  if storage.station_k then
+    storage.station_k = tables.for_n_of(
+      storage.station_update_table,
+      storage.station_k, 10,
       vtm_logic.update_station)
-    if global.station_k == nil then
-      global.station_update_table = nil
+    if storage.station_k == nil then
+      storage.station_update_table = nil
       game.print({ "vtm.station-refresh-end" })
     end
   end
-  if global.station_refresh == "init" then
-    global.station_refresh = nil
+  if storage.station_refresh == "init" then
+    storage.station_refresh = nil
     vtm_logic.init_stations()
-  elseif global.station_refresh == "all" then
-    global.station_refresh = nil
+  elseif storage.station_refresh == "all" then
+    storage.station_refresh = nil
     vtm_logic.schedule_station_refresh()
   end
-  for player_index, record in pairs(global.settings) do
+  for player_index, record in pairs(storage.settings) do
     if record.gui_refresh == "auto" and
         event.tick % (60 + 3 * player_index) == 0 then
       script.raise_event(constants.refresh_event, {
@@ -119,10 +119,10 @@ script.on_init(function()
     groups.create_gui(gui_id)
 
     -- do the button thing
-    migrations.add_mod_gui_button(player)
+--    migrations.add_mod_gui_button(player)
   end
   on_se_elevator()
-  global.station_refresh = "init"
+  storage.station_refresh = "init"
 end)
 
 -- script.on_event(defines.events.on_gui_opened, function(event)
@@ -180,7 +180,7 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
       }, event["setting"])
   then
     vtm_logic.load_guess_patterns()
-    global.station_refresh = "all"
+    storage.station_refresh = "all"
   end
   if event["setting"] == "vtm-showModgui" then
     local player = game.players[event.player_index]
@@ -203,19 +203,19 @@ commands.add_command("vtm-show-undef-stations", { "vtm.command-help" }, function
   local table_index = 0
   force.print({ "vtm.show-undef-stations" })
   if script.active_mods["space-exploration"] then
-    force.print({ "", { "vtm.filter-surface" }, ": ", global.settings[event.player_index].surface })
+    force.print({ "", { "vtm.filter-surface" }, ": ", storage.settings[event.player_index].surface })
   end
 
-  for _, station_data in pairs(global.stations) do
+  for _, station_data in pairs(storage.stations) do
     if station_data.station.valid and
         station_data.force_index == player.force.index and
         station_data.type == "ND" and
         (
           script.active_mods["space-exploration"] and
-          station_data.station.surface.name == global.settings[event.player_index].surface
+          station_data.station.surface.name == storage.settings[event.player_index].surface
           or
           script.active_mods["space-exploration"] and
-          global.settings[event.player_index].surface == "All"
+          storage.settings[event.player_index].surface == "All"
           or
           not script.active_mods["space-exploration"] and true
         )
@@ -230,14 +230,14 @@ end)
 commands.add_command("vtm-count-history", { "vtm.command-help" }, function(event)
   local player = game.get_player(event.player_index)
   if player == nil then return end
-  player.print("History Records: " .. table_size(global.history))
+  player.print("History Records: " .. table_size(storage.history))
 end)
 
 commands.add_command("vtm-del-all-groups", { "vtm.command-help" }, function(event)
   local player = game.get_player(event.player_index)
   if player == nil or not player.admin then return end
-  global.groups = {}
-  global.group_set = {}
+  storage.groups = {}
+  storage.group_set = {}
 
   player.print(player.name .. " deleted all group data ")
 end)

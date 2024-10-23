@@ -9,19 +9,19 @@ local migrations = {}
 
 function migrations.generic()
   -- refresh cached mods availability
-  global.TCS_active = game.active_mods["Train_Control_Signals"]
-  global.cybersyn_active = game.active_mods["cybersyn"]
-  global.SE_active = script.active_mods["space-exploration"]
+  storage.TCS_active = script.active_mods["Train_Control_Signals"]
+  storage.cybersyn_active = script.active_mods["cybersyn"]
+  storage.SE_active = script.active_mods["space-exploration"]
   --refresh cached settings
   vtm_logic.cache_generic_settings()
   
-  if global.surfaces == nil or table_size(global.surfaces) < 2 then
-    global.surfaces = {
+  if storage.surfaces == nil or table_size(storage.surfaces) < 2 then
+    storage.surfaces = {
       ["All"] = "All",
       ["nauvis"] = "Nauvis",
     }
   end
-  if global.station_refresh ~= "init" then
+  if storage.station_refresh ~= "init" then
     vtm_logic.load_guess_patterns()
     vtm_logic.update_all_stations("force")
     game.print("VTM updated stations on config change") --TODO localise
@@ -31,12 +31,12 @@ function migrations.generic()
   for _, player in pairs(game.players) do
     if player.valid then
       -- init personal settings
-      if global.settings[player.index] == nil then
+      if storage.settings[player.index] == nil then
         migrations.init_player_data(player)
       end
       -- recreate gui
       local gui_id = gui_util.get_gui_id(player.index)
-      if gui_id and global.guis[gui_id].group_gui then
+      if gui_id and storage.guis[gui_id].group_gui then
         groups.destroy_gui(gui_id)
       end
       if gui_id ~= nil then
@@ -57,19 +57,19 @@ end
 
 migrations.by_version = {
   ["0.1.2"] = function()
-    global.surfaces = {
+    storage.surfaces = {
       -- initial creation
       ["All"] = "All",
       ["nauvis"] = "Nauvis",
     }
   end,
   ["0.1.4"] = function()
-    global.groups = {} -- initial creation
-    global.group_set = {}
+    storage.groups = {} -- initial creation
+    storage.group_set = {}
     for _, player in pairs(game.players) do
       if player.valid then
-        global.groups[player.force_index] = {}
-        global.settings[player.index].group_edit = {} --[[@type GroupEditData[] ]]
+        storage.groups[player.force_index] = {}
+        storage.settings[player.index].group_edit = {} --[[@type GroupEditData[] ]]
       end
     end
   end,
@@ -78,41 +78,41 @@ migrations.by_version = {
 function migrations.init_player_data(player)
   if player.valid then
     -- init personal settings
-    global.settings[player.index] = {
+    storage.settings[player.index] = {
       current_tab = "trains",
       gui_refresh = "",
       surface = "All",
       history_switch = "left",
       group_edit = {}  --[[@type GroupEditData[] ]]
     }
-    if not global.groups[player.force_index] then
-      global.groups[player.force_index] = {}
+    if not storage.groups[player.force_index] then
+      storage.groups[player.force_index] = {}
     end
   end
 end
 
-function migrations.add_mod_gui_button(player)
-  local button_flow = mod_gui.get_button_flow(player) --[[@type LuaGuiElement]]
-  if not settings.player["vtm-showModgui"] then
-    return
-  end
-  if button_flow.vtm_button then
-    return
-  end
-  button_flow.add {
-    type = "button",
-    name = "vtm_button",
-    style = mod_gui.button_style,
-    caption = "VTM",
-    tags = {
-      [script.mod_name] = {
-        flib = {
-          on_click = { type = "generic", action = "open-vtm" }
-        }
-      }
-    },
-    tooltip = { "vtm.mod-gui-tooltip" }
-  }
-end
+-- function migrations.add_mod_gui_button(player)
+--   local button_flow = mod_gui.get_button_flow(player) --[[@type LuaGuiElement]]
+--   if not settings.player_default["vtm-showModgui"] then
+--     return
+--   end
+--   if button_flow.vtm_button then
+--     return
+--   end
+--   button_flow.add {
+--     type = "button",
+--     name = "vtm_button",
+--     style = mod_gui.button_style,
+--     caption = "VTM",
+--     tags = {
+--       [script.mod_name] = {
+--         flib = {
+--           on_click = { type = "generic", action = "open-vtm" }
+--         }
+--       }
+--     },
+--     tooltip = { "vtm.mod-gui-tooltip" }
+--   }
+-- end
 
 return migrations

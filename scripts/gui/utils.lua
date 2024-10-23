@@ -7,7 +7,7 @@ local util     = {}
 
 function util.get_gui_id(player_index)
   local player = game.get_player(player_index)
-  for gui_id, vtm_gui in pairs(global.guis) do
+  for gui_id, vtm_gui in pairs(storage.guis) do
     if vtm_gui.player == player then
       return gui_id
     end
@@ -45,7 +45,7 @@ function util.read_inbound_trains(station_data)
   if station.valid and station_data.incoming_trains then
     local trains = station_data.incoming_trains
     for train_id, _ in pairs(trains) do
-      local train_data = global.trains[train_id]
+      local train_data = storage.trains[train_id]
       if train_data and train_data.train.valid then
         if train_data.path_end_stop == station.unit_number then
             for type, item_data in pairs(train_data.contents) do
@@ -65,7 +65,7 @@ function util.read_inbound_trains(station_data)
     end
     -- delete invalid traindata
     for _, train_id in pairs(inv_trains) do
-      global.trains[train_id] = nil
+      storage.trains[train_id] = nil
       station_data.incoming_trains[train_id] = nil
     end
   end
@@ -99,7 +99,7 @@ function util.slot_table(widths, style, name)
   return {
     type = "table",
     name = name .. "_table",
-    style = style and game.styles[style] or "slot_table",
+    style = style and prototypes.style[style] or "slot_table",
     style_mods = {
       width = widths[name],
       minimal_height = 36,
@@ -146,17 +146,17 @@ end
 function util.sprite_button_type_name_amount(type, name, amount, color, gui_id)
   local prototype = nil
   if type == "item" then
-    prototype = game.item_prototypes[name]
+    prototype = prototypes.item[name]
   elseif type == "fluid" then
-    prototype = game.fluid_prototypes[name]
+    prototype = prototypes.fluid[name]
   elseif type == "virtual-signal" then
-    prototype = game.virtual_signal_prototypes[name]
+    prototype = prototypes.virtual_signal[name]
   end
   local sprite, tooltip, style
   if prototype then
     sprite = type .. "/" .. name
     if color ~= nil and (color == "red" or color == "green") then
-      local color_item = game.item_prototypes[color .. "-wire"]
+      local color_item = prototypes.item[color .. "-wire"]
       tooltip = { "", prototype.localised_name, ", ", color_item.localised_name }
     else
       tooltip = prototype.localised_name
@@ -182,17 +182,17 @@ end
 function util.update_sprite_button(button, type, name, amount, color, gui_id)
   local prototype = nil
   if type == "item" then
-    prototype = game.item_prototypes[name]
+    prototype = prototypes.item[name]
   elseif type == "fluid" then
-    prototype = game.fluid_prototypes[name]
+    prototype = prototypes.fluid[name]
   elseif type == "virtual-signal" then
-    prototype = game.virtual_signal_prototypes[name]
+    prototype = prototypes.virtual_signal[name]
   end
   local sprite, tooltip, style
-  if prototype and game.is_valid_sprite_path(type .. "/" .. name) then
+  if prototype and helpers.is_valid_sprite_path(type .. "/" .. name) then
     sprite = type .. "/" .. name
     if color ~= nil and (color == "red" or color == "green") then
-      local color_item = game.item_prototypes[color .. "-wire"]
+      local color_item = prototypes.item[color .. "-wire"]
       tooltip = { "", prototype.localised_name, ", ", color_item.localised_name }
     else
       tooltip = prototype.localised_name
@@ -268,7 +268,7 @@ function util.signal_for_entity(entity)
   local empty_signal = { type = "virtual", name = "signal-0" }
   if not entity then return empty_signal end
   if not entity.valid then return empty_signal end
-  if game.is_valid_sprite_path("item/" .. entity.prototype.name) then
+  if helpers.is_valid_sprite_path("item/" .. entity.prototype.name) then
     return { type = "item", name = entity.prototype.name }
   end
   return empty_signal
@@ -276,7 +276,7 @@ end
 
 function util.signal_to_sprite(signal)
   if not signal then return nil end
-  if game.is_valid_sprite_path(signal.type .. "/" .. signal.name) then
+  if helpers.is_valid_sprite_path(signal.type .. "/" .. signal.name) then
     return signal.type .. "/" .. signal.name
   end
 end
@@ -340,13 +340,13 @@ end
 ---@param surface_name string LuaSurface.name
 ---@param position MapPosition
 function util.show_remote_position(player, surface_name, position)
-  if not player or not surface or not position then return end
-  if global.SE_active and remote.interfaces["space-exploration"]["remote_view_start"]
+  if not player or not surface_name or not position then return end
+  if storage.SE_active and remote.interfaces["space-exploration"]["remote_view_start"]
   then
 ---@diagnostic disable-next-line: missing-fields
     remote.call("space-exploration", "remote_view_start", {
       player = player,
-      zone_name = global.surfaces[surface_name],
+      zone_name = storage.surfaces[surface_name],
       position = position,
       -- location_name="Point of Interest",
       -- freeze_history=true
@@ -359,12 +359,12 @@ end
 ---@param loco LuaEntity
 function util.follow_remote_train(player, loco)
   if not player or not loco or not loco.valid then return end
-  if global.SE_active and remote.interfaces["space-exploration"]["remote_view_start"]
+  if storage.SE_active and remote.interfaces["space-exploration"]["remote_view_start"]
   then
 ---@diagnostic disable-next-line: missing-fields
     remote.call("space-exploration", "remote_view_start", {
       player = player,
-      zone_name = global.surfaces[loco.surface.name],
+      zone_name = storage.surfaces[loco.surface.name],
       position = loco.position,
       -- location_name="Point of Interest",
       -- freeze_history=true

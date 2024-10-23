@@ -91,7 +91,6 @@ constants.gui = {
 }
 
 constants.interesting_states = {
-  [defines.train_state.path_lost] = true,
   [defines.train_state.no_schedule] = true,
   [defines.train_state.no_path] = true,
   [defines.train_state.wait_signal] = false,
@@ -104,7 +103,6 @@ constants.interesting_states = {
 
 constants.state_description = {
   [defines.train_state.on_the_path] = "gui-train-state.heading-to",
-  [defines.train_state.path_lost] = "gui-train-state.no-path-to",
   [defines.train_state.no_schedule] = "gui-train-state.no-schedule",
   [defines.train_state.no_path] = "gui-train-state.no-path-to",
   [defines.train_state.arrive_signal] = "gui-train-state.heading-to",
@@ -118,7 +116,6 @@ constants.state_description = {
 
 constants.state_description2 = {
   { defines.train_state.on_the_path,         { "vtm.train_state-on_the_path" } },
-  { defines.train_state.path_lost,           { "vtm.train_state-path_lost" } },
   { defines.train_state.no_schedule,         { "vtm.train_state-no_schedule" } },
   { defines.train_state.no_path,             { "vtm.train_state-no_path" } },
   { defines.train_state.arrive_signal,       { "vtm.train_state-arrive_signal" } },

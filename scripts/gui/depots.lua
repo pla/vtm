@@ -59,16 +59,16 @@ local function read_depot_cargo(station_data)
 end
 
 local function update_tab(gui_id)
-  local vtm_gui = global.guis[gui_id]
+  local vtm_gui = storage.guis[gui_id]
   local player = vtm_gui.player
   local vgui = vtm_gui.gui
-  local surface = global.settings[player.index].surface or "All"
+  local surface = storage.settings[player.index].surface or "All"
   local depots_compact = {}
   local depots = {}
   local limit
   local table_index = 0
 
-  for _, station_data in pairs(global.stations) do
+  for _, station_data in pairs(storage.stations) do
     if station_data.force_index == player.force.index and
         (station_data.type == "D" or
           station_data.type == "F")
@@ -115,7 +115,7 @@ local function update_tab(gui_id)
     table.insert(depots, value)
   end
   --sorting by name and type
-  if global.TCS_active then
+  if storage.TCS_active then
     -- special sort for TCS icons, depots always first
     table.sort(depots, function(a, b) return a.sort_prio .. a.name < b.sort_prio .. b.name end)
   else
@@ -157,7 +157,7 @@ local function update_tab(gui_id)
       end
       -- read cargo from trains parking at depot
       local station_stock = {}
-      if station_data.inbound > 0 and not global.dont_read_depot_stock then
+      if station_data.inbound > 0 and not storage.dont_read_depot_stock then
         station_stock = read_depot_cargo(station_data)
         if station_data.station.name == "se-space-elevator" then
           station_stock = gui_util.read_inbound_trains(station_data)
@@ -254,7 +254,7 @@ local function build_gui(gui_id)
         visible = true,
         {
           type = "flow",
-          style = "centering_horizontal_flow",
+          style = "compact_horizontal_flow",
           style_mods = { horizontally_stretchable = true },
           {
             type = "label",

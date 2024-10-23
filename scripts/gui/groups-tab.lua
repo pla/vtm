@@ -12,8 +12,8 @@ local flib_box  = require("__flib__.bounding-box")
 ---@param scroll_pane LuaGuiElement
 ---@param group_list table<uint,string>
 local function update_group_list(gui_id, scroll_pane, group_list)
-  local vsettings = global.settings[global.guis[gui_id].player.index]
-  local vtm_gui = global.guis[gui_id]
+  local vsettings = storage.settings[storage.guis[gui_id].player.index]
+  local vtm_gui = storage.guis[gui_id]
   local surface = vsettings.surface or "All"
   local children = scroll_pane.children
   local width = constants.gui.groups_tab
@@ -97,8 +97,8 @@ end
 ---@param scroll_pane LuaGuiElement
 ---@param group_list table<uint,GroupData>
 local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
-  local vsettings = global.settings[global.guis[gui_id].player.index]
-  local vtm_gui = global.guis[gui_id]
+  local vsettings = storage.settings[storage.guis[gui_id].player.index]
+  local vtm_gui = storage.guis[gui_id]
   local surface = vsettings.surface or "All"
   local children = scroll_pane.children
   local width = constants.gui.groups_tab
@@ -415,13 +415,13 @@ end
 ---@param group_list table<GroupData>
 local function set_members_for_display(set, force_index, group_list)
   for _, group_id in pairs(set) do
-    local set_member = global.groups[force_index][group_id]
+    local set_member = storage.groups[force_index][group_id]
     if set_member and set_member.main_station and set_member.main_station.station.valid then
       validate_group(set_member) --check members and tags for validity
       table.insert(group_list, set_member)
     else
       -- delete invalid group
-      global.groups[force_index][group_id] = nil
+      storage.groups[force_index][group_id] = nil
       set[_] = nil
     end
   end
@@ -435,15 +435,15 @@ end
 ---@return GroupData
 local function get_first_valid_set_member(set_name, set, del_set, force_index)
   local group_data
-  if not global.groups[force_index] or not global.groups[force_index] then
+  if not storage.groups[force_index] or not storage.groups[force_index] then
     return group_data
   end
   for key, group_id in pairs(set) do
-    group_data = global.groups[force_index][group_id]
+    group_data = storage.groups[force_index][group_id]
     if group_data and group_data.main_station and group_data.main_station.station.valid then
       break
     else
-      global.groups[force_index][group_id] = nil
+      storage.groups[force_index][group_id] = nil
       set[key] = nil
     end
   end
@@ -456,9 +456,9 @@ end
 ---@param gui_id uint
 ---@param group_id? uint
 local function update_tab(gui_id, group_id)
-  local vtm_gui = global.guis[gui_id]
+  local vtm_gui = storage.guis[gui_id]
   local player = vtm_gui.player
-  local vsettings = global.settings[global.guis[gui_id].player.index]
+  local vsettings = storage.settings[storage.guis[gui_id].player.index]
   local surface = vsettings.surface or "All"
 
   local filters = {
@@ -469,7 +469,7 @@ local function update_tab(gui_id, group_id)
   local group_list = {}
   ---@type table<uint, string>
   local del_set = {}
-  for set_name, set in pairs(global.group_set) do
+  for set_name, set in pairs(storage.group_set) do
     ---@type GroupData
     local group_data = get_first_valid_set_member(set_name, set, del_set, player.force_index)
     if group_data and
@@ -491,13 +491,13 @@ local function update_tab(gui_id, group_id)
   end
   -- remove invalid group sets
   for _, set_name in pairs(del_set) do
-    global.group_set[set_name] = nil
+    storage.group_set[set_name] = nil
   end
   if table_size(group_list) == 0 and table_size(group_set_list) > 0 then
     --nothing selected, take first set in display
     local _, set_name = next(group_set_list)
     vsettings.selected_group_set = set_name
-    local set = global.group_set[set_name]
+    local set = storage.group_set[set_name]
     set_members_for_display(set, player.force_index, group_list)
   end
 
@@ -615,7 +615,7 @@ local function build_gui()
         visible = true,
         {
           type = "flow",
-          style = "centering_horizontal_flow",
+          style = "compact_horizontal_flow",
           style_mods = { horizontally_stretchable = true },
           {
             type = "label",
@@ -633,11 +633,11 @@ end
 ---@param action GuiAction
 ---@param event EventData|any
 local function select_group(action, event)
-  local vtm_gui = global.guis[action.gui_id]
+  local vtm_gui = storage.guis[action.gui_id]
   local player = vtm_gui.player
-  local vsettings = global.settings[player.index]
+  local vsettings = storage.settings[player.index]
   local set_name = action.group_set
-  if not set_name or not global.group_set[set_name] then return end
+  if not set_name or not storage.group_set[set_name] then return end
   vsettings.selected_group_set = set_name
   update_tab(action.gui_id)
 end

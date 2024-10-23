@@ -422,7 +422,7 @@ end
 ---       {
 ---         type = "sprite-button",
 ---         style = "frame_action_button",
----         sprite = "utility/close_white",
+---         sprite = "utility/close",
 ---         hovered_sprite = "utility/close_black",
 ---         clicked_sprite = "utility/close_black",
 ---         ref = {"titlebar", "close_button"},

@@ -54,8 +54,8 @@ local function header(gui_id)
         style = "frame_action_button",
         mouse_button_filter = { "left", "right" },
         sprite = "vtm_refresh_white",
-        hovered_sprite = "utility/refresh",
-        clicked_sprite = "utility/refresh",
+        -- hovered_sprite = "utility/refresh",
+        -- clicked_sprite = "utility/refresh",
         ref = { "titlebar", "refresh_button" },
         actions = {
           on_click = { type = "generic", action = "refresh", gui_id = gui_id },
@@ -67,9 +67,9 @@ local function header(gui_id)
         name = "close_button",
         style = "frame_action_button",
         mouse_button_filter = { "left" },
-        sprite = "utility/close_white",
-        hovered_sprite = "utility/close_black",
-        clicked_sprite = "utility/close_black",
+        sprite = "utility/close",
+        -- hovered_sprite = "utility/close_black",
+        -- clicked_sprite = "utility/close_black",
         ref = { "titlebar", "close_button" },
         actions = {
           on_click = { type = "generic", action = "close-window", gui_id = gui_id },
@@ -98,7 +98,7 @@ local function create_gui(player)
         {
           type = "frame",
           direction = "vertical",
-          style = "inside_deep_frame_for_tabs",
+          style = "inside_deep_frame",
           style_mods = { horizontally_stretchable = true },
           {
             type = "tabbed-pane",
@@ -120,7 +120,7 @@ local function create_gui(player)
     }
   }
   local refs = gui.build(player.gui.screen, gui_contents)
-  global.guis[gui_id] = {
+  storage.guis[gui_id] = {
     gui_id = gui_id,
     gui = refs,
     player = player,
@@ -135,7 +135,7 @@ local function create_gui(player)
   end
   refs.titlebar.flow.drag_target = refs.window
   searchbar.update(gui_id)
-  local current_tab = global.settings[player.index].current_tab or "trains"
+  local current_tab = storage.settings[player.index].current_tab or "trains"
   refs.tabs.pane.selected_tab_index = tab_list[current_tab]
   refs.window.force_auto_center()
   refs.window.visible = false
@@ -145,8 +145,8 @@ end
 ---@param gui_id number
 ---@param to_state string?
 local function toggle_auto_refresh(gui_id, to_state)
-  local vtm_gui = global.guis[gui_id]
-  local vsettings = global.settings[vtm_gui.player.index]
+  local vtm_gui = storage.guis[gui_id]
+  local vsettings = storage.settings[vtm_gui.player.index]
   if to_state ~= nil then
     if to_state == "off" then
       vsettings.gui_refresh = ""
@@ -174,7 +174,7 @@ local function toggle_auto_refresh(gui_id, to_state)
 end
 
 local function open_gui(gui_id)
-  local vtm_gui = global.guis[gui_id]
+  local vtm_gui = storage.guis[gui_id]
   vtm_gui.gui.window.visible = true
   vtm_gui.state = "open"
   if not vtm_gui.pinned then
@@ -183,26 +183,26 @@ local function open_gui(gui_id)
 end
 
 local function close_gui(gui_id)
-  local vtm_gui = global.guis[gui_id]
+  local vtm_gui = storage.guis[gui_id]
   if vtm_gui.state == "closed" then return end
   vtm_gui.gui.window.visible = false
   vtm_gui.state = "closed"
-  if global.settings[vtm_gui.player.index].gui_refresh == "auto" then
+  if storage.settings[vtm_gui.player.index].gui_refresh == "auto" then
     toggle_auto_refresh(gui_id, "off")
   end
   vtm_gui.player.opened = nil
 end
 
 local function destroy_gui(gui_id)
-  local vtm_gui = global.guis[gui_id]
+  local vtm_gui = storage.guis[gui_id]
   vtm_gui.gui.window.destroy()
-  global.guis[gui_id] = nil
+  storage.guis[gui_id] = nil
 end
 
 local function open_or_close_gui(player_index)
   local gui_id = gui_util.get_gui_id(player_index)
   if gui_id ~= nil then
-    local vtm_gui = global.guis[gui_id]
+    local vtm_gui = storage.guis[gui_id]
     if vtm_gui.state ~= "open" then
       -- refresh tab before open
       script.raise_event(constants.refresh_event, {
@@ -216,7 +216,7 @@ local function open_or_close_gui(player_index)
 end
 
 local function toggle_pinned(event)
-  local vtm_gui = global.guis[gui_util.get_gui_id(event.player_index)]
+  local vtm_gui = storage.guis[gui_util.get_gui_id(event.player_index)]
   vtm_gui.pinned = not vtm_gui.pinned
   if vtm_gui.pinned then
     vtm_gui.gui.titlebar.close_button.tooltip = { "gui.close" }
@@ -247,7 +247,7 @@ local function dispatch_refresh(event)
     toggle_auto_refresh(gui_id)
   end
 
-  local current_tab = global.settings[event.player_index].current_tab
+  local current_tab = storage.settings[event.player_index].current_tab
   searchbar.update(gui_id)
   if current_tab == "stations" then
     stations.update_tab(gui_id)
@@ -267,7 +267,7 @@ local function handle_action(action, event)
   if action.action == "close-window" then -- x button
     close_gui(action.gui_id)
   elseif action.action == "window_closed" then
-    if global.guis[action.gui_id].pinned then
+    if storage.guis[action.gui_id].pinned then
       return
     end
     close_gui(action.gui_id)
@@ -277,7 +277,7 @@ local function handle_action(action, event)
     vtm_logic.clear_older(event.player_index, older_than)
     dispatch_refresh(event)
   elseif action.action == "change_tab" then
-    global.settings[event.player_index].current_tab = action.tab
+    storage.settings[event.player_index].current_tab = action.tab
     dispatch_refresh(event)
   elseif action.action == "refresh" then
     dispatch_refresh(event)
@@ -286,11 +286,11 @@ local function handle_action(action, event)
   elseif action.action == "open-vtm" then -- mod-gui-button
     open_or_close_gui(event.player_index)
   elseif action.action == "history_switch" then
-    global.settings[event.player_index].history_switch = event.element.switch_state
+    storage.settings[event.player_index].history_switch = event.element.switch_state
     dispatch_refresh(event)
   elseif action.action == "recenter" then
     if event.button == defines.mouse_button_type.middle then
-      local gui_data = global.guis[action.gui_id]
+      local gui_data = storage.guis[action.gui_id]
       if gui_data then
         gui_data.gui.window.force_auto_center()
       end

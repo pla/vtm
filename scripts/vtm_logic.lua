@@ -11,11 +11,11 @@ local last_sweep = 0
 local vtm_logic = {}
 
 function vtm_logic.load_guess_patterns()
-  if not global.settings["patterns"] then
+  if not storage.settings["patterns"] then
 ---@diagnostic disable-next-line: missing-fields
-    global.settings["patterns"] = {} --[[@type GuessPatterns ]]
+    storage.settings["patterns"] = {} --[[@type GuessPatterns ]]
   end
-  global.settings["patterns"] = {
+  storage.settings["patterns"] = {
     depot = util.split(tostring(settings.global["vtm-depot-names"].value):lower(), ","),
     refuel = util.split(tostring(settings.global["vtm-refuel-names"].value):lower(), ","),
     requester = util.split(tostring(settings.global["vtm-requester-names"].value):lower(), ","),
@@ -24,12 +24,12 @@ function vtm_logic.load_guess_patterns()
 end
 
 function vtm_logic.cache_generic_settings()
-  global.surface_selector_visible = settings.global["vtm-force-surface-visible"].value
-  global.max_hist                 = settings.global["vtm-history-length"].value
-  global.max_lines                = settings.global["vtm-limit-auto-refresh"].value
-  global.show_undef_warn          = settings.global["vtm-show-undef-warning"].value
-  global.dont_read_depot_stock    = settings.global["vtm-dont-read-depot-stock"].value
-  global.pr_from_start            = settings.global["vtm-p-or-r-start"].value
+  storage.surface_selector_visible = settings.global["vtm-force-surface-visible"].value
+  storage.max_hist                 = settings.global["vtm-history-length"].value
+  storage.max_lines                = settings.global["vtm-limit-auto-refresh"].value
+  storage.show_undef_warn          = settings.global["vtm-show-undef-warning"].value
+  storage.dont_read_depot_stock    = settings.global["vtm-dont-read-depot-stock"].value
+  storage.pr_from_start            = settings.global["vtm-p-or-r-start"].value
 end
 
 ---Try to guess the station type: Requester, Provider, Depot or Refuel
@@ -39,7 +39,7 @@ local function guess_station_type(station)
   local station_type = "ND"
   local is_refuel, is_depot, is_provider, is_requester, is_hidden
   local from_start = settings.global["vtm-p-or-r-start"].value
-  local patterns = global.settings["patterns"] --[[@as GuessPatterns ]]
+  local patterns = storage.settings["patterns"] --[[@as GuessPatterns ]]
   -- depot
   for _, pattern in pairs(patterns.depot) do
     if pattern:sub(1, 1) == "-" then
@@ -93,7 +93,7 @@ end
 ---@param backer_name string
 ---@return uint
 local function get_TCS_prio(backer_name)
-  if global.TCS_active then
+  if storage.TCS_active then
     local tcs_refuel = "[virtual-signal=refuel-signal]"
     local tcs_depot = "[virtual-signal=depot-signal]"
     -- local tcs_skip = "[virtual-signal=skip-signal]"
@@ -110,14 +110,14 @@ local function get_TCS_prio(backer_name)
 end
 
 local function register_surface(surface)
-  if surface.valid and not global.surfaces[surface.name] then
+  if surface.valid and not storage.surfaces[surface.name] then
     -- excluded sufaces, eg. Editor extensions
     for key, _ in pairs(constants.hidden_surfaces) do
       if surface.name:find(key, 1, true) then
         return
       end
     end
-    global.surfaces[surface.name] = surface.name
+    storage.surfaces[surface.name] = surface.name
   end
 end
 
@@ -145,21 +145,21 @@ local function new_station(station)
 end
 
 function vtm_logic.init_stations()
-  if table_size(global.stations) > 0 then
+  if table_size(storage.stations) > 0 then
     vtm_logic.update_all_stations("force")
     return
   end
-  local train_stops = game.get_train_stops()
+  local train_stops = game.train_manager.get_train_stops({})
   local stations = {}
   for _, station in pairs(train_stops) do
     stations[station.unit_number] = new_station(station)
   end
-  global.stations = stations
+  storage.stations = stations
 end
 
 -- unused, for now, needs to be different for P and R
 function vtm_logic.update_station_limit(unit_number, station)
-  local station_data = global.stations[unit_number]
+  local station_data = storage.stations[unit_number]
   if station.station_limit < 1 then
     station_data.closed = game.tick
   elseif station.station_limit > 0 and station.station_limit < constants.MAX_LIMIT then
@@ -221,8 +221,8 @@ end
 ---@param read_stock boolean?
 ---@return GroupData|nil
 function vtm_logic.read_group(group_id, read_stock)
-  local p_station = global.stations[group_id].station
-  local group_data = global.groups[p_station.force_index][p_station.unit_number] --[[@as GroupData]]
+  local p_station = storage.stations[group_id].station
+  local group_data = storage.groups[p_station.force_index][p_station.unit_number] --[[@as GroupData]]
   if not group_data then return end
 
   if group_data then
@@ -242,7 +242,7 @@ end
 
 function vtm_logic.read_group_id(station)
   if station.valid then
-    local group_data = global.groups[station.force_index][station.unit_number]
+    local group_data = storage.groups[station.force_index][station.unit_number]
     if group_data then
       return group_data.group_id
     end
@@ -251,10 +251,10 @@ end
 
 function vtm_logic.get_or_create_station_data(station)
   ---@type StationData
-  local station_data = global.stations[station.unit_number]
+  local station_data = storage.stations[station.unit_number]
   if not station_data then
     station_data = new_station(station)
-    global.stations[station.unit_number] = station_data
+    storage.stations[station.unit_number] = station_data
   end
   return station_data
 end
@@ -264,9 +264,9 @@ function vtm_logic.update_station(station)
   if not station.valid then
     return 0, true
   end
-  if global.stations[station.unit_number] then
+  if storage.stations[station.unit_number] then
     register_surface(station.surface)
-    local station_data = global.stations[station.unit_number]
+    local station_data = storage.stations[station.unit_number]
     station_data.force_index = station.force.index
     station_data.station = station
     station_data.last_changed = game.tick
@@ -284,7 +284,7 @@ function vtm_logic.update_station(station)
       station_data.sprite = gui_util.signal_to_sprite(gui_util.signal_for_entity(station_data.station)) or "item/train-stop"
     end
   else
-    global.stations[station.unit_number] = new_station(station)
+    storage.stations[station.unit_number] = new_station(station)
   end
   return station.unit_number, true
 end
@@ -292,7 +292,7 @@ end
 ---@param mode string
 function vtm_logic.update_all_stations(mode)
   if mode == "force" then
-    local train_stops = game.get_train_stops()
+    local train_stops = game.train_manager.get_train_stops({})
     for _, station in pairs(train_stops) do
       vtm_logic.update_station(station)
     end
@@ -304,18 +304,18 @@ function vtm_logic.update_all_stations(mode)
 end
 
 function vtm_logic.schedule_station_refresh()
-  if global.station_k then return end
+  if storage.station_k then return end
 
-  global.station_update_table = game.get_train_stops()
-  if next(global.station_update_table) then
+  storage.station_update_table = game.train_manager.get_train_stops({})
+  if next(storage.station_update_table) then
     game.print({ "vtm.station-refresh-start" })
-    global.station_k = 1
+    storage.station_k = 1
   end
 end
 
 function vtm_logic.clear_invalid_stations()
   local older_than = game.tick - MAX_KEEP
-  local stations = global.stations
+  local stations = storage.stations
   for key, station_data in pairs(stations) do
     if station_data.last_changed < older_than and
         station_data.station.valid == false then
@@ -325,10 +325,10 @@ function vtm_logic.clear_invalid_stations()
 end
 
 local function trim_old_history(older_than)
-  local size = table_size(global.history)
+  local size = table_size(storage.history)
   if size < 10 or game.tick - last_sweep < 720 then return end
-  while global.history[size].last_change <= older_than do
-    table.remove(global.history, size)
+  while storage.history[size].last_change <= older_than do
+    table.remove(storage.history, size)
     size = size - 1
   end
   last_sweep = game.tick
@@ -336,10 +336,10 @@ end
 
 local function clear_older_force(force, older_than)
   local force_index = force.index
-  local size = table_size(global.history)
-  while size > 1 and global.history[size].last_change <= older_than do
-    if global.history[size].force_index == force_index then
-      table.remove(global.history, size)
+  local size = table_size(storage.history)
+  while size > 1 and storage.history[size].last_change <= older_than do
+    if storage.history[size].force_index == force_index then
+      table.remove(storage.history, size)
       size = size - 1
     end
   end
@@ -358,13 +358,13 @@ end
 local function find_first_stop(schedule)
   local index = 1
   if schedule ~= nil and schedule.records then
-    if global.cybersyn_active then
+    if storage.cybersyn_active then
       -- timings will be off because of the depot waiting time
       if schedule.current == 2 then
         index = schedule.current
       end
       -- search with TCS signals in mind
-    elseif global.TCS_active then
+    elseif storage.TCS_active then
       local pattern = "[virtual-signal=skip-signal]"
       for key, record in pairs(schedule.records) do
         if record.station ~= nil then
@@ -415,15 +415,15 @@ local function diff(old_values, new_values)
 end
 
 local function get_train_data(train, train_id)
-  if not global.trains[train_id] then
-    global.trains[train_id] = new_current_log(train)
+  if not storage.trains[train_id] then
+    storage.trains[train_id] = new_current_log(train)
   end
 
-  return global.trains[train_id]
+  return storage.trains[train_id]
 end
 
 function vtm_logic.get_logs(force)
-  return tables.filter(global.trains, function(train_data)
+  return tables.filter(storage.trains, function(train_data)
     return train_data.force_index == force.index
   end)
 end
@@ -440,15 +440,15 @@ end
 local function finish_current_log(train, train_id, train_data)
   local surface = train.carriages[1].surface.name
   train_data.surface = surface
-  table.insert(global.history, 1, train_data)
+  table.insert(storage.history, 1, train_data)
   if train_data.surface2 then
     -- train passed SE elevator
     local data = tables.deep_copy(train_data)
     data.surface = data.surface2
-    table.insert(global.history, 1, data)
+    table.insert(storage.history, 1, data)
   end
   local new_data = new_current_log(train)
-  global.trains[train_id] = new_data
+  storage.trains[train_id] = new_data
   trim_old_history(game.tick - MAX_KEEP)
   -- log(serpent.block(train_data)) --FIXME: remove line
 end
@@ -457,7 +457,7 @@ function vtm_logic.migrate_train_SE(event)
   local old_train_id = event.old_train_id_1
   local train = event.train
   local new_train_id = train.id
-  local old_train_data = global.trains[event.old_train_id_1]
+  local old_train_data = storage.trains[event.old_train_id_1]
   if old_train_data then
     old_train_data.surface2 = game.surfaces[event.old_surface_index].name
     local log = {
@@ -473,12 +473,12 @@ function vtm_logic.migrate_train_SE(event)
 
     -- for train cargo in transit
     if old_train_data.path_end_stop ~= nil then
-      global.stations[old_train_data.path_end_stop].incoming_trains[old_train_id] = nil
-      global.stations[old_train_data.path_end_stop].incoming_trains[new_train_id] = true
+      storage.stations[old_train_data.path_end_stop].incoming_trains[old_train_id] = nil
+      storage.stations[old_train_data.path_end_stop].incoming_trains[new_train_id] = true
     end
     -- finally save new train and delete old data
-    global.trains[new_train_id] = new_train_data
-    global.trains[old_train_id] = nil
+    storage.trains[new_train_id] = new_train_data
+    storage.trains[old_train_id] = nil
   end
 end
 
@@ -546,15 +546,15 @@ local function on_train_changed_state(event)
   end
 
   -- for train cargo in transit
-  if train.path_end_stop and global.stations[train.path_end_stop.unit_number] == nil then
-    global.stations[train.path_end_stop.unit_number] = new_station(train.path_end_stop)
+  if train.path_end_stop and storage.stations[train.path_end_stop.unit_number] == nil then
+    storage.stations[train.path_end_stop.unit_number] = new_station(train.path_end_stop)
   end
   if train.has_path and train.path_end_stop then
     train_data.path_end_stop = train.path_end_stop.unit_number
-    global.stations[train.path_end_stop.unit_number].incoming_trains[train_id] = true
+    storage.stations[train.path_end_stop.unit_number].incoming_trains[train_id] = true
   else
     if train_data.path_end_stop ~= nil then
-      global.stations[train_data.path_end_stop].incoming_trains[train_id] = nil
+      storage.stations[train_data.path_end_stop].incoming_trains[train_id] = nil
       train_data.path_end_stop = nil
     end
   end
@@ -567,14 +567,14 @@ local function on_trainstop_build(event)
     -- create ne stop only if it has proper type
     local station_data = new_station(event.created_entity)
     -- if station_data.type ~= "ND" then
-    global.stations[event.created_entity.unit_number] = station_data
+    storage.stations[event.created_entity.unit_number] = station_data
     -- end
   end
 end
 
 local function on_trainstop_renamed(event)
   if event.entity.type == "train-stop" then
-    local station_data = global.stations[event.entity.unit_number]
+    local station_data = storage.stations[event.entity.unit_number]
     if station_data then
       station_data.sort_prio = get_TCS_prio(event.entity.backer_name)
       station_data.force_index = event.entity.force.index
@@ -582,7 +582,7 @@ local function on_trainstop_renamed(event)
       station_data.last_changed = game.tick
       station_data.type = guess_station_type(event.entity) or "ND" -- one of P R D F or ND
     else
-      global.stations[event.entity.unit_number] = new_station(event.entity)
+      storage.stations[event.entity.unit_number] = new_station(event.entity)
     end
     if not event.player_index then
       event.player_index = event.entity.last_user.index

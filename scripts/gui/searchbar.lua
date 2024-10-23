@@ -6,26 +6,26 @@ local tables    = require("__flib__.table")
 local function refresh(action)
   script.raise_event(constants.refresh_event, {
     action = action,
-    player_index = global.guis[action.gui_id].player.index
+    player_index = storage.guis[action.gui_id].player.index
   })
 end
 ---refresh surface drop down
 ---@param gui_id any
 local function update(gui_id)
-  local flow = global.guis[gui_id].gui.filter.surface_flow --[[@as LuaGuiElement]]
-  local dropdown = global.guis[gui_id].gui.filter.surface --[[@as LuaGuiElement]]
-  local surface = global.settings[global.guis[gui_id].player.index].surface or "All"
-  local visible = global.surface_selector_visible --[[@as boolean]]
-  if global.SE_active then
+  local flow = storage.guis[gui_id].gui.filter.surface_flow --[[@as LuaGuiElement]]
+  local dropdown = storage.guis[gui_id].gui.filter.surface --[[@as LuaGuiElement]]
+  local surface = storage.settings[storage.guis[gui_id].player.index].surface or "All"
+  local visible = storage.surface_selector_visible --[[@as boolean]]
+  if storage.SE_active then
     visible = true
   end
   flow.visible = visible
   dropdown.clear_items()
-  for _, value in pairs(global.surfaces) do
+  for _, value in pairs(storage.surfaces) do
     dropdown.add_item(value)
   end
   -- Validate that the selected surface still exist
-  local selected_index = tables.find(dropdown.items, global.surfaces[surface]) --[[@as uint]]
+  local selected_index = tables.find(dropdown.items, storage.surfaces[surface]) --[[@as uint]]
   -- If the surface was invalidated since last update, reset to all
   if not selected_index then
     selected_index = 1
@@ -35,8 +35,8 @@ local function update(gui_id)
 end
 
 local function handle_action(action, event)
-  local vtm = global.guis[action.gui_id]
-  local gui = global.guis[action.gui_id].gui
+  local vtm = storage.guis[action.gui_id]
+  local gui = storage.guis[action.gui_id].gui
   local filter_history = vtm.filter_history
   if action.action == "focus_search" then
     if gui and vtm.state == "open" and not vtm.pinned then
@@ -47,8 +47,8 @@ local function handle_action(action, event)
   end
   if action.action == "apply-surface" then
     -- get the key/original name of the surface(only to have Nauvis with a captial N)
-    local surface = tables.find(global.surfaces, event.element.items[event.element.selected_index])
-    global.settings[event.player_index].surface = surface or "All"
+    local surface = tables.find(storage.surfaces, event.element.items[event.element.selected_index])
+    storage.settings[event.player_index].surface = surface or "All"
     refresh(action)
     return
   end
