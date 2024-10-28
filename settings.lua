@@ -1,12 +1,5 @@
 data:extend({
   {
-    type = "bool-setting",
-    default_value = true,
-    name = "vtm-showModgui",
-    setting_type = "runtime-per-user",
-    order = "a",
-  },
-  {
     type = "int-setting",
     name = "vtm-history-length",
     setting_type = "runtime-global",

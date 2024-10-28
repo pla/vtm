@@ -1,4 +1,3 @@
----@meta
 --Alias definitions at the bottom
 
 ---@class GuiData
@@ -29,7 +28,7 @@
 ---@field composition string Train composition
 ---@field prototype LuaEntityPrototype prototype of the loco
 ---@field sprite SpritePath icon of the loco
----@field contents { [string]: { [string]: uint } } Contents of the train, TODO check if needed
+---@field contents { [string]: ItemCountWithQuality } Contents of the train
 ---@field events table<EventLog> Train state changed events get logged here for history
 ---@field surface string Surface where the train exits
 ---@field surface2 string Used when the train goes through a space elevator
@@ -95,14 +94,14 @@
 ---@field resource_tags table<uint,LuaCustomChartTag> key:tag_number, resource tag eg. from yarm
 
 ---@class GroupEditData
----@field selected_group_id uint hold the id if dialog opened with group_id
----@field selected_stations table<uint,LuaEntity>|nil
----@field selected_tags table<uint,LuaCustomChartTag>|nil key:tag_number, resource tag eg. from yarm
----@field group_area BoundingBox
----@field show_overlay boolean
----@field add_to_selection boolean should newly selected stations be added
----@field removed table<uint>|nil Unit numbers of the last remove action
----@field provider table<uint,LuaEntity> Provider stations in selection to check for exiting groups
+---@field selected_group_id uint? hold the id if dialog opened with group_id
+---@field selected_stations table<uint,LuaEntity>?
+---@field selected_tags table<uint,LuaCustomChartTag>? key:tag_number, resource tag eg. from yarm
+---@field group_area BoundingBox?
+---@field show_overlay boolean?
+---@field add_to_selection boolean? should newly selected stations be added
+---@field removed table<uint>? Unit numbers of the last remove action
+---@field provider table<uint,LuaEntity> ?Provider stations in selection to check for exiting groups
 
 ---@class GuiAction
 ---@field gui_id uint

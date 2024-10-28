@@ -111,7 +111,7 @@ local function train_status_message(train_data)
     msg = { "gui-train-state.manually-stopped" }
   elseif state == def_state.manual_control then
     msg = { "gui-train-state.manually-driving" }
-  elseif state == def_state.path_lost or state == def_state.no_path then
+  elseif state == def_state.no_path then
     msg = { "gui-train-state.no-path-to", select_station_from_schedule(train) }
   elseif state == def_state.no_schedule then
     msg = { "gui-train-state.no-schedule" }
@@ -358,7 +358,8 @@ function trains.handle_action(action, event)
         if player.surface.name ~= loco.surface.name then
           gui_util.follow_remote_train(player, loco)
         else
-          player.zoom_to_world(loco.position, 0.5, loco)
+          --player.zoom_to_world(loco.position, 0.5, loco)
+          player.set_controller({type = defines.controllers.remote, position = loco.position, surface = loco.surface})
         end
       else
         if loco and loco.valid then

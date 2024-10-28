@@ -12,15 +12,13 @@ local vtm_logic = {}
 
 function vtm_logic.load_guess_patterns()
   if not storage.settings["patterns"] then
----@diagnostic disable-next-line: missing-fields
-    storage.settings["patterns"] = {} --[[@type GuessPatterns ]]
+    storage.settings["patterns"] = {
+      depot = util.split(tostring(settings.global["vtm-depot-names"].value):lower(), ","),
+      refuel = util.split(tostring(settings.global["vtm-refuel-names"].value):lower(), ","),
+      requester = util.split(tostring(settings.global["vtm-requester-names"].value):lower(), ","),
+      provider = util.split(tostring(settings.global["vtm-provider-names"].value):lower(), ","),
+    }
   end
-  storage.settings["patterns"] = {
-    depot = util.split(tostring(settings.global["vtm-depot-names"].value):lower(), ","),
-    refuel = util.split(tostring(settings.global["vtm-refuel-names"].value):lower(), ","),
-    requester = util.split(tostring(settings.global["vtm-requester-names"].value):lower(), ","),
-    provider = util.split(tostring(settings.global["vtm-provider-names"].value):lower(), ","),
-  }
 end
 
 function vtm_logic.cache_generic_settings()
@@ -196,7 +194,7 @@ function vtm_logic.read_station_network(station_data, return_virtual)
   local cb = station.get_or_create_control_behavior() --[[@as LuaTrainStopControlBehavior]]
   set_trains_limit = cb.set_trains_limit
   -- argue against get_merged_signals- loose wire color info
-  for _, wire in pairs({ defines.wire_type.red, defines.wire_type.green }) do
+  for _, wire in pairs({ defines.wire_connector_id.circuit_red, defines.wire_connector_id.circuit_green }) do
     local cn = station.get_circuit_network(wire)
     -- cn - signals (type,name),wire_type
     if cn ~= nil and cn.signals ~= nil then
@@ -281,7 +279,8 @@ function vtm_logic.update_station(station)
       station_data.incoming_trains = {}
     end
     if station_data.sprite == nil then
-      station_data.sprite = gui_util.signal_to_sprite(gui_util.signal_for_entity(station_data.station)) or "item/train-stop"
+      station_data.sprite = gui_util.signal_to_sprite(gui_util.signal_for_entity(station_data.station)) or
+          "item/train-stop"
     end
   else
     storage.stations[station.unit_number] = new_station(station)
@@ -398,17 +397,30 @@ local function new_current_log(train)
   }
 end
 
+---comment
+---@param old_values ItemCountWithQuality[]
+---@param new_values ItemCountWithQuality[]
+---@return table
 local function diff(old_values, new_values)
   local result = {}
   if old_values then
     for k, v in pairs(old_values) do
-      result[k] = -v
+      local key = v.name .. v.quality
+      -- result[k] = -v
+      result[k] = v
+      result[k].count = -v.count
     end
   end
   if new_values then
-    for k, v in pairs(new_values) do
-      local old_value = result[k] or 0
-      result[k] = old_value + v
+    for _, v in pairs(new_values) do
+      local key = v.name .. v.quality
+      local old_count = 0
+      if result[key] then
+        old_count = result[key].count
+      else
+        result[key] = v
+      end
+      result[key].count = old_count + v.count
     end
   end
   return result
