@@ -91,4 +91,28 @@ function migrations.init_player_data(player)
   end
 end
 
+function migrations.add_mod_gui_button(player)
+  local button_flow = mod_gui.get_button_flow(player) --[[@type LuaGuiElement]]
+  if not settings.player_default["vtm-showModgui"] then
+    return
+  end
+  if button_flow.vtm_button then
+    return
+  end
+  button_flow.add {
+    type = "button",
+    name = "vtm_button",
+    style = mod_gui.button_style,
+    caption = "VTM",
+    tags = {
+      [script.mod_name] = {
+        flib = {
+          on_click = { type = "generic", action = "open-vtm" }
+        }
+      }
+    },
+    tooltip = { "vtm.mod-gui-tooltip" }
+  }
+end
+
 return migrations

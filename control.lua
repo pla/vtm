@@ -119,7 +119,7 @@ script.on_init(function()
     groups.create_gui(gui_id)
 
     -- do the button thing
---    migrations.add_mod_gui_button(player)
+    migrations.add_mod_gui_button(player)
   end
   on_se_elevator()
   storage.station_refresh = "init"
