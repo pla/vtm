@@ -200,9 +200,13 @@ function vtm_logic.read_station_network(station_data, return_virtual)
     if cn ~= nil and cn.signals ~= nil then
       for _, signal_data in pairs(cn.signals) do
         if signal_data.signal.type ~= "virtual" or return_virtual == true then
-          register_item(station_data, signal_data.signal.type, signal_data.signal.name)
+          local signal_type = signal_data.signal.type
+          if signal_type == nil then
+            signal_type = "item"
+          end
+          register_item(station_data, signal_type, signal_data.signal.name)
           table.insert(contents, {
-            type = signal_data.signal.type,
+            type = signal_type,
             name = signal_data.signal.name,
             count = signal_data.count,
             color = constants.wire_colors[wire]

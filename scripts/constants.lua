@@ -128,8 +128,7 @@ constants.state_description2 = {
 }
 
 constants.wire_colors = {
-  [defines.wire_type.copper] = "copper",
-  [defines.wire_type.red] = "red",
-  [defines.wire_type.green] = "green",
+  [defines.wire_connector_id.circuit_red] = "red",
+  [defines.wire_connector_id.circuit_green] = "green",
 }
 return constants

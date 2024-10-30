@@ -181,10 +181,6 @@ local function update_tab(gui_id)
       end
       local limit_text, color = station_limit(station_data, is_circuit_limit)
       local since = ""
-      -- TODO Project open request scanner
-      -- if station_data.opened then
-      -- since = format.time(game.tick - station_data.opened--[[@as uint]])
-      -- end
       gui.update(row, {
         {
           -- Station button
@@ -362,12 +358,8 @@ local function handle_action(action, event)
       position = action.position --[[@as MapPosition]]
       surface = action.surface_name --[[@as string]]
     end
-    if player.surface.name ~= surface then
-      -- typical SE situation, let's see what we can do
-      gui_util.show_remote_position(player, surface, position)
-    else
-      player.zoom_to_world(position, 0.5)
-    end
+      -- player.zoom_to_world(position, 0.5)
+      player.set_controller({type = defines.controllers.remote, position = position, surface = surface})
   elseif action.action == "show_group_ui" then
     local player = game.players[event.player_index]
     groups.open_gui(action)

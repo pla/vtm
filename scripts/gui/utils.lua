@@ -51,9 +51,10 @@ function util.read_inbound_trains(station_data)
             for type, item_data in pairs(train_data.contents) do
             local row = {}
             row.type = type == "items" and "item" or "fluid"
-            for name, count in pairs(item_data) do
-              row.name = name
-              row.count = count
+            for _, v in pairs(item_data) do
+              row.name = v.name
+              row.count = v.count
+              row.quality = v.quality
               row.color = "blue"
               table.insert(contents, row)
             end
@@ -220,11 +221,12 @@ function util.slot_table_update_train(icon_table, sources, gui_id)
   local new_table = {}
   for k, y in pairs(sources) do
     local type = k == "items" and "item" or "fluid"
-    for name, count in pairs(y) do
+    for _, v in pairs(y) do
       local row = {}
       row.type = type
-      row.name = name
-      row.count = count
+      row.name = v.name
+      row.count = v.count
+      row.quality = v.quality
       row.color = nil
       table.insert(new_table, row)
     end
