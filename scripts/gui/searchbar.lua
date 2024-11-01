@@ -93,7 +93,7 @@ local function handle_action(action, event)
         return
       end
       local name = filter_guis.item.elem_value.name
-      local type = filter_guis.item.elem_value.type
+      local type = filter_guis.item.elem_value.type or "item"
       filter_guis.search_field.text = "[" .. type .. "=" .. name .. "]"
       -- if event.button and event.button == defines.mouse_button_type.right then
       --   filter_guis.search_field.text = ("=" .. filter_guis.item.elem_value.name .. "]") or ""

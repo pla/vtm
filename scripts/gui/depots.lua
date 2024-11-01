@@ -19,19 +19,19 @@ local function depot_limit(station_data)
 end
 
 local function add_stock(stock, all_stock)
-  for item, amount in pairs(stock.items or {}) do
-    if all_stock[item] then
-      all_stock[item].count = all_stock[item].count + amount
+  for _, item in pairs(stock.items or {}) do
+    if all_stock[item.name] then
+      all_stock[item.name].count = all_stock[item.name].count + item.count
     else
-      all_stock[item] = { type = "item", name = item, count = amount, color = nil }
+      all_stock[item.name] = { type = "item", name = item.name, count = item.count, quality = item.quality }
     end
   end
 
-  for item, amount in pairs(stock.fluids or {}) do
-    if all_stock[item] then
-      all_stock[item].count = all_stock[item].count + amount
+  for _, item in pairs(stock.fluids or {}) do
+    if all_stock[item.name] then
+      all_stock[item.name].count = all_stock[item.name].count + item.count
     else
-      all_stock[item] = { type = "fluid", name = item, count = amount, color = nil }
+      all_stock[item.name] = { type = "fluid", name = item.name, count = item.count, quality = item.quality }
     end
   end
 end
@@ -42,7 +42,7 @@ local function read_depot_cargo(station_data)
   local trains = station_data.station.get_train_stop_trains()
   for _, t in pairs(trains) do
     -- check if the train is at the station
-    local entity = t.front_rail.get_rail_segment_entity(t.rail_direction_from_front_rail, false)
+    local entity = t.front_end.rail.get_rail_segment_stop(defines.rail_direction.front)
     if entity and
         entity.valid and
         entity.backer_name and
@@ -170,7 +170,7 @@ local function update_tab(gui_id)
         { -- name
           elem_mods = { caption = station_data.name },
           actions = {
-            on_click = { type = "depots", action = "position", position = station_data.station.position },
+            on_click = { type = "depots", action = "position", position = station_data.station.position, surface = station_data.station.surface },
           },
         },
         { --status
@@ -272,7 +272,8 @@ local function handle_action(action, event)
   if action.action == "position" then
     local player = game.players[event.player_index]
     if action.position then
-      player.zoom_to_world(action.position, 0.5)
+      --player.zoom_to_world(action.position, 0.5)
+      player.set_controller({type = defines.controllers.remote, position = action.position, surface = action.surface})
     end
   end
 end

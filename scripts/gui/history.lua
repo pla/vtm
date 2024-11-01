@@ -12,24 +12,24 @@ local function material_icon_list(event)
   local zero = 0
   -- diff only after leaving station
   if event.diff then
-    for item, amount in pairs(event.diff.items or {}) do
-      result = result .. util.format_number(amount, true) .. " [item=" .. item .. "], "
-      zero = zero + amount
+    for _, item in pairs(event.diff.items or {}) do
+      result = result .. util.format_number(item.count, true) .. " [item=" .. item.name .. "], "
+      zero = zero + item.count
     end
-    for fluid, amount in pairs(event.diff.fluids or {}) do
-      result = result .. util.format_number(math.ceil(amount), true) .. " [fluid=" .. fluid .. "], "
-      zero = zero + amount
+    for _, fluid in pairs(event.diff.fluids or {}) do
+      result = result .. util.format_number(math.ceil(fluid.count), true) .. " [fluid=" .. fluid.name.. "], "
+      zero = zero + fluid.count
     end
   end
   --contents and fluids only when wait_station
   if event.contents then
-    for item, _ in pairs(event.contents or {}) do
-      result = result .. "[item=" .. item .. "] "
+    for _, item in pairs(event.contents or {}) do
+      result = result .. "[item=" .. item.name .. "] "
     end
   end
   if event.fluids then
-    for fluid, _ in pairs(event.fluids or {}) do
-      result = result .. "[fluid=" .. fluid .. "] "
+    for _, fluid in pairs(event.fluids or {}) do
+      result = result .. "[fluid=" .. fluid.name .. "] "
     end
   end
   if result == "" then
@@ -86,21 +86,21 @@ end
 
 local function add_diff_to_shipment(shipment, event)
   if event.diff then
-    for item, amount in pairs(event.diff.items or {}) do
-      if amount < 0 then
-        if shipment[item] then
-          shipment[item].count = shipment[item].count + math.abs(amount)
+    for _, item in pairs(event.diff.items or {}) do
+      if item.count < 0 then
+        if shipment[item.name] then
+          shipment[item.name].count = shipment[item.name].count + math.abs(item.count)
         else
-          shipment[item] = { type = "item", name = item, count = math.abs(amount), color = nil }
+          shipment[item.name] = { type = "item", name = item.name, count = math.abs(item.count), quality = item.quality }
         end
       end
     end
-    for item, amount in pairs(event.diff.fluids or {}) do
-      if amount < 0 then
-        if shipment[item] then
-          shipment[item].count = shipment[item].count + math.abs(amount)
+    for _, item in pairs(event.diff.fluids or {}) do
+      if item.count < 0 then
+        if shipment[item.name] then
+          shipment[item.name].count = shipment[item.name].count + math.abs(item.count)
         else
-          shipment[item] = { type = "fluid", name = item, count = math.abs(amount), color = nil }
+          shipment[item.name] = { type = "fluid", name = item.name, count = math.abs(item.count), quality = item.quality }
         end
       end
     end
