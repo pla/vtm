@@ -9,7 +9,7 @@ local migrations = {}
 
 function migrations.generic()
   -- refresh cached mods availability
-  storage.TCS_active = script.active_mods["Train_Control_Signals"]
+  storage.TCS_active = script.active_mods["TCS_Icons"]
   storage.cybersyn_active = script.active_mods["cybersyn"]
   storage.SE_active = script.active_mods["space-exploration"]
   --refresh cached settings

@@ -191,7 +191,7 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
             {
               type = "sprite-button",
               style = "tool_button",
-              sprite = "utility/rename_icon_normal",
+              sprite = "utility/rename_icon",
               name = "editgrp_button",
               tooltip = { "vtm.groups-edit-group-tooltip" },
               mouse_button_filter = { "left" },

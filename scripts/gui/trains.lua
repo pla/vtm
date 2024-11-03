@@ -31,8 +31,8 @@ local function select_station_from_schedule(train)
     local station = schedule.records[schedule.current].station
     if station == nil and schedule.records[schedule.current].rail ~= nil then --cybersyn method
       --if the rail connected to a station?
-      local front = schedule.records[schedule.current].rail.get_rail_segment_entity(defines.rail_direction.front, false)
-      local back = schedule.records[schedule.current].rail.get_rail_segment_entity(defines.rail_direction.back, false)
+      local front = schedule.records[schedule.current].rail.get_rail_segment_stop(defines.rail_direction.front)
+      local back = schedule.records[schedule.current].rail.get_rail_segment_stop(defines.rail_direction.back)
       if front and front.type == "train-stop" then
         station = front.backer_name
       end
@@ -183,17 +183,17 @@ function trains.update_tab(gui_id)
           style = "vtm_table_row_frame",
           {
             type = "flow",
-            style_mods = { horizontal_align = "center", width = width.train_id },
+            style_mods = { vertical_align = "center", width = width.train_id },
             {
               type = "sprite-button",
               style = "transparent_slot",
-              sprite = "utility/side_menu_train_icon",
+              sprite = "utility/side_menu_train_icon"
+            },
               {
                 type = "label",
-                style = "vtm_trainid_label",
+                style = "vtm_semibold_label_with_padding",
                 tooltip = { "vtm.train-removed" },
               },
-            }
           },
           {
             type = "label",
@@ -221,16 +221,16 @@ function trains.update_tab(gui_id)
           elem_mods = {
             sprite = train_data.sprite,
           },
-          {
-            elem_mods = {
-              caption = train_data.train.id,
-              tooltip = { "vtm.train-open-ui-follow-train", train_data.train.id },
-            },
-            actions = {
-              on_click = { type = "trains", action = "open-train", train_id = train_data.train.id },
-            },
+        }       ,    {
+          elem_mods = {
+            caption = train_data.train.id,
+            tooltip = {"vtm.train-open-ui-follow-train", train_data.train.id },
           },
-        } },
+          actions = {
+            on_click = { type = "trains", action = "open-train", train_id = train_data.train.id },
+          },
+        },
+},
         {
           --status
           elem_mods = {
@@ -355,12 +355,7 @@ function trains.handle_action(action, event)
       local player = game.players[event.player_index]
       if event.shift and loco and loco.valid then
         -- follow train
-        if player.surface.name ~= loco.surface.name then
-          gui_util.follow_remote_train(player, loco)
-        else
-          --player.zoom_to_world(loco.position, 0.5, loco)
-          player.set_controller({type = defines.controllers.remote, position = loco.position, surface = loco.surface})
-        end
+        player.centered_on = loco
       else
         if loco and loco.valid then
           gui_util.open_entity_gui(event.player_index, loco)
@@ -369,7 +364,6 @@ function trains.handle_action(action, event)
     end
   elseif action.action == "refresh" then
     trains.update_tab(action.gui_id)
-    -- elseif action.action == "position" then
   end
 end
 
