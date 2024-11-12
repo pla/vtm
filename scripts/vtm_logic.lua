@@ -28,6 +28,11 @@ function vtm_logic.cache_generic_settings()
   storage.show_undef_warn          = settings.global["vtm-show-undef-warning"].value
   storage.dont_read_depot_stock    = settings.global["vtm-dont-read-depot-stock"].value
   storage.pr_from_start            = settings.global["vtm-p-or-r-start"].value
+
+  storage.backer_names = {}
+  for _, name in pairs(game.backer_names) do
+    storage.backer_names[name] = true
+  end
 end
 
 ---Try to guess the station type: Requester, Provider, Depot or Refuel
@@ -579,12 +584,11 @@ end
 
 local function on_trainstop_build(event)
   if event.entity.name == "train-stop" then
-    -- add_new_station(event.entity)
-    -- create ne stop only if it has proper type
+    if settings.global["vtm-name-new-station"].value and storage.backer_names[event.entity.backer_name] then
+      event.entity.backer_name = settings.global["vtm-new-station-name"].value
+    end
     local station_data = new_station(event.entity)
-    -- if station_data.type ~= "ND" then
     storage.stations[event.entity.unit_number] = station_data
-    -- end
   end
 end
 
@@ -639,9 +643,9 @@ end)
 -- end)
 
 script.on_event(defines.events.on_built_entity, function(event)
-    on_trainstop_build(event)
-  end,
-  { { filter = "type", type = "train-stop" } })
+  on_trainstop_build(event)
+end,
+{ { filter = "type", type = "train-stop" } })
 
 script.on_event(defines.events.on_robot_built_entity, function(event)
     on_trainstop_build(event)

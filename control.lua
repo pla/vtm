@@ -37,6 +37,7 @@ local function init_global_data()
   storage.SE_active = script.active_mods["space-exploration"]
   --cache relevant settings
   vtm_logic.cache_generic_settings()
+  
 end
 
 local function remove_mod_gui_button(player)
@@ -204,22 +205,16 @@ commands.add_command("vtm-show-undef-stations", { "vtm.command-help" }, function
   local force = player.valid and player.force or 1
   local table_index = 0
   force.print({ "vtm.show-undef-stations" })
-  if script.active_mods["space-exploration"] then
     force.print({ "", { "vtm.filter-surface" }, ": ", storage.settings[event.player_index].surface })
-  end
 
   for _, station_data in pairs(storage.stations) do
     if station_data.station.valid and
         station_data.force_index == player.force.index and
         station_data.type == "ND" and
         (
-          script.active_mods["space-exploration"] and
           station_data.station.surface.name == storage.settings[event.player_index].surface
           or
-          script.active_mods["space-exploration"] and
           storage.settings[event.player_index].surface == "All"
-          or
-          not script.active_mods["space-exploration"] and true
         )
     then
       table_index = table_index + 1

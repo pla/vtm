@@ -24,7 +24,7 @@ function migrations.generic()
   if storage.station_refresh ~= "init" then
     vtm_logic.load_guess_patterns()
     vtm_logic.update_all_stations("force")
-    game.print("VTM updated stations on config change") --TODO localise
+    game.print({"vtm.config-change1"})
 
   end
 
@@ -34,21 +34,22 @@ function migrations.generic()
       if storage.settings[player.index] == nil then
         migrations.init_player_data(player)
       end
+
       -- recreate gui
       local gui_id = gui_util.get_gui_id(player.index)
       if gui_id and storage.guis[gui_id].group_gui then
         groups.destroy_gui(gui_id)
       end
+
       if gui_id ~= nil then
         vtm_gui.destroy(gui_id)
       end
+
       vtm_gui.create_gui(player)
       gui_id = gui_util.get_gui_id(player.index)
       groups.create_gui(gui_id)
-      player.print("VTM recreated gui on config change") --TODO localise
-      -- script.raise_event(constants.refresh_event, {
-      --   player_index = player.index,
-      -- })
+      player.print({"vtm.config-change2"})
+      
       -- do the button thing
       migrations.add_mod_gui_button(player)
     end

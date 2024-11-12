@@ -7,6 +7,20 @@ data:extend({
     order = "a",
   },
   {
+    type = "bool-setting",
+    default_value = false,
+    name = "vtm-name-new-station",
+    setting_type = "runtime-global",
+    order = "a",
+  },
+  {
+    type = "string-setting",
+    name = "vtm-new-station-name",
+    setting_type = "runtime-global",
+    default_value = "Unused Station",
+    order = "a",
+  },
+  {
     type = "int-setting",
     name = "vtm-history-length",
     setting_type = "runtime-global",
@@ -20,7 +34,7 @@ data:extend({
     name = "vtm-depot-names",
     setting_type = "runtime-global",
     default_value = "depot,shuttle,unused",
-    order = "b",
+    order = "bb",
   },
   {
     type = "string-setting",

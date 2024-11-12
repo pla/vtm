@@ -98,7 +98,7 @@ local function update_tab(gui_id)
       table_index = table_index + 1
       vtm_gui.gui.stations.warning.visible = false
       -- get or create gui row
-      -- name,status,since,type,stock,intransit
+      -- name,status,prio,type,stock,intransit
       -- limit manual or circuit,type(PR),group
       local row = children[table_index]
       if not row then
@@ -131,7 +131,7 @@ local function update_tab(gui_id)
           {
             type = "label",
             style = "vtm_semibold_label_with_padding",
-            style_mods = { width = width.since, horizontal_align = "right" },
+            style_mods = { width = width.prio, horizontal_align = "right" },
           },
           {
             type = "label",
@@ -161,7 +161,7 @@ local function update_tab(gui_id)
         })
       end
       -- insert data
-      -- name,status,since,type,stock,intransit
+      -- name,status,prio,type,stock,intransit
       -- limit manual or circuit,type(PR),group
       local stock_data, is_circuit_limit = vtm_logic.read_station_network(station_data)
       station_data.stock = stock_data
@@ -180,7 +180,7 @@ local function update_tab(gui_id)
         in_transit_data = gui_util.read_inbound_trains(station_data)
       end
       local limit_text, color = station_limit(station_data, is_circuit_limit)
-      local since = ""
+      local prio = ""
       gui.update(row, {
         {
           -- Station button
@@ -203,10 +203,10 @@ local function update_tab(gui_id)
           { elem_mods = { caption = limit_text } },
         },
         {
-          elem_mods = {
-            caption = since
+          elem_mods = { --TODO change prio popup
+            caption = station_data.station.train_stop_priority
           }
-        },                                               -- since
+        },                                               -- prio
         { elem_mods = { caption = station_data.type } }, --type
         {}, {}, {},                                      -- slot table, slot table, pusher
         { {
@@ -241,7 +241,7 @@ end
 local function build_gui(gui_id)
   local width = constants.gui.stations
 
-  -- name,status,since,type,stock,intransit
+  -- name,status,prio,type,stock,intransit
   -- limit manual or circuit,type(PR),group
   return {
     tab = {
@@ -284,8 +284,8 @@ local function build_gui(gui_id)
         {
           type = "label",
           style = "subheader_caption_label",
-          -- caption = { "vtm.table-header-since" },
-          style_mods = { width = width.since },
+          caption = { "vtm.table-header-prio" },
+          style_mods = { width = width.prio },
         },
         {
           type = "label",
