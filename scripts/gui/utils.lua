@@ -2,10 +2,11 @@
 -- local gui         = require("__flib__.gui")
 local gui      = require("__virtm__.scripts.flib-gui")
 local flib_box = require("__flib__.bounding-box")
+local util = require("__core__.lualib.util")
 
-local util     = {}
+local utils     = {}
 
-function util.get_gui_id(player_index)
+function utils.get_gui_id(player_index)
   local player = game.get_player(player_index)
   for gui_id, vtm_gui in pairs(storage.guis) do
     if vtm_gui.player == player then
@@ -15,7 +16,7 @@ function util.get_gui_id(player_index)
   return nil
 end
 
-function util.default_list_box(name, action, item_data, items_num, refs_table, style)
+function utils.default_list_box(name, action, item_data, items_num, refs_table, style)
   if item_data == nil then
     --default list
     item_data = {}
@@ -38,7 +39,7 @@ function util.default_list_box(name, action, item_data, items_num, refs_table, s
   return content
 end
 
-function util.read_inbound_trains(station_data)
+function utils.read_inbound_trains(station_data)
   local station = station_data.station
   local contents = {}
   local inv_trains = {}
@@ -76,7 +77,7 @@ end
 ---Slave table will be added to master table
 ---@param master SlotTableDef[]
 ---@param slave SlotTableDef[]
-function util.merge_slot_tables(master, slave)
+function utils.merge_slot_tables(master, slave)
   if table_size(slave) == 0 then return end
   for _, add in pairs(slave) do
     local found = false
@@ -96,7 +97,7 @@ end
 --- @param widths table
 --- @param style? string
 --- @param name string
-function util.slot_table(widths, style, name)
+function utils.slot_table(widths, style, name)
   return {
     type = "table",
     name = name .. "_table",
@@ -118,7 +119,7 @@ end
 --- @param sources SlotTableDef[]
 --- @param gui_id uint
 --- @param max_lines uint?
-function util.slot_table_update(icon_table, sources, gui_id, max_lines)
+function utils.slot_table_update(icon_table, sources, gui_id, max_lines)
   local children = icon_table.children
   local i = 0
   for _, source_data in pairs(sources) do
@@ -127,12 +128,13 @@ function util.slot_table_update(icon_table, sources, gui_id, max_lines)
     if not button then
       button = gui.add(icon_table, { type = "sprite-button" })
     end
-    util.update_sprite_button(
+    utils.update_sprite_button(
       button,
       source_data.type,
       source_data.name,
       source_data.count,
-      source_data.color or nil,
+      source_data.quality,
+      source_data.color,
       gui_id
     )
     -- button.enabled = false
@@ -144,7 +146,7 @@ function util.slot_table_update(icon_table, sources, gui_id, max_lines)
   end
 end
 
-function util.sprite_button_type_name_amount(type, name, amount, color, gui_id)
+function utils.sprite_button_type_name_amount(type, name, amount, color, gui_id)
   local prototype = nil
   if type == "item" then
     prototype = prototypes.item[name]
@@ -180,7 +182,7 @@ function util.sprite_button_type_name_amount(type, name, amount, color, gui_id)
   }
 end
 
-function util.update_sprite_button(button, type, name, amount, color, gui_id)
+function utils.update_sprite_button(button, type, name, amount, quality, color, gui_id)
   local prototype = nil
   if type == "item" then
     prototype = prototypes.item[name]
@@ -197,6 +199,10 @@ function util.update_sprite_button(button, type, name, amount, color, gui_id)
       tooltip = { "", prototype.localised_name, ", ", color_item.localised_name }
     else
       tooltip = prototype.localised_name
+    end
+    if script.active_mods["quality"] then
+      local item_quality = prototypes.quality[quality]
+      tooltip = { "", tooltip , ", " , item_quality.localised_name }
     end
     style = "transparent_slot"
   else
@@ -217,7 +223,7 @@ function util.update_sprite_button(button, type, name, amount, color, gui_id)
   })
 end
 
-function util.slot_table_update_train(icon_table, sources, gui_id)
+function utils.slot_table_update_train(icon_table, sources, gui_id)
   local new_table = {}
   for k, y in pairs(sources) do
     local type = k == "items" and "item" or "fluid"
@@ -232,13 +238,13 @@ function util.slot_table_update_train(icon_table, sources, gui_id)
     end
   end
 
-  util.slot_table_update(icon_table, new_table, gui_id)
+  utils.slot_table_update(icon_table, new_table, gui_id)
 end
 
 ---Return Zoom level for minimap
 ---@param area BoundingBox
 ---@return double
-function util.get_zoom_from_area(area)
+function utils.get_zoom_from_area(area)
   local zoom = 1.0
   if area then
     local width = flib_box.width(area)
@@ -266,7 +272,7 @@ function util.get_zoom_from_area(area)
   return zoom
 end
 
-function util.signal_for_entity(entity)
+function utils.signal_for_entity(entity)
   local empty_signal = { type = "virtual", name = "signal-0" }
   if not entity then return empty_signal end
   if not entity.valid then return empty_signal end
@@ -276,14 +282,14 @@ function util.signal_for_entity(entity)
   return empty_signal
 end
 
-function util.signal_to_sprite(signal)
+function utils.signal_to_sprite(signal)
   if not signal then return nil end
   if helpers.is_valid_sprite_path(signal.type .. "/" .. signal.name) then
     return signal.type .. "/" .. signal.name
   end
 end
 
-function util.matches_filter(result, filters)
+function utils.matches_filter(result, filters)
   if result.last_change < filters.time_period then
     return false
   end
@@ -314,22 +320,22 @@ function util.matches_filter(result, filters)
   return false
 end
 
-function util.iterate_backwards_iterator(tbl, i)
+function utils.iterate_backwards_iterator(tbl, i)
   i = i - 1
   if i ~= 0 then
     return i, tbl[i]
   end
 end
 
-function util.iterate_backwards(tbl)
-  return util.iterate_backwards_iterator, tbl, table_size(tbl) + 1
+function utils.iterate_backwards(tbl)
+  return utils.iterate_backwards_iterator, tbl, table_size(tbl) + 1
 end
 
 --- Open entity GUI for one player. eg LuaTrain
 --- @param player_index number
 --- @param entity LuaEntity
 --- @return boolean --gui_opened If the GUI was opened.
-function util.open_entity_gui(player_index, entity)
+function utils.open_entity_gui(player_index, entity)
   if entity and entity.valid and game.players[player_index] then
     game.players[player_index].opened = entity
     return true
@@ -341,7 +347,7 @@ end
 ---@param player LuaPlayer
 ---@param surface_name string LuaSurface.name
 ---@param position MapPosition
-function util.show_remote_position(player, surface_name, position)
+function utils.show_remote_position(player, surface_name, position)
   if not player or not surface_name or not position then return end
   if storage.SE_active and remote.interfaces["space-exploration"]["remote_view_start"]
   then
@@ -359,7 +365,7 @@ end
 --- show train with Navsat on SE
 ---@param player LuaPlayer
 ---@param loco LuaEntity
-function util.follow_remote_train(player, loco)
+function utils.follow_remote_train(player, loco)
   if not player or not loco or not loco.valid then return end
   if storage.SE_active and remote.interfaces["space-exploration"]["remote_view_start"]
   then
@@ -377,7 +383,7 @@ end
 --- set a style for the given LuaGuiElement
 ---@param element LuaGuiElement
 ---@param style string must be a gui-style name
-function util.set_style(element, style)
+function utils.set_style(element, style)
   gui.update(element, {
     style = style
   })
@@ -387,8 +393,8 @@ end
 ---@param str string
 ---@param search string
 ---@return boolean
-function util.string_ends_with(str, search)
+function utils.string_ends_with(str, search)
   return string.sub(str, (string.len(search) * -1)) == search
 end
 
-return util
+return utils

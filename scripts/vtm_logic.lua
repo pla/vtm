@@ -578,12 +578,12 @@ local function on_train_changed_state(event)
 end
 
 local function on_trainstop_build(event)
-  if event.created_entity.name == "train-stop" then
+  if event.entity.name == "train-stop" then
     -- add_new_station(event.entity)
     -- create ne stop only if it has proper type
-    local station_data = new_station(event.created_entity)
+    local station_data = new_station(event.entity)
     -- if station_data.type ~= "ND" then
-    storage.stations[event.created_entity.unit_number] = station_data
+    storage.stations[event.entity.unit_number] = station_data
     -- end
   end
 end

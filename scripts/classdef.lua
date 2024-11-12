@@ -5,7 +5,7 @@
 ---@field gui table<string,LuaGuiElement>
 ---@field player LuaPlayer
 ---@field state string open or closed state of the main gui
----@field group_gui table<string,LuaGuiElement>?
+---@field group_gui table<string,LuaGuiElement>
 ---@field state_groups string open or closed state of the edit groups gui
 ---@field pinned boolean
 ---@field filter_history table Queue of previous search patterns
@@ -81,6 +81,7 @@
 ---@field type string item or fluid , virtual not in use
 ---@field name string prototype name of the item
 ---@field count number
+---@field quality string quality
 ---@field color string? color for the background of the slot, unused
 
 ---@class GroupData

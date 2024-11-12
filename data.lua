@@ -12,7 +12,6 @@ data:extend {
         filename = "__base__/graphics/icons/train-stop.png",
         position = { 0, 0 },
         size = 64,
-        mipmap_count = 4,
         flags = { "icon" },
       },
       {
@@ -21,7 +20,6 @@ data:extend {
         position = { 0, 0 },
         size = 64,
         -- scale="0.5",
-        mipmap_count = 3,
         -- shift = { 8, 8 }
       },
 
@@ -41,13 +39,13 @@ data:extend {
   {
     type = 'custom-input',
     name = 'vtm-open',
-    key_sequence = 'ALT + T',
+    key_sequence = 'SHIFT + T',
     enabled_while_spectating = false,
   },
   {
     type = 'custom-input',
     name = 'vtm-groups-open',
-    key_sequence = 'ALT + G',
+    key_sequence = 'SHIFT + G',
     enabled_while_spectating = false,
   },
   {
@@ -72,6 +70,17 @@ data:extend {
     action                   = "lua",
     associated_control_input = "vtm-open",
   },
+  {
+    type                     = "shortcut",
+    name                     = "vtm-groups-open",
+    icon                     = "__virtm__/graphics/icons/shortcutG.png",
+    small_icon               = "__virtm__/graphics/icons/shortcutG.png",
+    icon_size                = 32,
+    small_icon_size          = 24,
+    toggleable               = false,
+    action                   = "lua",
+    associated_control_input = "vtm-groups-open",
+  },
 }
 
 -- selection tool
@@ -85,7 +94,6 @@ data:extend {
       {
         icon = "__base__/graphics/icons/train-stop.png",
         icon_size = 32,
-        icon_mipmaps = 3,
         -- tint = { r = 0.5, g = 0, b = 0, a = 0.5 } --red
       }
     },

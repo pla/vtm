@@ -32,8 +32,8 @@ local function init_global_data()
     ["nauvis"] = "Nauvis",
   }
   -- cache relevant mods
-  --storage.TCS_active = script.active_mods["Train_Control_Signals"]
-  storage.cybersyn_active = script.active_mods ["cybersyn"]
+  storage.TCS_active = script.active_mods["TCS_Icons"]
+  storage.cybersyn_active = script.active_mods["cybersyn"]
   storage.SE_active = script.active_mods["space-exploration"]
   --cache relevant settings
   vtm_logic.cache_generic_settings()
@@ -89,7 +89,7 @@ local function on_se_elevator()
       and remote.interfaces["space-exploration"]["get_on_train_teleport_started_event"]
   then
     script.on_event(
----@diagnostic disable-next-line: param-type-mismatch
+    ---@diagnostic disable-next-line: param-type-mismatch
       remote.call("space-exploration", "get_on_train_teleport_finished_event"),
       --- @param event on_train_teleported
       function(event)
@@ -150,6 +150,8 @@ end)
 script.on_event(defines.events.on_lua_shortcut, function(event)
   if event.prototype_name == "vtm-open" then
     vtm_gui.open_or_close_gui(event.player_index)
+  elseif event.prototype_name == "vtm-groups-open" then
+    groups.toggle_groups_gui(event.player_index)
   end
 end)
 

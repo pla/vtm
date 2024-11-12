@@ -373,7 +373,7 @@ end
 ---@param surface SurfaceIdentification
 ---@param area BoundingBox
 ---@param ttl uint?
----@return uint64
+---@return LuaRenderObject
 local function draw_group_rectangle(color, surface, area, ttl)
   local id = rendering.draw_rectangle({
     color = color,
@@ -756,7 +756,7 @@ local function remove_station_from_list(action, event)
   local station
 
   if top_list.selected_index > 0 then
-    local name = top_list.items[top_list.selected_index]
+    local name = top_list.items[top_list.selected_index] --[[@as string]]
     if util.string_starts_with(name, provider[top_list.selected_index].backer_name) then
       station = provider[top_list.selected_index]
     end
@@ -825,7 +825,7 @@ local function delete_group(action, event)
 
   if not group_id and top_list.selected_index > 0 then
     for _, station in pairs(edit.selected_stations) do
-      local name = top_list.items[top_list.selected_index]
+      local name = top_list.items[top_list.selected_index] --[[@as string]]
       if util.string_starts_with(name, station.backer_name) then
         p_station = station
         break
