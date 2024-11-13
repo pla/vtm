@@ -173,17 +173,18 @@ end
 ---@param station_data StationData
 ---@param type "item"|"fluid"|"virtual" signalID type
 ---@param name string signalID name
-local function register_item(station_data, type, name)
+---@param quality string 
+local function register_item(station_data, type, name, quality)
   local found = false
   -- register item
   for _, row in pairs(station_data.registered_stock) do
-    if row.type == type and row.name == name then
+    if row.type == type and row.name == name and row.quality == quality then
       found = true
       break
     end
   end
   if not found then
-    table.insert(station_data.registered_stock, { type = type, name = name, count = 0 })
+    table.insert(station_data.registered_stock, { type = type, name = name, quality = quality, count = 0 })
   end
 end
 
@@ -209,10 +210,12 @@ function vtm_logic.read_station_network(station_data, return_virtual)
           if signal_type == nil then
             signal_type = "item"
           end
-          register_item(station_data, signal_type, signal_data.signal.name)
+          local quality = signal_data.signal.quality or "normal"
+          register_item(station_data, signal_type, signal_data.signal.name, quality)
           table.insert(contents, {
             type = signal_type,
             name = signal_data.signal.name,
+            quality = quality,
             count = signal_data.count,
             color = constants.wire_colors[wire]
           })

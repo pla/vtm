@@ -13,23 +13,23 @@ local function material_icon_list(event)
   -- diff only after leaving station
   if event.diff then
     for _, item in pairs(event.diff.items or {}) do
-      result = result .. util.format_number(item.count, true) .. " [item=" .. item.name .. "], "
+      result = result .. util.format_number(item.count, true) .. " [item=" .. item.name .. ",quality=" .. item.quality .. "], "
       zero = zero + item.count
     end
     for _, fluid in pairs(event.diff.fluids or {}) do
-      result = result .. util.format_number(math.ceil(fluid.count), true) .. " [fluid=" .. fluid.name.. "], "
+      result = result .. util.format_number(math.ceil(fluid.count), true) .. " [fluid=" .. fluid.name.. ",quality=" .. fluid.quality .."], "
       zero = zero + fluid.count
     end
   end
   --contents and fluids only when wait_station
   if event.contents then
     for _, item in pairs(event.contents or {}) do
-      result = result .. "[item=" .. item.name .. "] "
+      result = result .. "[item=" .. item.name .. ",quality=" .. item.quality .."] "
     end
   end
   if event.fluids then
     for _, fluid in pairs(event.fluids or {}) do
-      result = result .. "[fluid=" .. fluid.name .. "] "
+      result = result .. "[fluid=" .. fluid.name .. ",quality=" .. fluid.quality .."] "
     end
   end
   if result == "" then
@@ -87,20 +87,22 @@ end
 local function add_diff_to_shipment(shipment, event)
   if event.diff then
     for _, item in pairs(event.diff.items or {}) do
+      local key = item.name .. item.quality
       if item.count < 0 then
-        if shipment[item.name] then
-          shipment[item.name].count = shipment[item.name].count + math.abs(item.count)
+        if shipment[key] then
+          shipment[key].count = shipment[key].count + math.abs(item.count)
         else
-          shipment[item.name] = { type = "item", name = item.name, count = math.abs(item.count), quality = item.quality }
+          shipment[key] = { type = "item", name = item.name, count = math.abs(item.count), quality = item.quality }
         end
       end
     end
     for _, item in pairs(event.diff.fluids or {}) do
+      local key = item.name .. item.quality
       if item.count < 0 then
-        if shipment[item.name] then
-          shipment[item.name].count = shipment[item.name].count + math.abs(item.count)
+        if shipment[key] then
+          shipment[key].count = shipment[key].count + math.abs(item.count)
         else
-          shipment[item.name] = { type = "fluid", name = item.name, count = math.abs(item.count), quality = item.quality }
+          shipment[key] = { type = "fluid", name = item.name, count = math.abs(item.count), quality = item.quality }
         end
       end
     end
@@ -110,7 +112,7 @@ end
 local function update_route_flow(flow, history_data, compact)
   local table_index = 0
   local children = flow.children
-  local shipment = {}
+  local shipment = {} --[[@as SlotTableDef[] ]]
 
   for _, event in pairs(history_data.events) do
     if event.schedule then -- schedule changend event

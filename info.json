@@ -6,7 +6,8 @@
     "author": "EvilPLa",
     "dependencies": [
       "base >= 2.0",
-      "flib >= 0.15.0"
+      "flib >= 0.15.0",
+      "? TCS_Icons"
     ],
     "description": "GUI to monitor your vanilla train network, inspired by LTN Manager and Trainlog"
 }

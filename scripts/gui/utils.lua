@@ -2,9 +2,9 @@
 -- local gui         = require("__flib__.gui")
 local gui      = require("__virtm__.scripts.flib-gui")
 local flib_box = require("__flib__.bounding-box")
-local util = require("__core__.lualib.util")
+local util     = require("__core__.lualib.util")
 
-local utils     = {}
+local utils    = {}
 
 function utils.get_gui_id(player_index)
   local player = game.get_player(player_index)
@@ -49,10 +49,10 @@ function utils.read_inbound_trains(station_data)
       local train_data = storage.trains[train_id]
       if train_data and train_data.train.valid then
         if train_data.path_end_stop == station.unit_number then
-            for type, item_data in pairs(train_data.contents) do
-            local row = {}
-            row.type = type == "items" and "item" or "fluid"
+          for type, item_data in pairs(train_data.contents) do
             for _, v in pairs(item_data) do
+              local row = {}
+              row.type = type == "items" and "item" or "fluid"
               row.name = v.name
               row.count = v.count
               row.quality = v.quality
@@ -194,6 +194,8 @@ function utils.update_sprite_button(button, type, name, amount, quality, color, 
   local sprite, tooltip, style
   if prototype and helpers.is_valid_sprite_path(type .. "/" .. name) then
     sprite = type .. "/" .. name
+    local quali_sprite = nil
+
     if color ~= nil and (color == "red" or color == "green") then
       local color_item = prototypes.item[color .. "-wire"]
       tooltip = { "", prototype.localised_name, ", ", color_item.localised_name }
@@ -202,7 +204,10 @@ function utils.update_sprite_button(button, type, name, amount, quality, color, 
     end
     if script.active_mods["quality"] then
       local item_quality = prototypes.quality[quality]
-      tooltip = { "", tooltip , ", " , item_quality.localised_name }
+      if helpers.is_valid_sprite_path(item_quality.type .. "/" .. item_quality.name) then
+        quali_sprite = item_quality.type .. "/" .. item_quality.name
+      end
+      tooltip = { "", tooltip, ", [",item_quality.type , "=" , item_quality.name,"] ", item_quality.localised_name }
     end
     style = "transparent_slot"
   else
@@ -351,7 +356,7 @@ function utils.show_remote_position(player, surface_name, position)
   if not player or not surface_name or not position then return end
   if storage.SE_active and remote.interfaces["space-exploration"]["remote_view_start"]
   then
----@diagnostic disable-next-line: missing-fields
+    ---@diagnostic disable-next-line: missing-fields
     remote.call("space-exploration", "remote_view_start", {
       player = player,
       zone_name = storage.surfaces[surface_name],
@@ -369,7 +374,7 @@ function utils.follow_remote_train(player, loco)
   if not player or not loco or not loco.valid then return end
   if storage.SE_active and remote.interfaces["space-exploration"]["remote_view_start"]
   then
----@diagnostic disable-next-line: missing-fields
+    ---@diagnostic disable-next-line: missing-fields
     remote.call("space-exploration", "remote_view_start", {
       player = player,
       zone_name = storage.surfaces[loco.surface.name],
