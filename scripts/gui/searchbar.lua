@@ -16,7 +16,7 @@ local function update(gui_id)
   local dropdown = storage.guis[gui_id].gui.filter.surface --[[@as LuaGuiElement]]
   local surface = storage.settings[storage.guis[gui_id].player.index].surface or "All"
   local visible = storage.surface_selector_visible --[[@as boolean]]
-  if storage.SE_active then
+  if storage.SE_active or storage.SA_active then
     visible = true
   end
   flow.visible = visible

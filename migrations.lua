@@ -12,6 +12,8 @@ function migrations.generic()
   storage.TCS_active = script.active_mods["TCS_Icons"]
   storage.cybersyn_active = script.active_mods["cybersyn"]
   storage.SE_active = script.active_mods["space-exploration"]
+  storage.SA_active = script.active_mods["space-age"]
+  
   --refresh cached settings
   vtm_logic.cache_generic_settings()
   
