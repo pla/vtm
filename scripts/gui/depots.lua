@@ -20,18 +20,20 @@ end
 
 local function add_stock(stock, all_stock)
   for _, item in pairs(stock.items or {}) do
-    if all_stock[item.name] then
-      all_stock[item.name].count = all_stock[item.name].count + item.count
+    local key = item.name .. item.quality
+    if all_stock[key] then
+      all_stock[key].count = all_stock[key].count + item.count
     else
-      all_stock[item.name] = { type = "item", name = item.name, count = item.count, quality = item.quality }
+      all_stock[key] = { type = "item", name = item.name, count = item.count, quality = item.quality }
     end
   end
 
   for _, item in pairs(stock.fluids or {}) do
-    if all_stock[item.name] then
-      all_stock[item.name].count = all_stock[item.name].count + item.count
+    local key = item.name .. item.quality
+    if all_stock[key] then
+      all_stock[key].count = all_stock[key].count + item.count
     else
-      all_stock[item.name] = { type = "fluid", name = item.name, count = item.count, quality = item.quality }
+      all_stock[key] = { type = "fluid", name = item.name, count = item.count, quality = item.quality }
     end
   end
 end
