@@ -120,7 +120,12 @@ local function register_surface(surface)
         return
       end
     end
+    if surface.planet and surface.planet.prototype.localised_name then
+      storage.surfaces[surface.name] = {"", "[planet=" , surface.name , "] " , surface.planet.prototype.localised_name}
+    else
     storage.surfaces[surface.name] = surface.name
+    end
+
   end
 end
 
@@ -630,9 +635,6 @@ local function on_train_schedule_changed(event)
     schedule = train.schedule,
     changed_by = event.player_index
   })
-  -- TODO trigger station refresh from train path_end_stop :/
-  -- worth nothing if there is nothing ready to deliver
-  -- better make that available in a different way
 end
 
 -- EVENTS

@@ -529,7 +529,6 @@ local function open_gui(action, clear)
     update_gui_from_group(action.gui_id, action.group_id)
     return
   end
-  -- TODO: that might not work anymore
   if clear then
     clear_selected_data(action.gui_id)
   end
@@ -640,7 +639,6 @@ local function save_groups(action, event)
     player.print({ "vtm.groups-saved", p_station.unit_number })
     add_group_overlay(action.gui_id, group_data, edit.show_overlay)
   end
-  --todo maybe option to show last saved group
   clear_selected_data(action.gui_id)
   update_gui(action.gui_id, {})
   return true

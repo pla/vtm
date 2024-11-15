@@ -20,7 +20,6 @@ function migrations.generic()
   if storage.surfaces == nil or table_size(storage.surfaces) < 2 then
     storage.surfaces = {
       ["All"] = "All",
-      ["nauvis"] = "Nauvis",
     }
   end
   if storage.station_refresh ~= "init" then
@@ -63,7 +62,6 @@ migrations.by_version = {
     storage.surfaces = {
       -- initial creation
       ["All"] = "All",
-      ["nauvis"] = "Nauvis",
     }
   end,
   ["0.1.4"] = function()

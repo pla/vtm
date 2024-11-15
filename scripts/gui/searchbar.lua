@@ -16,16 +16,19 @@ local function update(gui_id)
   local dropdown = storage.guis[gui_id].gui.filter.surface --[[@as LuaGuiElement]]
   local surface = storage.settings[storage.guis[gui_id].player.index].surface or "All"
   local visible = storage.surface_selector_visible --[[@as boolean]]
+  local selected_index = 1
   if storage.SE_active or storage.SA_active then
     visible = true
   end
   flow.visible = visible
   dropdown.clear_items()
-  for _, value in pairs(storage.surfaces) do
+  for key, value in pairs(storage.surfaces) do
     dropdown.add_item(value)
+    if key == surface then
+    selected_index = #dropdown.items
+    end
   end
   -- Validate that the selected surface still exist
-  local selected_index = tables.find(dropdown.items, storage.surfaces[surface]) --[[@as uint]]
   -- If the surface was invalidated since last update, reset to all
   if not selected_index then
     selected_index = 1
@@ -46,8 +49,9 @@ local function handle_action(action, event)
     return
   end
   if action.action == "apply-surface" then
-    -- get the key/original name of the surface(only to have Nauvis with a captial N)
-    local surface = tables.find(storage.surfaces, event.element.items[event.element.selected_index])
+    -- local surface = tables.find(storage.surfaces, event.element.items[event.element.selected_index])
+    local surface = event.element.items[event.element.selected_index][3] or "All"
+    -- local surface = storage.surfaces[key]
     storage.settings[event.player_index].surface = surface or "All"
     refresh(action)
     return

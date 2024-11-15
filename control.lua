@@ -26,10 +26,9 @@ local function init_global_data()
   storage.groups = {}
   ---@type GroupSet
   storage.group_set = {}
-  ---@type {[string]:string}
+  ---@type {[string]:string|table}
   storage.surfaces = {
     ["All"] = "All",
-    ["nauvis"] = "Nauvis",
   }
   -- cache relevant mods
   storage.TCS_active = script.active_mods["TCS_Icons"]

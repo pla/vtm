@@ -203,7 +203,7 @@ local function update_tab(gui_id)
           { elem_mods = { caption = limit_text } },
         },
         {
-          elem_mods = { --TODO change prio popup
+          elem_mods = { --TODO make a change-prio popup
             caption = station_data.station.train_stop_priority
           }
         },                                               -- prio

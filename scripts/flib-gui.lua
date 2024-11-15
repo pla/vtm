@@ -234,7 +234,6 @@ local function recursive_update(elem, updates)
     flib_gui.update_tags(elem, updates.tags)
   end
 
-  -- TODO: This could be a lot better
   if updates.actions then
     for event_name, payload in pairs(updates.actions) do
       flib_gui.set_action(elem, event_name, payload)
