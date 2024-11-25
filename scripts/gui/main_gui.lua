@@ -3,6 +3,7 @@ local constants   = require("__virtm__.scripts.constants")
 local gui         = require("__virtm__.scripts.flib-gui")
 local searchbar   = require("__virtm__.scripts.gui.searchbar")
 local trains      = require("__virtm__.scripts.gui.trains")
+local space      = require("__virtm__.scripts.gui.space")
 local stations    = require("__virtm__.scripts.gui.stations")
 local depots      = require("__virtm__.scripts.gui.depots")
 local history     = require("__virtm__.scripts.gui.history")
@@ -108,6 +109,8 @@ local function create_gui(player)
             trains.build_gui(),
             -- tab stations
             stations.build_gui(),
+            -- tab space
+            space.build_gui(),
             -- tab depots
             depots.build_gui(),
             -- tab groups
@@ -133,6 +136,7 @@ local function create_gui(player)
   local tab_list = {}
   for key, value in pairs(refs.tabs.pane.tabs) do
     tab_list[value.tab.name] = key
+  
   end
   refs.titlebar.flow.drag_target = refs.window
   searchbar.update(gui_id)
@@ -248,12 +252,17 @@ local function dispatch_refresh(event)
     toggle_auto_refresh(gui_id)
   end
 
+  local gui_data = storage.guis[gui_id]
+  gui_data.gui.tabs.space_tab.visible = storage.showSpaceTab --[[@as boolean]]
+
   local current_tab = storage.settings[event.player_index].current_tab
   searchbar.update(gui_id)
   if current_tab == "stations" then
     stations.update_tab(gui_id)
   elseif current_tab == "trains" then
     trains.update_tab(gui_id)
+  elseif current_tab == "space" then
+    space.update_tab(gui_id)
   elseif current_tab == "depots" then
     depots.update_tab(gui_id)
   elseif current_tab == "groups" then
