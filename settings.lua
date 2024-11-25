@@ -9,6 +9,13 @@ data:extend({
   {
     type = "bool-setting",
     default_value = false,
+    name = "vtm-showSpaceTab",
+    setting_type = "runtime-global",
+    order = "a",
+  },
+  {
+    type = "bool-setting",
+    default_value = false,
     name = "vtm-name-new-station",
     setting_type = "runtime-global",
     order = "a",

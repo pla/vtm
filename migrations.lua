@@ -17,7 +17,7 @@ function migrations.generic()
   --refresh cached settings
   vtm_logic.cache_generic_settings()
   
-  if storage.surfaces == nil or table_size(storage.surfaces) < 2 then
+  if storage.surfaces == nil or table_size(storage.surfaces) < 1 then
     storage.surfaces = {
       ["All"] = "All",
     }

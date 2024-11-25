@@ -27,6 +27,15 @@ constants.gui = {
     cargo_columns = 6,
     appendix = 17,
   },
+  space = {
+    name = 200,
+    status = 334,
+    location = 80,
+    weight = 70,
+    cargo = 36 * 6,
+    cargo_columns = 6,
+    appendix = 17,
+  },
   stations = {
     icon = 28,
     name = 283,

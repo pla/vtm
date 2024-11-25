@@ -35,10 +35,9 @@ local function init_global_data()
   storage.cybersyn_active = script.active_mods["cybersyn"]
   storage.SE_active = script.active_mods["space-exploration"]
   storage.SA_active = script.active_mods["space-age"]
-  
+
   --cache relevant settings
   vtm_logic.cache_generic_settings()
-  
 end
 
 local function remove_mod_gui_button(player)
@@ -180,7 +179,7 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
         "vtm-provider-names",
         "vtm-depot-names",
         "vtm-refuel-names",
-        "vtm-p-or-r-start"
+        "vtm-p-or-r-start",
       }, event["setting"])
   then
     vtm_logic.load_guess_patterns()
@@ -206,7 +205,7 @@ commands.add_command("vtm-show-undef-stations", { "vtm.command-help" }, function
   local force = player.valid and player.force or 1
   local table_index = 0
   force.print({ "vtm.show-undef-stations" })
-    force.print({ "", { "vtm.filter-surface" }, ": ", storage.settings[event.player_index].surface })
+  force.print({ "", { "vtm.filter-surface" }, ": ", storage.settings[event.player_index].surface })
 
   for _, station_data in pairs(storage.stations) do
     if station_data.station.valid and

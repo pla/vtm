@@ -28,12 +28,12 @@ local function add_stock(stock, all_stock)
     end
   end
 
-  for _, item in pairs(stock.fluids or {}) do
-    local key = item.name .. item.quality
+  for fluid, count in pairs(stock.fluids or {}) do
+    local key = fluid
     if all_stock[key] then
-      all_stock[key].count = all_stock[key].count + item.count
+      all_stock[key].count = all_stock[key].count + count
     else
-      all_stock[key] = { type = "fluid", name = item.name, count = item.count, quality = item.quality }
+      all_stock[key] = { type = "fluid", name = fluid, count = count}
     end
   end
 end
@@ -41,17 +41,14 @@ end
 local function read_depot_cargo(station_data)
   local station_stock = {}
   if not station_data.station.valid then return {} end
-  local trains = station_data.station.get_train_stop_trains()
-  for _, t in pairs(trains) do
-    -- check if the train is at the station
-    local entity = t.front_end.rail.get_rail_segment_stop(defines.rail_direction.front)
-    if entity and
-        entity.valid and
-        entity.backer_name and
-        -- entity.type == "train-stop" and
-        entity.backer_name == station_data.name
-    then
-      local stock = {}
+  local tm = game.train_manager
+  -- local surface = station_data.station.surface
+  local depots = tm.get_train_stops({ force = station_data.station.force, station_name = station_data.station
+  .backer_name })
+  for _, s in pairs(depots) do
+    local stock = {}
+    local t = s.get_stopped_train()
+    if t then
       stock.items = t.get_contents()
       stock.fluids = t.get_fluid_contents()
       add_stock(stock, station_stock)
@@ -275,7 +272,7 @@ local function handle_action(action, event)
     local player = game.players[event.player_index]
     if action.position then
       --player.zoom_to_world(action.position, 0.5)
-      player.set_controller({type = defines.controllers.remote, position = action.position, surface = action.surface})
+      player.set_controller({ type = defines.controllers.remote, position = action.position, surface = action.surface })
     end
   end
 end

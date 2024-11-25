@@ -42,33 +42,43 @@ end
 function utils.read_inbound_trains(station_data)
   local station = station_data.station
   local contents = {}
-  local inv_trains = {}
-  if station.valid and station_data.incoming_trains then
-    local trains = station_data.incoming_trains
+  local invalid_trains = {}
+  if station.valid and station.trains_count then
+    local trains = station.get_train_stop_trains()
     for train_id, _ in pairs(trains) do
       local train_data = storage.trains[train_id]
       if train_data and train_data.train.valid then
         if train_data.path_end_stop == station.unit_number then
           for type, item_data in pairs(train_data.contents) do
-            for _, v in pairs(item_data) do
-              local row = {}
-              row.type = type == "items" and "item" or "fluid"
-              row.name = v.name
-              row.count = v.count
-              row.quality = v.quality
-              row.color = "blue"
-              table.insert(contents, row)
-            end
+              if type == "items" then
+              for _, v in pairs(item_data) do
+                local row = {}
+                  row.name = v.name
+                  row.count = v.count
+                  row.quality = v.quality
+                  row.color = "blue"
+                  table.insert(contents, row)
+              end
+              elseif type == "fluids" then
+                --fluids, have no quality
+                for name, count in pairs(item_data) do
+                  local row = {}
+                  row.type = "fluid"
+                  row.name = name
+                  row.count = count
+                  row.color = nil
+                  table.insert(contents, row)
+                end
+              end
           end
         end
       else
-        table.insert(inv_trains, train_id)
+        table.insert(invalid_trains, train_id)
       end
     end
     -- delete invalid traindata
-    for _, train_id in pairs(inv_trains) do
+    for _, train_id in pairs(invalid_trains) do
       storage.trains[train_id] = nil
-      station_data.incoming_trains[train_id] = nil
     end
   end
   return contents
@@ -202,12 +212,12 @@ function utils.update_sprite_button(button, type, name, amount, quality, color, 
     else
       tooltip = prototype.localised_name
     end
-    if script.active_mods["quality"] then
+    if script.active_mods["quality"] and type == "item" then
       local item_quality = prototypes.quality[quality]
       if helpers.is_valid_sprite_path(item_quality.type .. "/" .. item_quality.name) then
         quali_sprite = item_quality.type .. "/" .. item_quality.name
       end
-      tooltip = { "", tooltip, ", [",item_quality.type , "=" , item_quality.name,"] ", item_quality.localised_name }
+      tooltip = { "", tooltip, ", [", item_quality.type, "=", item_quality.name, "] ", item_quality.localised_name }
     end
     style = "transparent_slot"
   else
@@ -231,15 +241,27 @@ end
 function utils.slot_table_update_train(icon_table, sources, gui_id)
   local new_table = {}
   for k, y in pairs(sources) do
-    local type = k == "items" and "item" or "fluid"
-    for _, v in pairs(y) do
-      local row = {}
-      row.type = type
-      row.name = v.name
-      row.count = v.count
-      row.quality = v.quality
-      row.color = nil
-      table.insert(new_table, row)
+    -- items
+    if k == "items" then
+      for _, v in pairs(y) do
+        local row = {}
+        row.type = "item"
+        row.name = v.name
+        row.count = v.count
+        row.quality = v.quality
+        row.color = nil
+        table.insert(new_table, row)
+      end
+      --fluids, have no quality
+    elseif k == "fluids" then
+      for name, count in pairs(y) do
+        local row = {}
+        row.type = "fluid"
+        row.name = name
+        row.count = count
+        row.color = nil
+        table.insert(new_table, row)
+      end
     end
   end
 

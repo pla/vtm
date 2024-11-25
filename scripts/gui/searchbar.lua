@@ -49,9 +49,7 @@ local function handle_action(action, event)
     return
   end
   if action.action == "apply-surface" then
-    -- local surface = tables.find(storage.surfaces, event.element.items[event.element.selected_index])
     local surface = event.element.items[event.element.selected_index][3] or "All"
-    -- local surface = storage.surfaces[key]
     storage.settings[event.player_index].surface = surface or "All"
     refresh(action)
     return

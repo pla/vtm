@@ -20,6 +20,16 @@
 ---@field group_edit GroupEditData unit_number as key
 ---@field selected_group_set string? selected group in groups tab
 
+---@class PlatformData
+---@field key uint platform unique index
+---@field name string Platform name
+---@field status string?
+---@field schedule PlatformSchedule?
+---@field location LocalisedString
+---@field next string?
+---@field weight uint
+---@field contents { [string]: ItemCountWithQuality } Contents of the platform
+
 ---@class TrainData
 ---@field force_index uint
 ---@field train LuaTrain
@@ -49,7 +59,6 @@
 ---@field train_front_rail LuaEntity Rail to check if a train is at station, still needed?
 ---@field type "P"|"R"|"D"|"F"|"H"|"ND" Station type Requester, Provider, Hidden, ND for undefined
 ---@field sort_prio uint used to manipulate the sort order of depots
----@field incoming_trains {[uint]:boolean} train_ids headed for the station
 ---@field stock SlotTableDef[] 
 ---@field stock_tick uint
 ---@field in_transit SlotTableDef[] unused for now
@@ -81,7 +90,7 @@
 ---@field type string item or fluid , virtual not in use
 ---@field name string prototype name of the item
 ---@field count number
----@field quality string quality
+---@field quality string? quality -- fluid has no quality
 ---@field color string? color for the background of the slot, unused
 
 ---@class GroupData
@@ -125,12 +134,15 @@
 ---@alias set_name string Backer_name of the main station
 ---@alias GroupSet {[set_name]:table<group_id>} Key is the backer_name of the main station
 
+---@alias index uint Platform index
+
 ---@alias GlobalGuis {[gui_id]:GuiData}
 ---@alias GlobalTrainData {[train_id]:TrainData}
 ---@alias GlobalHistoryData {[uint]:HistoryData}
 ---@alias GlobalStationData {[unit_number]:StationData}
 ---@alias GlobalPlayerSettings {[player_index]:PlayerSettings}
 ---@alias GlobalGroups {[force_index]:{[group_id]:GroupData}}
+---@alias GlobalPlatformData {[index]:PlatformData}
 
 ---@class on_train_teleported
 ---@field train LuaTrain

@@ -55,7 +55,7 @@ local function select_station_from_schedule(train)
 end
 
 local function train_status_message(train_data)
-  local msg = { "", "Train invalid or error" }
+  local msg = { "vtm.train-msg-error" }
   if not train_data.train.valid then
     return msg
   end
@@ -93,9 +93,8 @@ local function train_status_message(train_data)
       end
     end
   elseif train.state == def_state.destination_full then
-    if train.station == nil then
-      local station = nil
-      station = select_station_from_eventlist(train_data.events)
+    if train.station then
+      local station = train.station
       if station ~= nil then
         if next(train_data.contents.items) or next(train_data.contents.fluids) then
           msg = { "vtm.train-state-destination-full-cargo", station.backer_name }
@@ -137,6 +136,7 @@ function trains.update_tab(gui_id)
     search_field = vtm_gui.gui.filter.search_field.text:lower(),
   }
 
+  -- select trains from global
   for train_id, train_data in pairs(storage.trains) do
     if not train_data.train.valid then
       table.insert(inv_trains, train_id)

@@ -11,14 +11,12 @@ local last_sweep = 0
 local vtm_logic = {}
 
 function vtm_logic.load_guess_patterns()
-  if not storage.settings["patterns"] then
-    storage.settings["patterns"] = {
-      depot = util.split(tostring(settings.global["vtm-depot-names"].value):lower(), ","),
-      refuel = util.split(tostring(settings.global["vtm-refuel-names"].value):lower(), ","),
-      requester = util.split(tostring(settings.global["vtm-requester-names"].value):lower(), ","),
-      provider = util.split(tostring(settings.global["vtm-provider-names"].value):lower(), ","),
-    }
-  end
+  storage.settings["patterns"] = {
+    depot = util.split(tostring(settings.global["vtm-depot-names"].value):lower(), ","),
+    refuel = util.split(tostring(settings.global["vtm-refuel-names"].value):lower(), ","),
+    requester = util.split(tostring(settings.global["vtm-requester-names"].value):lower(), ","),
+    provider = util.split(tostring(settings.global["vtm-provider-names"].value):lower(), ","),
+  }
 end
 
 function vtm_logic.cache_generic_settings()
@@ -28,8 +26,11 @@ function vtm_logic.cache_generic_settings()
   storage.show_undef_warn          = settings.global["vtm-show-undef-warning"].value
   storage.dont_read_depot_stock    = settings.global["vtm-dont-read-depot-stock"].value
   storage.pr_from_start            = settings.global["vtm-p-or-r-start"].value
+  storage.showSpaceTab             = settings.global["vtm-showSpaceTab"].value
+  storage.name_new_station         = settings.global["vtm-name-new-station"].value
+  storage.new_station_name         = settings.global["vtm-new-station-name"].value
 
-  storage.backer_names = {}
+  storage.backer_names             = {}
   for _, name in pairs(game.backer_names) do
     storage.backer_names[name] = true
   end
@@ -121,11 +122,10 @@ local function register_surface(surface)
       end
     end
     if surface.planet and surface.planet.prototype.localised_name then
-      storage.surfaces[surface.name] = {"", "[planet=" , surface.name , "] " , surface.planet.prototype.localised_name}
+      storage.surfaces[surface.name] = { "", "[planet=", surface.name, "] ", surface.planet.prototype.localised_name }
     else
-    storage.surfaces[surface.name] = surface.name
+      storage.surfaces[surface.name] = surface.name
     end
-
   end
 end
 
@@ -145,7 +145,6 @@ local function new_station(station)
     train_front_rail = nil,
     type = guess_station_type(station), -- one of P R D F H or ND
     sort_prio = get_TCS_prio(station.backer_name),
-    incoming_trains = {},
     stock = {},
     in_transit = {},
     registered_stock = {},
@@ -178,7 +177,7 @@ end
 ---@param station_data StationData
 ---@param type "item"|"fluid"|"virtual" signalID type
 ---@param name string signalID name
----@param quality string 
+---@param quality string
 local function register_item(station_data, type, name, quality)
   local found = false
   -- register item
@@ -292,9 +291,6 @@ function vtm_logic.update_station(station)
     if station_data.registered_stock == nil then
       station_data.registered_stock = {}
     end
-    if station_data.incoming_trains == nil then
-      station_data.incoming_trains = {}
-    end
     if station_data.sprite == nil then
       station_data.sprite = gui_util.signal_to_sprite(gui_util.signal_for_entity(station_data.station)) or
           "item/train-stop"
@@ -381,7 +377,7 @@ local function find_first_stop(schedule)
       end
       -- search with TCS signals in mind
     elseif storage.TCS_active then
-      local pattern = "[virtual-signal=skip-signal]"
+      local pattern = "[virtual-signal=skip-signal]" -- TODO: this can go away
       for key, record in pairs(schedule.records) do
         if record.station ~= nil then
           local start = string.sub(record.station, 1, string.len(pattern))
@@ -418,7 +414,7 @@ end
 ---@param old_values ItemCountWithQuality[]
 ---@param new_values ItemCountWithQuality[]
 ---@return table
-local function diff(old_values, new_values)
+local function diff_items(old_values, new_values)
   local result = {}
   if old_values then
     for k, v in pairs(old_values) do
@@ -442,6 +438,23 @@ local function diff(old_values, new_values)
   end
   return result
 end
+
+local function diff_fluids(old_values, new_values)
+  local result = {}
+  if old_values then
+    for k, v in pairs(old_values) do
+      result[k] = -v
+    end
+  end
+  if new_values then
+    for k, v in pairs(new_values) do
+      local old_value = result[k] or 0
+      result[k] = old_value + v
+    end
+  end
+  return result
+end
+
 
 local function get_train_data(train, train_id)
   if not storage.trains[train_id] then
@@ -500,11 +513,6 @@ function vtm_logic.migrate_train_SE(event)
     new_train_data.surface = train.carriages[1].surface.name
     add_log(new_train_data, log)
 
-    -- for train cargo in transit
-    if old_train_data.path_end_stop ~= nil then
-      storage.stations[old_train_data.path_end_stop].incoming_trains[old_train_id] = nil
-      storage.stations[old_train_data.path_end_stop].incoming_trains[new_train_id] = true
-    end
     -- finally save new train and delete old data
     storage.trains[new_train_id] = new_train_data
     storage.trains[old_train_id] = nil
@@ -521,7 +529,7 @@ local function on_train_changed_state(event)
   local train = event.train
   local train_id = train.id
   local train_data = get_train_data(train, train_id)
-  if not train_data then return end -- some SE crap, just ignore it
+  if not train_data then return end -- some SE things, just ignore it
   local new_state = train.state
   local interesting_event = constants.interesting_states[event.old_state] or constants.interesting_states[new_state]
   if not interesting_event then
@@ -547,12 +555,12 @@ local function on_train_changed_state(event)
   end
 
   if event.old_state == defines.train_state.wait_station then
-    local diff_items = diff(train_data.contents.items, train.get_contents())
-    local diff_fluids = diff(train_data.contents.fluids, train.get_fluid_contents())
+    local item_diff = diff_items(train_data.contents.items, train.get_contents())
+    local fluid_diff = diff_fluids(train_data.contents.fluids, train.get_fluid_contents())
     train_data.contents = read_contents(train)
     log.diff = {
-      items = diff_items,
-      fluids = diff_fluids
+      items = item_diff,
+      fluids = fluid_diff
     }
     log.station = train_data.last_station
     train_data.last_station = nil
@@ -580,10 +588,8 @@ local function on_train_changed_state(event)
   end
   if train.has_path and train.path_end_stop then
     train_data.path_end_stop = train.path_end_stop.unit_number
-    storage.stations[train.path_end_stop.unit_number].incoming_trains[train_id] = true
   else
     if train_data.path_end_stop ~= nil then
-      storage.stations[train_data.path_end_stop].incoming_trains[train_id] = nil
       train_data.path_end_stop = nil
     end
   end
@@ -648,9 +654,9 @@ end)
 -- end)
 
 script.on_event(defines.events.on_built_entity, function(event)
-  on_trainstop_build(event)
-end,
-{ { filter = "type", type = "train-stop" } })
+    on_trainstop_build(event)
+  end,
+  { { filter = "type", type = "train-stop" } })
 
 script.on_event(defines.events.on_robot_built_entity, function(event)
     on_trainstop_build(event)

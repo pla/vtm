@@ -16,9 +16,9 @@ local function material_icon_list(event)
       result = result .. util.format_number(item.count, true) .. " [item=" .. item.name .. ",quality=" .. item.quality .. "], "
       zero = zero + item.count
     end
-    for _, fluid in pairs(event.diff.fluids or {}) do
-      result = result .. util.format_number(math.ceil(fluid.count), true) .. " [fluid=" .. fluid.name.. ",quality=" .. fluid.quality .."], "
-      zero = zero + fluid.count
+    for name, count in pairs(event.diff.fluids or {}) do
+      result = result .. util.format_number(math.ceil(count), true) .. " [fluid=" .. name.. "], "
+      zero = zero + count
     end
   end
   --contents and fluids only when wait_station
@@ -28,8 +28,8 @@ local function material_icon_list(event)
     end
   end
   if event.fluids then
-    for _, fluid in pairs(event.fluids or {}) do
-      result = result .. "[fluid=" .. fluid.name .. ",quality=" .. fluid.quality .."] "
+    for name, _ in pairs(event.fluids or {}) do
+      result = result .. "[fluid=" .. name .. "] "
     end
   end
   if result == "" then
@@ -96,13 +96,13 @@ local function add_diff_to_shipment(shipment, event)
         end
       end
     end
-    for _, item in pairs(event.diff.fluids or {}) do
-      local key = item.name .. item.quality
-      if item.count < 0 then
+    for fluid, count in pairs(event.diff.fluids or {}) do
+      local key = fluid
+      if count < 0 then
         if shipment[key] then
-          shipment[key].count = shipment[key].count + math.abs(item.count)
+          shipment[key].count = shipment[key].count + math.abs(count)
         else
-          shipment[key] = { type = "fluid", name = item.name, count = math.abs(item.count), quality = item.quality }
+          shipment[key] = { type = "fluid", name = fluid, count = math.abs(count) }
         end
       end
     end
