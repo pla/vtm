@@ -596,6 +596,7 @@ local function on_train_changed_state(event)
   add_log(train_data, log)
 end
 
+--TODO create Combinator with all signals from Station items for paired crafter
 local function on_trainstop_build(event)
   if event.entity.name == "train-stop" then
     if settings.global["vtm-name-new-station"].value and storage.backer_names[event.entity.backer_name] then

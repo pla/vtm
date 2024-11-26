@@ -204,6 +204,8 @@ function utils.update_sprite_button(button, type, name, amount, quality, color, 
   local sprite, tooltip, style
   if prototype and helpers.is_valid_sprite_path(type .. "/" .. name) then
     sprite = type .. "/" .. name
+    -- TODO figure out how to display quality sprites
+    local item_sprite = nil
     local quali_sprite = nil
 
     if color ~= nil and (color == "red" or color == "green") then
