@@ -28,7 +28,7 @@
 ---@field location LocalisedString
 ---@field next string?
 ---@field weight uint
----@field contents { [string]: ItemCountWithQuality } Contents of the platform
+---@field contents { [string]: ItemWithQualityCounts } Contents of the platform
 
 ---@class TrainData
 ---@field force_index uint
@@ -38,7 +38,7 @@
 ---@field composition string Train composition
 ---@field prototype LuaEntityPrototype prototype of the loco
 ---@field sprite SpritePath icon of the loco
----@field contents { [string]: ItemCountWithQuality } Contents of the train
+---@field contents { [string]: ItemWithQualityCounts } Contents of the train
 ---@field events table<EventLog> Train state changed events get logged here for history
 ---@field surface string Surface where the train exits
 ---@field surface2 string Used when the train goes through a space elevator

@@ -11,6 +11,7 @@ data:extend({
     default_value = false,
     name = "vtm-showSpaceTab",
     setting_type = "runtime-global",
+    hidden = false,
     order = "a",
   },
   {

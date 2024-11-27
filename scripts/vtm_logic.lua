@@ -411,8 +411,8 @@ local function new_current_log(train)
 end
 
 ---comment
----@param old_values ItemCountWithQuality[]
----@param new_values ItemCountWithQuality[]
+---@param old_values ItemWithQualityCounts[]
+---@param new_values ItemWithQualityCounts[]
 ---@return table
 local function diff_items(old_values, new_values)
   local result = {}
