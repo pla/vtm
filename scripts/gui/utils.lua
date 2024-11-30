@@ -380,13 +380,13 @@ end
 function utils.open_entity_gui(player_index, entity)
   if entity and entity.valid and game.players[player_index] then
     game.players[player_index].opened = entity
-    game.players[player_index].zoom = 3 * math.exp(-1.05 * 100)
+    game.players[player_index].zoom = 0.2
     return true
   end
   return false
 end
 
----view station with Navsat on SE
+--[[ ---view station with Navsat on SE
 ---@param player LuaPlayer
 ---@param surface_name string LuaSurface.name
 ---@param position MapPosition
@@ -422,8 +422,8 @@ function utils.follow_remote_train(player, loco)
     })
   end
 end
-
---- set a style for the given LuaGuiElement
+]]--- set a style for the given LuaGuiElement
+--- 
 ---@param element LuaGuiElement
 ---@param style string must be a gui-style name
 function utils.set_style(element, style)

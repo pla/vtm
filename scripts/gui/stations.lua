@@ -163,6 +163,7 @@ local function update_tab(gui_id)
       -- insert data
       -- name,status,prio,type,stock,intransit
       -- limit manual or circuit,type(PR),group
+      row.visible = true
       local stock_data, is_circuit_limit = vtm_logic.read_station_network(station_data)
       station_data.stock = stock_data
       station_data.stock_tick = game.tick
@@ -234,7 +235,8 @@ local function update_tab(gui_id)
     vtm_gui.gui.stations.warning.visible = true
   end
   for child_index = table_index + 1, #children do
-    children[child_index].destroy()
+    -- children[child_index].destroy()
+    children[child_index].visible = false
   end
 end
 
@@ -358,8 +360,9 @@ local function handle_action(action, event)
       position = action.position --[[@as MapPosition]]
       surface = action.surface_name --[[@as string]]
     end
-      -- player.zoom_to_world(position, 0.5)
       player.set_controller({type = defines.controllers.remote, position = position, surface = surface})
+      player.zoom = 0.5
+
   elseif action.action == "show_group_ui" then
     local player = game.players[event.player_index]
     groups.open_gui(action)
