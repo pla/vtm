@@ -253,9 +253,12 @@ local function dispatch_refresh(event)
   end
 
   local gui_data = storage.guis[gui_id]
+  local current_tab = storage.settings[event.player_index].current_tab
+  if not storage.showSpaceTab and current_tab == "space" then
+    current_tab = "trains"
+  end
   gui_data.gui.tabs.space_tab.visible = storage.showSpaceTab --[[@as boolean]]
 
-  local current_tab = storage.settings[event.player_index].current_tab
   searchbar.update(gui_id)
   if current_tab == "stations" then
     stations.update_tab(gui_id)

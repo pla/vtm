@@ -26,7 +26,7 @@ function vtm_logic.cache_generic_settings()
   storage.show_undef_warn          = settings.global["vtm-show-undef-warning"].value
   storage.dont_read_depot_stock    = settings.global["vtm-dont-read-depot-stock"].value
   storage.pr_from_start            = settings.global["vtm-p-or-r-start"].value
-  storage.showSpaceTab             = settings.global["vtm-showSpaceTab"].value
+  storage.showSpaceTab             = settings.global["vtm-showSpaceTab"].value and storage.SA_active or false
   storage.name_new_station         = settings.global["vtm-name-new-station"].value
   storage.new_station_name         = settings.global["vtm-new-station-name"].value
 
