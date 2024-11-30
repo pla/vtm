@@ -440,4 +440,27 @@ function utils.string_ends_with(str, search)
   return string.sub(str, (string.len(search) * -1)) == search
 end
 
+function utils.cache_generic_settings()
+  -- cache relevant mods
+  storage.TCS_active =      script.active_mods["TCS_Icons"] and true or false
+  storage.cybersyn_active = script.active_mods["cybersyn"] and true or false
+  storage.SE_active = script.active_mods["space-exploration"] and true or false
+  storage.SA_active = script.active_mods["space-age"] and true or false
+
+  storage.surface_selector_visible = settings.global["vtm-force-surface-visible"].value
+  storage.max_hist                 = settings.global["vtm-history-length"].value
+  storage.max_lines                = settings.global["vtm-limit-auto-refresh"].value
+  storage.show_undef_warn          = settings.global["vtm-show-undef-warning"].value
+  storage.dont_read_depot_stock    = settings.global["vtm-dont-read-depot-stock"].value
+  storage.pr_from_start            = settings.global["vtm-p-or-r-start"].value
+  storage.showSpaceTab             = settings.global["vtm-showSpaceTab"].value and storage.SA_active
+  storage.name_new_station         = settings.global["vtm-name-new-station"].value
+  storage.new_station_name         = settings.global["vtm-new-station-name"].value
+
+  storage.backer_names             = {}
+  for _, name in pairs(game.backer_names) do
+    storage.backer_names[name] = true
+  end
+end
+
 return utils

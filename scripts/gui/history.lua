@@ -14,7 +14,7 @@ local function material_icon_list(event)
   if event.diff then
     for _, item in pairs(event.diff.items or {}) do
       result = result ..
-      util.format_number(item.count, true) .. " [item=" .. item.name .. ",quality=" .. item.quality .. "], "
+          util.format_number(item.count, true) .. " [item=" .. item.name .. ",quality=" .. item.quality .. "], "
       zero = zero + item.count
     end
     for name, count in pairs(event.diff.fluids or {}) do
@@ -370,9 +370,9 @@ local function update_tab(gui_id)
             elem_mods = {
               caption = train_id_str
             },
-          actions = {
-            on_click = { type = "trains", action = "open-train", train_id = train_id_str },
-          },
+            actions = {
+              on_click = { type = "trains", action = "open-train", train_id = train_id_str },
+            },
           },
           tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", train_id_str },
         } },
@@ -386,6 +386,11 @@ local function update_tab(gui_id)
         },
       })
       update_route_flow(row.route, history_data, compact)
+      -- Light Running, hide empty row in comact mode (most likely, interrupt disturbs the schedule)
+      row.visible = true
+      if #row.route.children == 0 then
+        row.visible = false
+      end
       gui_util.slot_table_update(row.shipment_table, history_data.shipment, vtm_gui.gui_id)
     end
   end

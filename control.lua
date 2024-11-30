@@ -4,11 +4,12 @@ local tables     = require("__flib__.table")
 local on_tick_n  = require("__flib__.on-tick-n")
 local migration  = require("__flib__.migration")
 local constants  = require("__virtm__.scripts.constants")
-local vtm_gui    = require("__virtm__.scripts.gui.main_gui")
+local main_gui    = require("__virtm__.scripts.gui.main_gui")
 local vtm_logic  = require("__virtm__.scripts.vtm_logic")
 local gui_util   = require("__virtm__.scripts.gui.utils")
 local migrations = require("__virtm__.migrations")
 local groups     = require("__virtm__.scripts.gui.groups")
+local utils      = require("__virtm__.scripts.gui.utils")
 
 local function init_global_data()
   -- definitions see classdef.lua
@@ -30,14 +31,9 @@ local function init_global_data()
   storage.surfaces = {
     ["All"] = "All",
   }
-  -- cache relevant mods
-  storage.TCS_active = script.active_mods["TCS_Icons"]
-  storage.cybersyn_active = script.active_mods["cybersyn"]
-  storage.SE_active = script.active_mods["space-exploration"]
-  storage.SA_active = script.active_mods["space-age"]
 
   --cache relevant settings
-  vtm_logic.cache_generic_settings()
+  utils.cache_generic_settings()
 end
 
 local function remove_mod_gui_button(player)
@@ -115,7 +111,7 @@ script.on_init(function()
   vtm_logic.load_guess_patterns()
   for _, player in pairs(game.players) do
     migrations.init_player_data(player)
-    vtm_gui.create_gui(player)
+    main_gui.create_gui(player)
     local gui_id = gui_util.get_gui_id(player.index)
     groups.create_gui(gui_id)
 
@@ -141,7 +137,7 @@ end)
 -- end)
 
 script.on_event("vtm-open", function(event)
-  vtm_gui.open_or_close_gui(event.player_index)
+  main_gui.open_or_close_gui(event.player_index)
 end)
 
 script.on_event("vtm-groups-open", function(event)
@@ -150,14 +146,14 @@ end)
 
 script.on_event(defines.events.on_lua_shortcut, function(event)
   if event.prototype_name == "vtm-open" then
-    vtm_gui.open_or_close_gui(event.player_index)
+    main_gui.open_or_close_gui(event.player_index)
   elseif event.prototype_name == "vtm-groups-open" then
     groups.toggle_groups_gui(event.player_index)
   end
 end)
 
 script.on_event("vtm-linked-focus-search", function(event)
-  vtm_gui.handle_action({
+  main_gui.handle_action({
     type = "generic",
     action = "focus_search",
     gui_id = gui_util.get_gui_id(event.player_index)
@@ -168,7 +164,7 @@ script.on_event(defines.events.on_player_created, function(event)
   local player = game.players[event.player_index]
   migrations.init_player_data(player)
   migrations.add_mod_gui_button(player)
-  vtm_gui.create_gui(player)
+  main_gui.create_gui(player)
   local gui_id = gui_util.get_gui_id(player.index)
   groups.create_gui(gui_id)
 end)
@@ -194,7 +190,7 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
     end
   end
   --refresh cached settings
-  vtm_logic.cache_generic_settings()
+  utils.cache_generic_settings()
 end)
 
 
@@ -224,14 +220,12 @@ commands.add_command("vtm-show-undef-stations", { "vtm.command-help" }, function
   end
 end)
 
-commands.add_command("vtm-set-zoom", { "vtm.command-help" }, function(event)
-  local player = game.get_player(event.player_index)
-  if player == nil then return end
-  player.print("Zoom: " .. event.parameter)
-  storage.zoom = tonumber(event.parameter)
-end)
-
-
+-- commands.add_command("vtm-set-zoom", { "vtm.command-help" }, function(event)
+--   local player = game.get_player(event.player_index)
+--   if player == nil then return end
+--   player.print("Zoom: " .. event.parameter)
+--   storage.zoom = tonumber(event.parameter)
+-- end)
 
 commands.add_command("vtm-count-history", { "vtm.command-help" }, function(event)
   local player = game.get_player(event.player_index)

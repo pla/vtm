@@ -1,6 +1,6 @@
 local vtm_gui    = require("__virtm__.scripts.gui.main_gui")
 local vtm_logic  = require("__virtm__.scripts.vtm_logic")
-local gui_util   = require("__virtm__.scripts.gui.utils")
+local utils      = require("__virtm__.scripts.gui.utils")
 local mod_gui    = require("__core__.lualib.mod-gui")
 local constants  = require("__virtm__.scripts.constants")
 local groups     = require("__virtm__.scripts.gui.groups")
@@ -8,15 +8,9 @@ local groups     = require("__virtm__.scripts.gui.groups")
 local migrations = {}
 
 function migrations.generic()
-  -- refresh cached mods availability
-  storage.TCS_active = script.active_mods["TCS_Icons"]
-  storage.cybersyn_active = script.active_mods["cybersyn"]
-  storage.SE_active = script.active_mods["space-exploration"]
-  storage.SA_active = script.active_mods["space-age"]
-  
   --refresh cached settings
-  vtm_logic.cache_generic_settings()
-  
+  utils.cache_generic_settings()
+
   if storage.surfaces == nil or table_size(storage.surfaces) < 1 then
     storage.surfaces = {
       ["All"] = "All",
@@ -25,8 +19,7 @@ function migrations.generic()
   if storage.station_refresh ~= "init" then
     vtm_logic.load_guess_patterns()
     vtm_logic.update_all_stations("force")
-    game.print({"vtm.config-change1"})
-
+    game.print({ "vtm.config-change1" })
   end
 
   for _, player in pairs(game.players) do
@@ -37,7 +30,7 @@ function migrations.generic()
       end
 
       -- recreate gui
-      local gui_id = gui_util.get_gui_id(player.index)
+      local gui_id = utils.get_gui_id(player.index)
       if gui_id and storage.guis[gui_id].group_gui then
         groups.destroy_gui(gui_id)
       end
@@ -47,10 +40,10 @@ function migrations.generic()
       end
 
       vtm_gui.create_gui(player)
-      gui_id = gui_util.get_gui_id(player.index)
+      gui_id = utils.get_gui_id(player.index)
       groups.create_gui(gui_id)
-      player.print({"vtm.config-change2"})
-      
+      player.print({ "vtm.config-change2" })
+
       -- do the button thing
       migrations.add_mod_gui_button(player)
     end
@@ -84,7 +77,7 @@ function migrations.init_player_data(player)
       gui_refresh = "",
       surface = "All",
       history_switch = "left",
-      group_edit = {}  --[[@type GroupEditData[] ]]
+      group_edit = {} --[[@type GroupEditData[] ]]
     }
     if not storage.groups[player.force_index] then
       storage.groups[player.force_index] = {}

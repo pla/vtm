@@ -19,23 +19,6 @@ function vtm_logic.load_guess_patterns()
   }
 end
 
-function vtm_logic.cache_generic_settings()
-  storage.surface_selector_visible = settings.global["vtm-force-surface-visible"].value
-  storage.max_hist                 = settings.global["vtm-history-length"].value
-  storage.max_lines                = settings.global["vtm-limit-auto-refresh"].value
-  storage.show_undef_warn          = settings.global["vtm-show-undef-warning"].value
-  storage.dont_read_depot_stock    = settings.global["vtm-dont-read-depot-stock"].value
-  storage.pr_from_start            = settings.global["vtm-p-or-r-start"].value
-  storage.showSpaceTab             = settings.global["vtm-showSpaceTab"].value and storage.SA_active or false
-  storage.name_new_station         = settings.global["vtm-name-new-station"].value
-  storage.new_station_name         = settings.global["vtm-new-station-name"].value
-
-  storage.backer_names             = {}
-  for _, name in pairs(game.backer_names) do
-    storage.backer_names[name] = true
-  end
-end
-
 ---Try to guess the station type: Requester, Provider, Depot or Refuel
 ---@param station LuaEntity
 ---@return string
