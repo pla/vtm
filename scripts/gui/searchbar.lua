@@ -49,8 +49,13 @@ local function handle_action(action, event)
     return
   end
   if action.action == "apply-surface" then
-    local surface = event.element.items[event.element.selected_index][3] or "All"
-    storage.settings[event.player_index].surface = surface or "All"
+    local surface = "All"
+    if event.element.items[event.element.selected_index][3] then
+      surface=event.element.items[event.element.selected_index][3]
+    else
+      surface = event.element.items[event.element.selected_index]
+    end
+    storage.settings[event.player_index].surface = surface
     refresh(action)
     return
   end
