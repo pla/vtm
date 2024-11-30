@@ -45,35 +45,36 @@ function utils.read_inbound_trains(station_data)
   local invalid_trains = {}
   if station.valid and station.trains_count then
     local trains = station.get_train_stop_trains()
-    for train_id, _ in pairs(trains) do
-      local train_data = storage.trains[train_id]
+    for _, train in pairs(trains) do
+      local train_data = storage.trains[train.id]
       if train_data and train_data.train.valid then
         if train_data.path_end_stop == station.unit_number then
           for type, item_data in pairs(train_data.contents) do
-              if type == "items" then
+            if type == "items" then
               for _, v in pairs(item_data) do
                 local row = {}
-                  row.name = v.name
-                  row.count = v.count
-                  row.quality = v.quality
-                  row.color = "blue"
-                  table.insert(contents, row)
+                row.type = "item"
+                row.name = v.name
+                row.count = v.count
+                row.quality = v.quality
+                row.color = "blue"
+                table.insert(contents, row)
               end
-              elseif type == "fluids" then
-                --fluids, have no quality
-                for name, count in pairs(item_data) do
-                  local row = {}
-                  row.type = "fluid"
-                  row.name = name
-                  row.count = count
-                  row.color = nil
-                  table.insert(contents, row)
-                end
+            elseif type == "fluids" then
+              --fluids, have no quality
+              for name, count in pairs(item_data) do
+                local row = {}
+                row.type = "fluid"
+                row.name = name
+                row.count = count
+                row.color = nil
+                table.insert(contents, row)
               end
+            end
           end
         end
       else
-        table.insert(invalid_trains, train_id)
+        table.insert(invalid_trains, train.id)
       end
     end
     -- delete invalid traindata
@@ -272,33 +273,45 @@ end
 
 ---Return Zoom level for minimap
 ---@param area BoundingBox
----@return double
+---@return double, double
 function utils.get_zoom_from_area(area)
-  local zoom = 1.0
+  local max = 0
+  local zoom  = 1.0
   if area then
     local width = flib_box.width(area)
     local height = flib_box.height(area)
-    local max = math.max(width, height)
-    --[[
+    max = math.max(width, height)
+    zoom = (1442*max^-0.7) -- + (storage.zoom or 0) 
+
+    --[[ zoom Factorio 1.1
       zoom=1 - 130 *2 = 260
       zoom1.5 - 86 *2 = 172
       zoom=2 - 65 *2 = 130
       zoom=3 - 44 *2 = 88
       ]]
-    if max > 260 then
-      zoom = 0.5
-    elseif max > 172 then
-      zoom = 1
-    elseif max > 130 then
-      zoom = 1.5
-    elseif max > 88 then
-      zoom = 2
-    elseif max <= 88 then
-      zoom = 3
-    end
+    --[[ zoom Factorio 2.0
+      zoom=1442*max^-0.7
+      ]]
+    -- leave that here in case something chengs again
+    -- if max > 260 then
+    --   -- zoom = 0.5
+    --   zoom = zoom
+    -- elseif max > 172 then
+    --   -- zoom = 1
+    --   zoom = zoom
+    -- elseif max > 130 then
+    --   -- zoom = 1.5
+    --   zoom = zoom
+    -- elseif max > 88 then
+    --   -- zoom = 2
+    --   zoom = zoom
+    -- elseif max <= 88 then
+    --   -- zoom = 3
+    --   zoom = zoom
+    -- end
   end
 
-  return zoom
+  return zoom, max
 end
 
 function utils.signal_for_entity(entity)
@@ -367,6 +380,7 @@ end
 function utils.open_entity_gui(player_index, entity)
   if entity and entity.valid and game.players[player_index] then
     game.players[player_index].opened = entity
+    game.players[player_index].zoom = 3 * math.exp(-1.05 * 100)
     return true
   end
   return false

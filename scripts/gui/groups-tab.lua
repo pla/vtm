@@ -217,7 +217,7 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
 
     -- group center
     local position = flib_box.center(group_data.area)
-    local zoom = gui_util.get_zoom_from_area(group_data.area)
+    local zoom ,max = gui_util.get_zoom_from_area(group_data.area)
     if not group_data.main_station.stock_tick or (group_data.main_station.stock_tick and group_data.main_station.stock_tick < game.tick - 60) then
       local stock_data, is_circuit_limit = vtm_logic.read_station_network(group_data.main_station)
       group_data.main_station.stock = stock_data
@@ -241,7 +241,11 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
                 zoom = zoom or 1,
                 surface_index = group_data.main_station.station.surface_index
               },
-              {}, -- label
+              {-- label
+                elem_mods = {
+                  caption="Zoom ".. string.format("%2f",zoom).." - Max "..max,
+                }
+              },
               {
                   --button
                 actions = {
@@ -506,7 +510,6 @@ local function update_tab(gui_id, group_id)
 
   local scroll_left = vtm_gui.gui.groups.scroll_pane_left or {}
   local scroll_right = vtm_gui.gui.groups.scroll_pane_right or {}
-  -- TODO: ?switch compact view maybe
 
   --left side
   update_group_list(gui_id, scroll_left, group_set_list)

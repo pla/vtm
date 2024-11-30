@@ -224,6 +224,15 @@ commands.add_command("vtm-show-undef-stations", { "vtm.command-help" }, function
   end
 end)
 
+commands.add_command("vtm-set-zoom", { "vtm.command-help" }, function(event)
+  local player = game.get_player(event.player_index)
+  if player == nil then return end
+  player.print("Zoom: " .. event.parameter)
+  storage.zoom = tonumber(event.parameter)
+end)
+
+
+
 commands.add_command("vtm-count-history", { "vtm.command-help" }, function(event)
   local player = game.get_player(event.player_index)
   if player == nil then return end
