@@ -182,18 +182,18 @@ function trains.update_tab(gui_id)
           direction = "horizontal",
           style = "vtm_table_row_frame",
           {
+            -- train id
             type = "flow",
-            style_mods = { vertical_align = "center", width = width.train_id },
+            style_mods = { horizontal_align = "center", width = width.train_id },
             {
-              type = "sprite-button",
-              style = "transparent_slot",
-              sprite = "utility/side_menu_train_icon"
-            },
+              type = "sprite",
+              sprite = "utility/side_menu_train_icon",
+              tooltip = { "vtm.train-removed" },
               {
                 type = "label",
-                style = "vtm_semibold_label_with_padding",
-                tooltip = { "vtm.train-removed" },
+                style = "vtm_trainid_label",
               },
+            },
           },
           {
             type = "label",
@@ -220,21 +220,18 @@ function trains.update_tab(gui_id)
           -- train_id button
           elem_mods = {
             sprite = train_data.sprite,
-            tooltip = {"vtm.train-open-ui-follow-train", train_data.train.id },
+          },
+          {
+            elem_mods = {
+              caption = train_data.train.id,
+              tooltip = { "vtm.train-open-ui-follow-train", train_data.train.id },
             },
             actions = {
               on_click = { type = "trains", action = "open-train", train_id = train_data.train.id },
             },
-        }       ,    {
-          elem_mods = {
-            caption = train_data.train.id,
-            tooltip = {"vtm.train-open-ui-follow-train", train_data.train.id },
-          },
-          actions = {
-            on_click = { type = "trains", action = "open-train", train_id = train_data.train.id },
           },
         },
-},
+        },
         {
           --status
           elem_mods = {
@@ -318,14 +315,14 @@ function trains.build_gui(gui_id)
           },
         }
       },
-      {
+      { -- scroll pane for the actual traindata, data will be filled in by the update gui function
         type = "scroll-pane",
         style = "vtm_table_scroll_pane",
         ref = { "trains", "scroll_pane" },
         vertical_scroll_policy = "always",
         horizontal_scroll_policy = "never",
       },
-      {
+      { -- warning no train here
         type = "frame",
         direction = "horizontal",
         style = "negative_subheader_frame",
@@ -352,13 +349,13 @@ end
 ---@param event EventData.on_gui_click
 function trains.handle_action(action, event)
   if action.action == "open-train" then
-    if storage.trains[action.train_id] then
-      local train = storage.trains[action.train_id].train
+    if storage.trains[tonumber(action.train_id)] then
+      local train = storage.trains[tonumber(action.train_id)].train
       if not train.valid then return end
       local loco = flib_train.get_main_locomotive(train)
       local player = game.players[event.player_index]
       if event.shift and loco and loco.valid then
-        -- follow train
+        -- follow train in map/remote view
         player.centered_on = loco
       else
         if loco and loco.valid then

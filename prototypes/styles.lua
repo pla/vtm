@@ -162,7 +162,8 @@ styles.vtm_trainid_label = {
   horizontal_align = "right",
   font = "default-semibold",
   parent = "label",
-  size = 32,
+  height = 36,
+  minimal_width = 40
 }
 -- minimap
 styles.vtm_minimap_label = {

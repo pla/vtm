@@ -13,18 +13,19 @@ local function material_icon_list(event)
   -- diff only after leaving station
   if event.diff then
     for _, item in pairs(event.diff.items or {}) do
-      result = result .. util.format_number(item.count, true) .. " [item=" .. item.name .. ",quality=" .. item.quality .. "], "
+      result = result ..
+      util.format_number(item.count, true) .. " [item=" .. item.name .. ",quality=" .. item.quality .. "], "
       zero = zero + item.count
     end
     for name, count in pairs(event.diff.fluids or {}) do
-      result = result .. util.format_number(math.ceil(count), true) .. " [fluid=" .. name.. "], "
+      result = result .. util.format_number(math.ceil(count), true) .. " [fluid=" .. name .. "], "
       zero = zero + count
     end
   end
   --contents and fluids only when wait_station
   if event.contents then
     for _, item in pairs(event.contents or {}) do
-      result = result .. "[item=" .. item.name .. ",quality=" .. item.quality .."] "
+      result = result .. "[item=" .. item.name .. ",quality=" .. item.quality .. "] "
     end
   end
   if event.fluids then
@@ -306,8 +307,7 @@ local function update_tab(gui_id)
             type = "flow",
             style_mods = { horizontal_align = "center", width = width.train_id },
             {
-              type = "sprite-button",
-              style = "transparent_slot",
+              type = "sprite",
               sprite = "utility/side_menu_train_icon",
               tooltip = { "vtm.train-removed" },
               {
@@ -341,14 +341,14 @@ local function update_tab(gui_id)
 
       local prototype
       local sprite = "warning-white"
-      local train_id = ""
+      local train_id_str = ""
       ---@type LocalisedString
       local tooltip = { "vtm.train-removed" }
 
       if history_data.train.valid then
         prototype = history_data.prototype
         sprite = history_data.sprite
-        train_id = tostring(history_data.train.id)
+        train_id_str = tostring(history_data.train.id)
         tooltip = prototype.localised_name
       elseif history_data.surface2 and helpers.is_valid_sprite_path("item/se-space-elevator") then
         sprite = "item/se-space-elevator"
@@ -361,19 +361,20 @@ local function update_tab(gui_id)
 
       gui.update(row, {
         { {
+          -- train_id button
           elem_mods = {
             sprite = sprite,
             tooltip = tooltip,
           },
           {
             elem_mods = {
-              caption = train_id
+              caption = train_id_str
             },
-            actions = {
-              on_click = { type = "trains", action = "open-train", train_id = train_id },
-            },
+          actions = {
+            on_click = { type = "trains", action = "open-train", train_id = train_id_str },
           },
-          tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", train_id },
+          },
+          tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", train_id_str },
         } },
         { -- route, gets updated below
         },
