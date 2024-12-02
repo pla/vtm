@@ -1,5 +1,5 @@
 local vtm_gui    = require("__virtm__.scripts.gui.main_gui")
-local vtm_logic  = require("__virtm__.scripts.vtm_logic")
+local backend  = require("__virtm__.scripts.backend")
 local utils      = require("__virtm__.scripts.gui.utils")
 local mod_gui    = require("__core__.lualib.mod-gui")
 local constants  = require("__virtm__.scripts.constants")
@@ -17,8 +17,8 @@ function migrations.generic()
     }
   end
   if storage.station_refresh ~= "init" then
-    vtm_logic.load_guess_patterns()
-    vtm_logic.update_all_stations("force")
+    backend.load_guess_patterns()
+    backend.update_all_stations("force")
     game.print({ "vtm.config-change1" })
   end
 

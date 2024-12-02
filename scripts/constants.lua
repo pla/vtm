@@ -140,4 +140,36 @@ constants.wire_colors = {
   [defines.wire_connector_id.circuit_red] = "red",
   [defines.wire_connector_id.circuit_green] = "green",
 }
+constants.time_period_items = {
+  {
+      time = 60*2,
+      text = "vtm.time-2m"
+  },
+  {
+      time = 60*15,
+      text = "vtm.time-15m"
+  },
+  {
+      time = 60*60*1,
+      text = "vtm.time-1h"
+  },
+  {
+      time = 60*60*3,
+      text = "vtm.time-3h"
+  },
+  {
+      time = 60*60*6,
+      text = "vtm.time-6h"
+  },
+  {
+      time = 60*60*12,
+      text = "vtm.time-12h"
+  },
+  {
+      time = 60*60*24,
+      text = "vtm.time-24h"
+  }
+}
+constants.time_period_default_index = 2
+
 return constants

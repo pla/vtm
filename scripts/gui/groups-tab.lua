@@ -4,7 +4,7 @@ local gui         = require("__virtm__.scripts.flib-gui")
 local gui_util  = require("__virtm__.scripts.gui.utils")
 local match     = require("__virtm__.scripts.match")
 local constants = require("__virtm__.scripts.constants")
-local vtm_logic = require("__virtm__.scripts.vtm_logic")
+local backend = require("__virtm__.scripts.backend")
 local groups    = require("__virtm__.scripts.gui.groups")
 local flib_box  = require("__flib__.bounding-box")
 
@@ -219,7 +219,7 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
     local position = flib_box.center(group_data.area)
     local zoom ,max = gui_util.get_zoom_from_area(group_data.area)
     if not group_data.main_station.stock_tick or (group_data.main_station.stock_tick and group_data.main_station.stock_tick < game.tick - 60) then
-      local stock_data, is_circuit_limit = vtm_logic.read_station_network(group_data.main_station)
+      local stock_data, is_circuit_limit = backend.read_station_network(group_data.main_station)
       group_data.main_station.stock = stock_data
       group_data.main_station.stock_tick = game.tick
     end
@@ -317,7 +317,7 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
         })
       end
       if not station_data.stock_tick or (station_data.stock_tick and station_data.stock_tick < game.tick - 60) then
-        local stock_data, is_circuit_limit = vtm_logic.read_station_network(station_data)
+        local stock_data, is_circuit_limit = backend.read_station_network(station_data)
         station_data.stock = stock_data
         station_data.stock_tick = game.tick
       end

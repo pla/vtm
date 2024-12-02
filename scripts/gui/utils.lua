@@ -1,10 +1,10 @@
 -- gui/util.lua
 -- local gui         = require("__flib__.gui")
-local gui      = require("__virtm__.scripts.flib-gui")
-local flib_box = require("__flib__.bounding-box")
-local util     = require("__core__.lualib.util")
+local gui       = require("__virtm__.scripts.flib-gui")
+local flib_box  = require("__flib__.bounding-box")
+local constants = require("__virtm__.scripts.constants")
 
-local utils    = {}
+local utils     = {}
 
 function utils.get_gui_id(player_index)
   local player = game.get_player(player_index)
@@ -275,13 +275,13 @@ end
 ---@param area BoundingBox
 ---@return double, double
 function utils.get_zoom_from_area(area)
-  local max = 0
-  local zoom  = 1.0
+  local max  = 0
+  local zoom = 1.0
   if area then
     local width = flib_box.width(area)
     local height = flib_box.height(area)
     max = math.max(width, height)
-    zoom = (1442*max^-0.7) -- + (storage.zoom or 0) 
+    zoom = (1442 * max ^ -0.7) -- + (storage.zoom or 0)
 
     --[[ zoom Factorio 1.1
       zoom=1 - 130 *2 = 260
@@ -422,8 +422,8 @@ function utils.follow_remote_train(player, loco)
     })
   end
 end
-]]--- set a style for the given LuaGuiElement
---- 
+]] --- set a style for the given LuaGuiElement
+---
 ---@param element LuaGuiElement
 ---@param style string must be a gui-style name
 function utils.set_style(element, style)
@@ -442,10 +442,10 @@ end
 
 function utils.cache_generic_settings()
   -- cache relevant mods
-  storage.TCS_active =      script.active_mods["TCS_Icons"] and true or false
-  storage.cybersyn_active = script.active_mods["cybersyn"] and true or false
-  storage.SE_active = script.active_mods["space-exploration"] and true or false
-  storage.SA_active = script.active_mods["space-age"] and true or false
+  storage.TCS_active               = script.active_mods["TCS_Icons"] and true or false
+  storage.cybersyn_active          = script.active_mods["cybersyn"] and true or false
+  storage.SE_active                = script.active_mods["space-exploration"] and true or false
+  storage.SA_active                = script.active_mods["space-age"] and true or false
 
   storage.surface_selector_visible = settings.global["vtm-force-surface-visible"].value
   storage.max_hist                 = settings.global["vtm-history-length"].value
@@ -461,6 +461,10 @@ function utils.cache_generic_settings()
   for _, name in pairs(game.backer_names) do
     storage.backer_names[name] = true
   end
+end
+
+function utils.ticks(time_period_index)
+  return constants.time_period_items[time_period_index].time * 60
 end
 
 return utils

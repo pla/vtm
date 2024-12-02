@@ -1,17 +1,17 @@
 local constants   = require("__virtm__.scripts.constants")
 -- local gui         = require("__flib__.gui")
 local gui         = require("__virtm__.scripts.flib-gui")
+
 local searchbar   = require("__virtm__.scripts.gui.searchbar")
 local trains      = require("__virtm__.scripts.gui.trains")
-local space      = require("__virtm__.scripts.gui.space")
+local space       = require("__virtm__.scripts.gui.space")
 local stations    = require("__virtm__.scripts.gui.stations")
 local depots      = require("__virtm__.scripts.gui.depots")
 local history     = require("__virtm__.scripts.gui.history")
-local vtm_logic   = require("__virtm__.scripts.vtm_logic")
-local gui_util    = require("__virtm__.scripts.gui.utils")
-local time_filter = require("__virtm__.scripts.filter-time")
 local groups      = require("__virtm__.scripts.gui.groups")
 local groups_tab  = require("__virtm__.scripts.gui.groups-tab")
+local backend   = require("__virtm__.scripts.backend")
+local gui_utils    = require("__virtm__.scripts.gui.utils")
 
 
 -- config sprite: side_menu_menu_icon
@@ -26,12 +26,14 @@ local function header(gui_id)
       on_click = { type = "generic", action = "recenter", gui_id = gui_id },
     },
     children = {
-      { type = "label",
+      {
+        type = "label",
         style = "frame_title",
         caption = { "vtm.header" },
         ignored_by_interaction = true
       },
-      { type = "empty-widget",
+      {
+        type = "empty-widget",
         style = "flib_titlebar_drag_handle",
         ignored_by_interaction = true
       },
@@ -103,6 +105,7 @@ local function create_gui(player)
           style_mods = { horizontally_stretchable = true },
           {
             type = "tabbed-pane",
+            name = "tabbedpane",
             ref = { "tabs", "pane" },
             style = "vtm_tabbed_pane",
             -- tab trains
@@ -136,7 +139,6 @@ local function create_gui(player)
   local tab_list = {}
   for key, value in pairs(refs.tabs.pane.tabs) do
     tab_list[value.tab.name] = key
-  
   end
   refs.titlebar.flow.drag_target = refs.window
   searchbar.update(gui_id)
@@ -205,7 +207,7 @@ local function destroy_gui(gui_id)
 end
 
 local function open_or_close_gui(player_index)
-  local gui_id = gui_util.get_gui_id(player_index)
+  local gui_id = gui_utils.get_gui_id(player_index)
   if gui_id ~= nil then
     local vtm_gui = storage.guis[gui_id]
     if vtm_gui.state ~= "open" then
@@ -221,7 +223,7 @@ local function open_or_close_gui(player_index)
 end
 
 local function toggle_pinned(event)
-  local vtm_gui = storage.guis[gui_util.get_gui_id(event.player_index)]
+  local vtm_gui = storage.guis[gui_utils.get_gui_id(event.player_index)]
   vtm_gui.pinned = not vtm_gui.pinned
   if vtm_gui.pinned then
     vtm_gui.gui.titlebar.close_button.tooltip = { "gui.close" }
@@ -242,7 +244,7 @@ end
 
 --- @param event EventData|EventData.on_gui_click
 local function dispatch_refresh(event)
-  local gui_id = gui_util.get_gui_id(event.player_index)
+  local gui_id = gui_utils.get_gui_id(event.player_index)
   if gui_id == nil then
     return --no gui
   end
@@ -286,8 +288,8 @@ local function handle_action(action, event)
     close_gui(action.gui_id)
   elseif action.action == "clear_history" then
     -- delete history older 2 mins
-    local older_than = game.tick - time_filter.ticks(1)
-    vtm_logic.clear_older(event.player_index, older_than)
+    local older_than = game.tick - gui_utils.ticks(1)
+    backend.clear_older(event.player_index, older_than)
     dispatch_refresh(event)
   elseif action.action == "change_tab" then
     storage.settings[event.player_index].current_tab = action.tab

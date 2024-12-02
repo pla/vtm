@@ -5,7 +5,7 @@ local gui         = require("__virtm__.scripts.flib-gui")
 local gui_util  = require("__virtm__.scripts.gui.utils")
 local match     = require("__virtm__.scripts.match")
 local constants = require("__virtm__.scripts.constants")
-local vtm_logic = require("__virtm__.scripts.vtm_logic")
+local backend = require("__virtm__.scripts.backend")
 local groups    = require("__virtm__.scripts.gui.groups")
 
 ---comment
@@ -54,7 +54,7 @@ local function update_tab(gui_id)
   }
 
   if not next(storage.stations) then
-    vtm_logic.init_stations()
+    backend.init_stations()
   end
   for _, station_data in pairs(storage.stations) do
     if station_data.station.valid and
@@ -164,12 +164,12 @@ local function update_tab(gui_id)
       -- name,status,prio,type,stock,intransit
       -- limit manual or circuit,type(PR),group
       row.visible = true
-      local stock_data, is_circuit_limit = vtm_logic.read_station_network(station_data)
+      local stock_data, is_circuit_limit = backend.read_station_network(station_data)
       station_data.stock = stock_data
       station_data.stock_tick = game.tick
       local group_id, sprite
       if station_data.type == "P" then
-        group_id = vtm_logic.read_group_id(station_data.station)
+        group_id = backend.read_group_id(station_data.station)
       end
       if group_id then
         sprite = "vtm_group_logo"

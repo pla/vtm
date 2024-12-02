@@ -5,7 +5,7 @@ local gui         = require("__virtm__.scripts.flib-gui")
 local gui_util  = require("__virtm__.scripts.gui.utils")
 local util      = require("__core__.lualib.util")
 local constants = require("__virtm__.scripts.constants")
-local vtm_logic = require("__virtm__.scripts.vtm_logic")
+local backend = require("__virtm__.scripts.backend")
 local flib_box  = require("__flib__.bounding-box")
 
 
@@ -497,7 +497,7 @@ local function update_gui_from_group(gui_id, group_id)
 
   if group_id then
     local stations = {}
-    local group_data = vtm_logic.read_group(group_id)
+    local group_data = backend.read_group(group_id)
     if group_data then
       clear_selected_data(gui_id)
       edit.selected_group_id = group_data.group_id
@@ -620,7 +620,7 @@ local function save_groups(action, event)
   local group_members = {}
 
   for _, r_station in pairs(requester) do
-    table.insert(group_members, vtm_logic.get_or_create_station_data(r_station))
+    table.insert(group_members, backend.get_or_create_station_data(r_station))
   end
   for _, p_station in pairs(provider) do
     ---@type GroupData
@@ -628,7 +628,7 @@ local function save_groups(action, event)
       created = game.tick,
       group_id = p_station.unit_number,
       members = group_members,
-      main_station = vtm_logic.get_or_create_station_data(p_station),
+      main_station = backend.get_or_create_station_data(p_station),
       surface = p_station.surface.name,
       area = edit.group_area,
       resource_tags = tag_list,

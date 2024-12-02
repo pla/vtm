@@ -5,7 +5,7 @@ local on_tick_n  = require("__flib__.on-tick-n")
 local migration  = require("__flib__.migration")
 local constants  = require("__virtm__.scripts.constants")
 local main_gui    = require("__virtm__.scripts.gui.main_gui")
-local vtm_logic  = require("__virtm__.scripts.vtm_logic")
+local backend  = require("__virtm__.scripts.backend")
 local gui_util   = require("__virtm__.scripts.gui.utils")
 local migrations = require("__virtm__.migrations")
 local groups     = require("__virtm__.scripts.gui.groups")
@@ -57,7 +57,7 @@ local function on_tick(event)
     storage.station_k = tables.for_n_of(
       storage.station_update_table,
       storage.station_k, 10,
-      vtm_logic.update_station)
+      backend.update_station)
     if storage.station_k == nil then
       storage.station_update_table = nil
       game.print({ "vtm.station-refresh-end" })
@@ -65,10 +65,10 @@ local function on_tick(event)
   end
   if storage.station_refresh == "init" then
     storage.station_refresh = nil
-    vtm_logic.init_stations()
+    backend.init_stations()
   elseif storage.station_refresh == "all" then
     storage.station_refresh = nil
-    vtm_logic.schedule_station_refresh()
+    backend.schedule_station_refresh()
   end
   for player_index, record in pairs(storage.settings) do
     if record.gui_refresh == "auto" and
@@ -91,7 +91,7 @@ local function on_se_elevator()
       --- @param event on_train_teleported
       function(event)
         -- migrate stuff and things
-        vtm_logic.migrate_train_SE(event)
+        backend.migrate_train_SE(event)
       end
     )
   end
@@ -108,7 +108,7 @@ end)
 script.on_init(function()
   on_tick_n.init()
   init_global_data()
-  vtm_logic.load_guess_patterns()
+  backend.load_guess_patterns()
   for _, player in pairs(game.players) do
     migrations.init_player_data(player)
     main_gui.create_gui(player)
@@ -178,7 +178,7 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
         "vtm-p-or-r-start",
       }, event["setting"])
   then
-    vtm_logic.load_guess_patterns()
+    backend.load_guess_patterns()
     storage.station_refresh = "all"
   end
   if event["setting"] == "vtm-showModgui" then
