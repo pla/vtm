@@ -1,8 +1,6 @@
-local vtm_gui    = require("__virtm__.scripts.gui.main_gui")
-local backend  = require("__virtm__.scripts.backend")
+local main_gui    = require("__virtm__.scripts.gui.main_gui")
+local backend    = require("__virtm__.scripts.backend")
 local utils      = require("__virtm__.scripts.gui.utils")
-local mod_gui    = require("__core__.lualib.mod-gui")
-local constants  = require("__virtm__.scripts.constants")
 local groups     = require("__virtm__.scripts.gui.groups")
 
 local migrations = {}
@@ -36,10 +34,10 @@ function migrations.generic()
       end
 
       if gui_id ~= nil then
-        vtm_gui.destroy(gui_id)
+        main_gui.destroy(gui_id)
       end
 
-      vtm_gui.create_gui(player)
+      main_gui.create_gui(player)
       gui_id = utils.get_gui_id(player.index)
       groups.create_gui(gui_id)
       player.print({ "vtm.config-change2" })
@@ -49,7 +47,7 @@ function migrations.generic()
     end
   end
 end
-
+-- legacy, but stays so I don't have to relearn how to do this in the future
 migrations.by_version = {
   ["0.1.2"] = function()
     storage.surfaces = {
@@ -83,30 +81,6 @@ function migrations.init_player_data(player)
       storage.groups[player.force_index] = {}
     end
   end
-end
-
-function migrations.add_mod_gui_button(player)
-  local button_flow = mod_gui.get_button_flow(player) --[[@type LuaGuiElement]]
-  if not settings.player_default["vtm-showModgui"] then
-    return
-  end
-  if button_flow.vtm_button then
-    return
-  end
-  button_flow.add {
-    type = "button",
-    name = "vtm_button",
-    style = mod_gui.button_style,
-    caption = "VTM",
-    tags = {
-      [script.mod_name] = {
-        flib = {
-          on_click = { type = "generic", action = "open-vtm" }
-        }
-      }
-    },
-    tooltip = { "vtm.mod-gui-tooltip" }
-  }
 end
 
 return migrations

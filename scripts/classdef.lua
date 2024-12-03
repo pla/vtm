@@ -1,4 +1,4 @@
---[[ --Alias definitions at the bottom
+--Alias definitions at the bottom
 
 ---@class GuiData
 ---@field gui_id uint
@@ -148,5 +148,3 @@
 ---@field train LuaTrain
 ---@field old_train_id_1 uint?
 ---@field old_surface_index uint
-
-]]

@@ -1,17 +1,18 @@
-local constants   = require("__virtm__.scripts.constants")
+local constants  = require("__virtm__.scripts.constants")
 -- local gui         = require("__flib__.gui")
-local gui         = require("__virtm__.scripts.flib-gui")
+local gui        = require("__virtm__.scripts.flib-gui")
+local mod_gui    = require("__core__.lualib.mod-gui")
 
-local searchbar   = require("__virtm__.scripts.gui.searchbar")
-local trains      = require("__virtm__.scripts.gui.trains")
-local space       = require("__virtm__.scripts.gui.space")
-local stations    = require("__virtm__.scripts.gui.stations")
-local depots      = require("__virtm__.scripts.gui.depots")
-local history     = require("__virtm__.scripts.gui.history")
-local groups      = require("__virtm__.scripts.gui.groups")
-local groups_tab  = require("__virtm__.scripts.gui.groups-tab")
-local backend   = require("__virtm__.scripts.backend")
-local gui_utils    = require("__virtm__.scripts.gui.utils")
+local searchbar  = require("__virtm__.scripts.gui.searchbar")
+local trains     = require("__virtm__.scripts.gui.trains")
+local space      = require("__virtm__.scripts.gui.space")
+local stations   = require("__virtm__.scripts.gui.stations")
+local depots     = require("__virtm__.scripts.gui.depots")
+local history    = require("__virtm__.scripts.gui.history")
+local groups     = require("__virtm__.scripts.gui.groups")
+local groups_tab = require("__virtm__.scripts.gui.groups-tab")
+local backend    = require("__virtm__.scripts.backend")
+local gui_utils  = require("__virtm__.scripts.gui.utils")
 
 
 -- config sprite: side_menu_menu_icon
@@ -278,6 +279,40 @@ local function dispatch_refresh(event)
   end
 end
 
+local function remove_mod_gui_button(player)
+  local button_flow = mod_gui.get_button_flow(player) --[[@as LuaGuiElement]]
+  if button_flow.vtm_button then
+    button_flow.vtm_button.destroy()
+  end
+end
+
+local function add_mod_gui_button(player)
+  local button_flow = mod_gui.get_button_flow(player) --[[@type LuaGuiElement]]
+  if not settings.player_default["vtm-showModgui"] then
+    return
+  end
+  if button_flow.vtm_button then
+    return
+  end
+  -- flib_gui.add(button_flow, {
+  --   type = "button",
+  --   style = mod_gui.button_style,
+  --   caption = "VTM",
+  --   handler = main_gui.open_or_close_gui,
+  -- })
+
+  button_flow.add {
+    type = "button",
+    name = "vtm_button",
+    style = mod_gui.button_style,
+    caption = "VTM",
+    actions = {
+      on_click = { type = "generic", action = "open-vtm" }
+    },
+    tooltip = { "vtm.mod-gui-tooltip" }
+  }
+end
+
 local function handle_action(action, event)
   if action.action == "close-window" then -- x button
     close_gui(action.gui_id)
@@ -352,5 +387,7 @@ return {
   close = close_gui,
   destroy = destroy_gui,
   create_gui = create_gui,
-  handle_action = handle_action
+  handle_action = handle_action,
+  remove_mod_gui_button=remove_mod_gui_button,
+  add_mod_gui_button=add_mod_gui_button,
 }
