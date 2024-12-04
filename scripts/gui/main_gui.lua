@@ -1,6 +1,7 @@
 local constants  = require("__virtm__.scripts.constants")
--- local gui         = require("__flib__.gui")
-local gui        = require("__virtm__.scripts.flib-gui")
+local classdef   = require("__virtm__.scripts.classdef")
+local flib_gui   = require("__flib__.gui")
+-- local gui        = require("__virtm__.scripts.flib-gui")
 local mod_gui    = require("__core__.lualib.mod-gui")
 
 local searchbar  = require("__virtm__.scripts.gui.searchbar")
@@ -14,6 +15,13 @@ local groups_tab = require("__virtm__.scripts.gui.groups-tab")
 local backend    = require("__virtm__.scripts.backend")
 local gui_utils  = require("__virtm__.scripts.gui.utils")
 
+local function add_space_tab()
+  if script.active_mods["space-age"] and space then
+    return space.build_gui()
+  end
+end
+
+local main_gui = {}
 
 -- config sprite: side_menu_menu_icon
 -- search sprite: search_white
@@ -21,10 +29,12 @@ local gui_utils  = require("__virtm__.scripts.gui.utils")
 local function header(gui_id)
   return {
     type = "flow",
-    ref = { "titlebar", "flow" },
+    style = "flib_titlebar_flow",
+    drag_target = "window",
     mouse_button_filter = { "middle" },
-    actions = {
-      on_click = { type = "generic", action = "recenter", gui_id = gui_id },
+    handler = {
+      [defines.events.on_gui_click] = main_gui.center_window,
+      [defines.events.on_gui_closed] = main_gui.hide,
     },
     children = {
       {
@@ -43,13 +53,11 @@ local function header(gui_id)
         name = "pin_button",
         style = "frame_action_button",
         mouse_button_filter = { "left" },
+        auto_toggle = true,
         sprite = "flib_pin_white",
-        hovered_sprite = "flib_pin_black",
-        clicked_sprite = "flib_pin_black",
-        ref = { "titlebar", "pin_button" },
-        actions = {
-          on_click = { type = "generic", action = "toggle_pinned", gui_id = gui_id },
-        },
+        -- hovered_sprite = "flib_pin_black",
+        -- clicked_sprite = "flib_pin_black",
+        handler = { [defines.events.on_gui_click] = main_gui.toggle_pinned },
         tooltip = { "gui.flib-keep-open" }
       },
       {
@@ -58,12 +66,8 @@ local function header(gui_id)
         style = "frame_action_button",
         mouse_button_filter = { "left", "right" },
         sprite = "vtm_refresh_white",
-        -- hovered_sprite = "utility/refresh",
-        -- clicked_sprite = "utility/refresh",
         ref = { "titlebar", "refresh_button" },
-        actions = {
-          on_click = { type = "generic", action = "refresh", gui_id = gui_id },
-        },
+        handler = { [defines.events.on_gui_click] = main_gui.refresh },
         tooltip = { "vtm.refresh" }
       },
       {
@@ -72,30 +76,23 @@ local function header(gui_id)
         style = "frame_action_button",
         mouse_button_filter = { "left" },
         sprite = "utility/close",
-        -- hovered_sprite = "utility/close_black",
-        -- clicked_sprite = "utility/close_black",
         ref = { "titlebar", "close_button" },
-        actions = {
-          on_click = { type = "generic", action = "close-window", gui_id = gui_id },
-        },
+        handler = { [defines.events.on_gui_click] = main_gui.hide },
         tooltip = { "gui.close-instruction" }
-      }
+      },
     }
   }
 end
 
-local function create_gui(player)
+function main_gui.create_gui(player)
   local gui_id = player.index
   local gui_contents = {
     {
       type = "frame",
       direction = "vertical",
-      name = "vtm_main_frame",
+      name = "window",
       style_mods = { minimal_width = constants.gui_window_min_width },
-      ref = { "window" },
-      actions = {
-        on_closed = { type = "generic", action = "window_closed", gui_id = gui_id }
-      },
+      handler = { [defines.events.on_gui_closed] = main_gui.on_window_closed },
       children = {
         header(gui_id),
         searchbar.build_gui(gui_id),
@@ -106,28 +103,28 @@ local function create_gui(player)
           style_mods = { horizontally_stretchable = true },
           {
             type = "tabbed-pane",
-            name = "tabbedpane",
-            ref = { "tabs", "pane" },
+            name = "tabbed_pane",
             style = "vtm_tabbed_pane",
+            handler = { [defines.events.on_gui_selected_tab_changed] = main_gui.change_tab },
             -- tab trains
-            trains.build_gui(),
-            -- tab stations
-            stations.build_gui(),
-            -- tab space
-            space.build_gui(),
-            -- tab depots
-            depots.build_gui(),
-            -- tab groups
-            groups_tab.build_gui(),
-            -- tab history
-            history.build_gui(),
+            -- trains.build_gui(),
+            -- -- tab stations
+            -- stations.build_gui(),
+            -- -- tab space
+            -- add_space_tab(),
+            -- -- tab depots
+            -- depots.build_gui(),
+            -- -- tab groups
+            -- groups_tab.build_gui(),
+            -- -- tab history
+            -- history.build_gui(),
           }, -- end tabbed pane
         },
       }
     }
   }
-  local refs = gui.build(player.gui.screen, gui_contents)
-  storage.guis[gui_id] = {
+  local refs = flib_gui.add(player.gui.screen, gui_contents)
+  local gui_data = {
     gui_id = gui_id,
     gui = refs,
     player = player,
@@ -137,156 +134,170 @@ local function create_gui(player)
     filter_history = {},
     group_gui = {}
   }
+  storage.guis[gui_id] = gui_data
   local tab_list = {}
-  for key, value in pairs(refs.tabs.pane.tabs) do
+  for key, value in pairs(refs.tabbed_pane.tabs) do
     tab_list[value.tab.name] = key
   end
-  refs.titlebar.flow.drag_target = refs.window
-  searchbar.update(gui_id)
+  -- refs.titlebar.flow.drag_target = refs.window
+  searchbar.update(gui_data)
+  -- get and set current tab
   local current_tab = storage.settings[player.index].current_tab or "trains"
-  refs.tabs.pane.selected_tab_index = tab_list[current_tab]
+  refs.tabbed_pane.selected_tab_index = tab_list[current_tab]
+  -- center window on initial build
   refs.window.force_auto_center()
+  -- hide until requested
   refs.window.visible = false
 end
 
 ---Toggle auto refresh
----@param gui_id number
----@param to_state string?
-local function toggle_auto_refresh(gui_id, to_state)
-  local vtm_gui = storage.guis[gui_id]
-  local vsettings = storage.settings[vtm_gui.player.index]
+---@param gui_data GuiData
+---@param to_state string? "off"|"auto"
+local function toggle_auto_refresh(gui_data, to_state)
+  -- get player settings
+  local ps = storage.settings[gui_data.player.index]
   if to_state ~= nil then
+    -- force given state
     if to_state == "off" then
-      vsettings.gui_refresh = ""
+      ps.gui_refresh = ""
+      gui_data.gui.refresh_button.toggled = false
     elseif to_state == "auto" then
-      vsettings.gui_refresh = "auto"
+      ps.gui_refresh = "auto"
     end
   else
     -- toggle
-    if vsettings.gui_refresh == "auto" then
-      vsettings.gui_refresh = ""
+    if ps.gui_refresh == "auto" then
+      ps.gui_refresh = ""
     else
-      vsettings.gui_refresh = "auto"
+      ps.gui_refresh = "auto"
     end
   end
 
-  if vsettings.gui_refresh == "auto" then
-    vtm_gui.gui.titlebar.refresh_button.sprite = "utility/refresh"
-    vtm_gui.gui.titlebar.refresh_button.style = "flib_selected_frame_action_button"
-    vtm_gui.player.print({ "vtm.auto-refresh-on" })
+  if ps.gui_refresh == "auto" then
+    gui_data.gui.refresh_button.toggled = true
+    gui_data.player.print({ "vtm.auto-refresh-on" })
   else
-    vtm_gui.gui.titlebar.refresh_button.sprite = "vtm_refresh_white"
-    vtm_gui.gui.titlebar.refresh_button.style = "frame_action_button"
-    vtm_gui.player.print({ "vtm.auto-refresh-off" })
+    gui_data.gui.refresh_button.toggled = false
+    gui_data.player.print({ "vtm.auto-refresh-off" })
   end
 end
 
-local function open_gui(gui_id)
-  local vtm_gui = storage.guis[gui_id]
-  vtm_gui.gui.window.visible = true
-  vtm_gui.state = "open"
-  if not vtm_gui.pinned then
-    vtm_gui.player.opened = vtm_gui.gui.window
+--- @param gui_data GuiData
+--- @param event? EventData|EventData.on_gui_click
+function main_gui.open(gui_data, event)
+  main_gui.dispatch_refresh(gui_data, event)
+  gui_data.gui.window.visible = true
+  gui_data.state = "open"
+  if not gui_data.pinned then
+    gui_data.player.opened = gui_data.gui.window
   end
 end
 
-local function close_gui(gui_id)
-  local vtm_gui = storage.guis[gui_id]
-  if vtm_gui.state == "closed" then return end
-  vtm_gui.gui.window.visible = false
-  vtm_gui.state = "closed"
-  if storage.settings[vtm_gui.player.index].gui_refresh == "auto" then
-    toggle_auto_refresh(gui_id, "off")
+--- @param gui_data GuiData
+--- @param event? EventData|EventData.on_gui_click
+function main_gui.hide(gui_data, event)
+  if gui_data.state == "closed" then return end
+  gui_data.gui.window.visible = false
+  gui_data.state = "closed"
+  if storage.settings[gui_data.player.index].gui_refresh == "auto" then
+    toggle_auto_refresh(gui_data, "off")
   end
-  vtm_gui.player.opened = nil
+  gui_data.player.opened = nil
 end
 
-local function destroy_gui(gui_id)
-  local vtm_gui = storage.guis[gui_id]
-  vtm_gui.gui.window.destroy()
-  storage.guis[gui_id] = nil
+--- @param gui_data GuiData
+--- @param event? EventData|EventData.on_gui_click
+function main_gui.destroy(gui_data, event)
+  gui_data.gui.window.destroy()
+  storage.guis[gui_data.gui_id] = nil
 end
 
-local function open_or_close_gui(player_index)
-  local gui_id = gui_utils.get_gui_id(player_index)
-  if gui_id ~= nil then
-    local vtm_gui = storage.guis[gui_id]
-    if vtm_gui.state ~= "open" then
-      -- refresh tab before open
-      script.raise_event(constants.refresh_event, {
-        player_index = player_index,
-      })
-      open_gui(gui_id)
-    else
-      close_gui(gui_id)
-    end
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_lua_shortcut
+function on_lua_shortcut(gui_data, event)
+  if event.prototype_name == "vtm-shortcut" then
+    main_gui.open_or_close_gui(gui_data, event)
   end
 end
 
-local function toggle_pinned(event)
-  local vtm_gui = storage.guis[gui_utils.get_gui_id(event.player_index)]
-  vtm_gui.pinned = not vtm_gui.pinned
-  if vtm_gui.pinned then
-    vtm_gui.gui.titlebar.close_button.tooltip = { "gui.close" }
-    vtm_gui.gui.titlebar.pin_button.sprite = "flib_pin_black"
-    vtm_gui.gui.titlebar.pin_button.style = "flib_selected_frame_action_button"
-    vtm_gui.player.opened = vtm_gui.gui.window
-    if vtm_gui.player.opened == vtm_gui.gui.window then
-      vtm_gui.player.opened = nil
-    end
+--- @param gui_data GuiData
+--- @param event? EventData|EventData.on_gui_click
+function main_gui.open_or_close_gui(gui_data, event)
+  if gui_data.state ~= "open" then
+    main_gui.dispatch_refresh(gui_data, event)
+    main_gui.open(gui_data, event)
   else
-    vtm_gui.gui.titlebar.close_button.tooltip = { "gui.close-instruction" }
-    vtm_gui.gui.titlebar.pin_button.sprite = "flib_pin_white"
-    vtm_gui.gui.titlebar.pin_button.style = "frame_action_button"
-    vtm_gui.player.opened = vtm_gui.gui.window
+    main_gui.hide(gui_data, event)
   end
 end
 
-
+--- @param gui_data GuiData
 --- @param event EventData|EventData.on_gui_click
-local function dispatch_refresh(event)
-  local gui_id = gui_utils.get_gui_id(event.player_index)
-  if gui_id == nil then
-    return --no gui
+function main_gui.toggle_pinned(gui_data, event)
+  gui_data.pinned = not gui_data.pinned
+  if gui_data.pinned then
+    gui_data.gui.close_button.tooltip = { "gui.close" }
+    -- gui_data.gui.pin_button.sprite = "flib_pin_black"
+    -- gui_data.gui.pin_button.style = "flib_selected_frame_action_button"
+    gui_data.player.opened = gui_data.gui.window
+    if gui_data.player.opened == gui_data.gui.window then
+      gui_data.player.opened = nil
+    end
+  else
+    gui_data.gui.close_button.tooltip = { "gui.close-instruction" }
+    -- gui_data.gui.pin_button.sprite = "flib_pin_white"
+    -- gui_data.gui.pin_button.style = "frame_action_button"
+    gui_data.player.opened = gui_data.gui.window
   end
+end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function main_gui.refresh(gui_data, event)
   if (event.control and event.button == defines.mouse_button_type.left) or
       event.button == defines.mouse_button_type.right
   then
-    toggle_auto_refresh(gui_id)
+    toggle_auto_refresh(gui_data)
   end
-
-  local gui_data = storage.guis[gui_id]
-  local current_tab = storage.settings[event.player_index].current_tab
-  if not storage.showSpaceTab and current_tab == "space" then
-    current_tab = "trains"
-  end
-  gui_data.gui.tabs.space_tab.visible = storage.showSpaceTab --[[@as boolean]]
-
-  searchbar.update(gui_id)
-  if current_tab == "stations" then
-    stations.update_tab(gui_id)
-  elseif current_tab == "trains" then
-    trains.update_tab(gui_id)
-  elseif current_tab == "space" then
-    space.update_tab(gui_id)
-  elseif current_tab == "depots" then
-    depots.update_tab(gui_id)
-  elseif current_tab == "groups" then
-    groups_tab.update_tab(gui_id)
-  elseif current_tab == "history" then
-    history.update_tab(gui_id)
-  elseif current_tab == "requests" then
-  end
+  main_gui.dispatch_refresh(gui_data, event)
 end
 
-local function remove_mod_gui_button(player)
+function main_gui.refresh_event(custom_event_data) -- unify parameters for add handlers?
+end
+
+function main_gui.dispatch_refresh(gui_data, event) -- unify parameters for add handlers?
+  if not gui_data then return end
+  -- local current_tab = storage.settings[gui_data.player_index].current_tab
+  -- if not storage.showSpaceTab and current_tab == "space" then
+  --   current_tab = "trains"
+  -- end
+  -- refresh all data, the tab badges and then the current tab
+  -- searchbar.update(gui_id)
+  -- if current_tab == "stations" then
+  --   stations.update_tab(gui_id)
+  -- elseif current_tab == "trains" then
+  --   trains.update_tab(gui_id)
+  -- elseif current_tab == "space" then
+  --   space.update_tab(gui_id)
+  -- elseif current_tab == "depots" then
+  --   depots.update_tab(gui_id)
+  -- elseif current_tab == "groups" then
+  --   groups_tab.update_tab(gui_id)
+  -- elseif current_tab == "history" then
+  --   history.update_tab(gui_id)
+  -- elseif current_tab == "requests" then
+  --   -- not existent
+  -- end
+end
+
+function main_gui.remove_mod_gui_button(player)
   local button_flow = mod_gui.get_button_flow(player) --[[@as LuaGuiElement]]
   if button_flow.vtm_button then
     button_flow.vtm_button.destroy()
   end
 end
 
-local function add_mod_gui_button(player)
+function main_gui.add_mod_gui_button(player)
   local button_flow = mod_gui.get_button_flow(player) --[[@type LuaGuiElement]]
   if not settings.player_default["vtm-showModgui"] then
     return
@@ -294,100 +305,96 @@ local function add_mod_gui_button(player)
   if button_flow.vtm_button then
     return
   end
-  -- flib_gui.add(button_flow, {
-  --   type = "button",
-  --   style = mod_gui.button_style,
-  --   caption = "VTM",
-  --   handler = main_gui.open_or_close_gui,
-  -- })
 
-  button_flow.add {
+  -- TODO: different style when gui_unifier
+  flib_gui.add(button_flow, {
     type = "button",
-    name = "vtm_button",
     style = mod_gui.button_style,
     caption = "VTM",
-    actions = {
-      on_click = { type = "generic", action = "open-vtm" }
-    },
-    tooltip = { "vtm.mod-gui-tooltip" }
-  }
+    tooltip = { "vtm.mod-gui-tooltip" },
+    handler = main_gui.open_or_close_gui,
+  })
 end
 
 local function handle_action(action, event)
+  local gui_data
   if action.action == "close-window" then -- x button
-    close_gui(action.gui_id)
+    -- main_gui.hide(action.gui_id)
   elseif action.action == "window_closed" then
-    if storage.guis[action.gui_id].pinned then
-      return
-    end
-    close_gui(action.gui_id)
+    -- if storage.guis[action.gui_id].pinned then
+    --   return
+    -- end
+    -- main_gui.hide(action.gui_id)
   elseif action.action == "clear_history" then
     -- delete history older 2 mins
     local older_than = game.tick - gui_utils.ticks(1)
     backend.clear_older(event.player_index, older_than)
-    dispatch_refresh(event)
+    main_gui.dispatch_refresh(gui_data, event)
   elseif action.action == "change_tab" then
-    storage.settings[event.player_index].current_tab = action.tab
-    dispatch_refresh(event)
+    -- storage.settings[event.player_index].current_tab = action.tab
+    -- dispatch_refresh(gui_data,event)
   elseif action.action == "refresh" then
-    dispatch_refresh(event)
+    -- dispatch_refresh(event)
   elseif action.action == "toggle_pinned" then
-    toggle_pinned(event)
+    -- toggle_pinned(event)
   elseif action.action == "open-vtm" then -- mod-gui-button
-    open_or_close_gui(event.player_index)
+    -- main_gui.open_or_close_gui(event.player_index)
   elseif action.action == "history_switch" then
     storage.settings[event.player_index].history_switch = event.element.switch_state
-    dispatch_refresh(event)
+    main_gui.dispatch_refresh(gui_data, event)
   elseif action.action == "recenter" then
-    if event.button == defines.mouse_button_type.middle then
-      local gui_data = storage.guis[action.gui_id]
-      if gui_data then
-        gui_data.gui.window.force_auto_center()
-      end
-    end
-  elseif action.action == "focus_search" then
-    searchbar.handle_action(action, event)
+    -- if event.button == defines.mouse_button_type.middle then
+    --   local gui_data = storage.guis[action.gui_id]
+    --   if gui_data then
+    --     gui_data.gui.window.force_auto_center()
+    --   end
+    -- end
+    -- elseif action.action == "focus_search" then
+    -- searchbar.handle_action(action, event)
   end
 end
 
-gui.hook_events(function(event)
-  local action = gui.read_action(event)
-  if action then
-    if action.type == "generic" then
-      handle_action(action, event)
-    elseif action.type == "trains" then
-      trains.handle_action(action, event)
-    elseif action.type == "stations" then
-      stations.handle_action(action, event)
-    elseif action.type == "depots" then
-      depots.handle_action(action, event)
-    elseif action.type == "searchbar" then
-      searchbar.handle_action(action, event)
-    elseif action.type == "history" then
-      history.handle_action(action, event)
-    elseif action.type == "groups" then
-      groups.handle_action(action, event)
-    elseif action.type == "groups_tab" then
-      groups_tab.handle_action(action, event)
-    end
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function main_gui.on_window_closed(gui_data, event)
+  if gui_data.pinned then
+    return
+  end
+  main_gui.hide(gui_data, event)
+end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function main_gui.change_tab(gui_data, event)
+  storage.settings[event.player_index].current_tab = event.element.name
+  main_gui.dispatch_refresh(gui_data, event)
+end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function main_gui.center_window(gui_data, event)
+  gui_data.gui.window.force_auto_center()
+end
+
+flib_gui.add_handlers(main_gui, function(event, handler)
+  local gui_id = gui_utils.get_gui_id(event.player_index)
+  ---@type GuiData
+  local gui_data = storage.guis[gui_id]
+  if gui_data then
+    handler(gui_data, event)
   end
 end)
+
+flib_gui.handle_events()
 
 if not constants.refresh_event then
   constants.refresh_event = script.generate_event_name()
 end
 
-script.on_event(constants.refresh_event, function(event)
-  dispatch_refresh(event)
-end)
-
-return {
-  open_or_close_gui = open_or_close_gui,
-  open = open_gui,
-  close = close_gui,
-  destroy = destroy_gui,
-  create_gui = create_gui,
-  handle_action = handle_action,
-  remove_mod_gui_button=remove_mod_gui_button,
-  add_mod_gui_button=add_mod_gui_button,
+main_gui.events = {
+  [constants.refresh_event] = main_gui.refresh_event,
+  ["vtm-key"] = main_gui.open_or_close_gui,
+  [defines.events.on_lua_shortcut] = main_gui.on_lua_shortcut,
 }
+
+return main_gui

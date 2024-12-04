@@ -1,20 +1,23 @@
 --searchbar.lua
 local constants = require("__virtm__.scripts.constants")
-local backend = require("__virtm__.scripts.backend")
-local tables    = require("__flib__.table")
+local flib_gui  = require("__flib__.gui")
+local gui_utils = require("__virtm__.scripts.gui.utils")
 
-local function refresh(action)
+local searchbar = {}
+
+local function refresh(gui_data, event)
+  -- main_gui.dispatch_refresh(gui_data, event)
   script.raise_event(constants.refresh_event, {
-    action = action,
-    player_index = storage.guis[action.gui_id].player.index
+    player_index = gui_data.player.index,
   })
 end
+
 ---refresh surface drop down
----@param gui_id any
-local function update(gui_id)
-  local flow = storage.guis[gui_id].gui.filter.surface_flow --[[@as LuaGuiElement]]
-  local dropdown = storage.guis[gui_id].gui.filter.surface --[[@as LuaGuiElement]]
-  local surface = storage.settings[storage.guis[gui_id].player.index].surface or "All"
+---@param gui_data GuiData
+function searchbar.update(gui_data)
+  local flow = gui_data.gui.surface_flow --[[@as LuaGuiElement]]
+  local dropdown = gui_data.gui.surface_dropdown --[[@as LuaGuiElement]]
+  local surface = storage.settings[gui_data.player.index].surface or "All"
   local visible = storage.surface_selector_visible --[[@as boolean]]
   local selected_index = 1
   if storage.SE_active or storage.SA_active then
@@ -25,7 +28,7 @@ local function update(gui_id)
   for key, value in pairs(storage.surfaces) do
     dropdown.add_item(value)
     if key == surface then
-    selected_index = #dropdown.items
+      selected_index = #dropdown.items
     end
   end
   -- Validate that the selected surface still exist
@@ -37,102 +40,11 @@ local function update(gui_id)
   dropdown.selected_index = selected_index
 end
 
-local function handle_action(action, event)
-  local vtm = storage.guis[action.gui_id]
-  local gui = storage.guis[action.gui_id].gui
-  local filter_history = vtm.filter_history
-  if action.action == "focus_search" then
-    if gui and vtm.state == "open" and not vtm.pinned then
-      gui.filter.search_field.focus()
-      gui.filter.search_field.select_all()
-    end
-    return
-  end
-  if action.action == "apply-surface" then
-    local surface = "All"
-    if event.element.items[event.element.selected_index][3] then
-      surface=event.element.items[event.element.selected_index][3]
-    else
-      surface = event.element.items[event.element.selected_index]
-    end
-    storage.settings[event.player_index].surface = surface
-    refresh(action)
-    return
-  end
-  if action.action == "refresh" then
-    refresh(action)
-    return
-  end
-  local filter = action.filter
-  if action.action == "filter" then
-    if filter ~= "search_field" then
-      gui.filter.item.elem_value = { type = action.filter, name = action.value }
-      action.action = "apply-filter"
-    end
-  end
-  if action.action == "prev-filter" then
-    -- check history table
-    if #filter_history > 0 then
-      if not gui.filter.item.elem_value or
-          gui.filter.item.elem_value and gui.filter.item.elem_value.name ~= filter_history[1].name then
-        -- set first entry to filter if different
-        gui.filter.item.elem_value = filter_history[1]
-        -- remove entry from history
-        table.remove(filter_history, 1)
-      else -- first is current
-        if #filter_history > 1 then
-          --set second entry if there is one
-          gui.filter.item.elem_value = filter_history[2]
-          -- remove two entries
-          table.remove(filter_history, 1)
-          table.remove(filter_history, 1)
-        end
-      end
-
-      action.action = "apply-filter"
-    end
-  end
-  if action.action == "apply-filter" then
-    if filter ~= "search_field" then
-      local filter_guis = gui.filter
-      if not filter_guis.item.elem_value then
-        filter_guis.search_field.text = ""
-        return
-      end
-      local name = filter_guis.item.elem_value.name
-      local type = filter_guis.item.elem_value.type or "item"
-      filter_guis.search_field.text = "[" .. type .. "=" .. name .. "]"
-      -- if event.button and event.button == defines.mouse_button_type.right then
-      --   filter_guis.search_field.text = ("=" .. filter_guis.item.elem_value.name .. "]") or ""
-      -- end
-      -- TODO only insert if different from prev entry
-      if #filter_history == 0 or (#filter_history > 0 and gui.filter.item.elem_value.name ~= filter_history[1].name) then
-        table.insert(filter_history, 1, filter_guis.item.elem_value)
-      end
-      while #filter_history > 10 do
-        table.remove(filter_history, 11)
-      end
-    end
-    refresh(action)
-    return
-  end
-  if action.action == "clear-filter" then
-    if action.button and event.button ~= defines.mouse_button_type[action.button] then
-      return
-    end
-    local filter_guis = gui.filter
-    filter_guis.search_field.text = ""
-    filter_guis.item.elem_value = nil
-    refresh(action)
-  end
-end
-
-local function build_gui(gui_id)
+function searchbar.build_gui(gui_id)
   return {
     type = "frame",
     direction = "horizontal",
     style = "vtm_searchbar_frame",
-    -- style = "inside_shallow_frame_with_padding",
     children = {
       {
         -- search flow
@@ -149,20 +61,11 @@ local function build_gui(gui_id)
             type = "textfield",
             tooltip = { "vtm.filter-station-name-tooltip" },
             clear_and_focus_on_right_click = true,
-            ref = { "filter", "search_field" },
-            actions = {
-              on_confirmed = {
-                type = "searchbar",
-                action = "apply-filter",
-                gui_id = gui_id,
-                filter = "search_field"
-              },
-              on_click = {
-                type = "searchbar",
-                action = "clear-filter",
-                gui_id = gui_id,
-                button = "right"
-              }
+            name = "search_field",
+            tags = { button = "right" },
+            handler = {
+              [defines.events.on_gui_confirmed] = searchbar.apply_filter,
+              [defines.events.on_gui_click] = searchbar.clear_filter --right button
             }
           },
           {
@@ -173,44 +76,33 @@ local function build_gui(gui_id)
           {
             type = "choose-elem-button",
             style = "slot_button_in_shallow_frame",
+            name = "choose_elem_button",
             style_mods = { size = 32, },
             elem_type = "signal",
             tooltip = { "vtm.filter-item-tooltip" },
-            ref = { "filter", "item" },
-            actions = {
-              on_elem_changed = {
-                type = "searchbar",
-                action = "apply-filter",
-                gui_id = gui_id,
-                filter = "item",
-                button = "right"
-              },
-              on_click = {
-                type = "searchbar",
-                action = "clear-filter",
-                gui_id = gui_id,
-                button = "right"
-              }
-            }
+            tags = { button = "right" },
+            handler = {
+              [defines.events.on_gui_elem_changed] = searchbar.apply_filter,
+              [defines.events.on_gui_click] = searchbar.clear_filter --right button
+            },
           },
           {
             type = "button",
             style = "tool_button",
+            name = "prev_filter",
             caption = { "vtm.filter-prev" },
-            tooltip = { "vtm.filter-prev-tooltip" },
             mouse_button_filter = { "left" },
-            actions = {
-              on_click = { type = "searchbar", action = "prev-filter", gui_id = gui_id }
-            }
+            tooltip = { "vtm.filter-prev-tooltip" },
+            handler = { [defines.events.on_gui_click] = searchbar.prev_filter },
           },
           {
             type = "button",
+            name = "clear_filter",
             caption = { "vtm.filter-clear" },
             mouse_button_filter = { "left" },
             tooltip = { "vtm.filter-clear" },
-            actions = {
-              on_click = { type = "searchbar", action = "clear-filter", gui_id = gui_id }
-            }
+            tags = { button = "left" },
+            handler = { [defines.events.on_gui_click] = searchbar.clear_filter },
           },
         }
       }, -- end search flow
@@ -222,7 +114,7 @@ local function build_gui(gui_id)
         -- Surface flow
         type = "flow",
         direction = "horizontal",
-        ref = { "filter", "surface_flow" },
+        name = "surface_flow",
         visible = false,
         style_mods = { vertical_align = "center", horizontal_align = "right", },
         children = {
@@ -233,16 +125,11 @@ local function build_gui(gui_id)
           },
           {
             type = "drop-down",
+            name = "surface_dropdown",
             tooltip = { "vtm.filter-surface-tooltip" },
-            ref = { "filter", "surface" },
-            actions = {
-              on_selection_state_changed = {
-                type = "searchbar", action = "apply-surface", gui_id = gui_id,
-              },
-              -- on_click = {
-              --   type = "searchbar", action = "clear-filter", gui_id = gui_id,
-              -- }
-            }
+            handler = {
+              [defines.events.on_gui_selection_state_changed] = searchbar.apply_surface
+            },
           },
         }
       } -- end surface flow
@@ -250,9 +137,116 @@ local function build_gui(gui_id)
   }
 end
 
-return {
-    handle_action = handle_action,
-    build_gui = build_gui,
-    refresh = refresh,
-    update = update,
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click|EventData.on_gui_confirmed|EventData.on_gui_elem_changed
+function searchbar.apply_filter(gui_data, event)
+  -- TODO check where the search field applies the filter
+  local filter_history = gui_data.filter_history
+  if event.element.name ~= "search_field" then
+    -- check filter tag (a sprite button was clicked)
+    if event.element.tags ~= nil and event.element.tags.filter ~= nil then
+      gui_data.gui.choose_elem_button.elem_value = {
+        type = event.element.tags.type --[[@as string]],
+        name = event.element.tags.name --[[@as string]],
+        -- TODO add quality all around, maybe shift click to include quality
+        -- quality = event.element.tags.quality or "normal"
+      }
+    end
+    -- do nothing when right click (clears search on text and chooser)
+    if event.button and event.button == defines.mouse_button_type.right then
+      return
+    end
+
+    if event.element.name == "choose_elem_button" then
+      if event.element.elem_value == nil then
+        return
+      else
+        local name = event.element.elem_value.name
+        local type = event.element.elem_value.type or "item" --TODO add quality
+        gui_data.gui.search_field.text = "[" .. type .. "=" .. name .. "]"
+        -- TODO only insert if different from prev entry
+        if #filter_history == 0 or (#filter_history > 0 and gui_data.gui.choose_elem_button.elem_value.name ~= filter_history[1].name) then
+          table.insert(filter_history, 1, gui_data.gui.choose_elem_button.elem_value)
+        end
+        while #filter_history > 10 do
+          table.remove(filter_history, 11)
+        end
+      end
+    end
+  end
+  refresh(gui_data, event)
+end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function searchbar.prev_filter(gui_data, event)
+  local filter_history = gui_data.filter_history
+
+  -- check history table
+  if #filter_history > 0 then
+    if not gui_data.gui.choose_elem_button.elem_value or
+        gui_data.gui.choose_elem_button.elem_value and gui_data.gui.choose_elem_button.elem_value.name ~= filter_history[1].name then
+      -- set first entry to filter if different
+      gui_data.gui.choose_elem_button.elem_value = filter_history[1]
+      -- remove entry from history
+      table.remove(filter_history, 1)
+    else -- first is current
+      if #filter_history > 1 then
+        --set second entry if there is one
+        gui_data.gui.choose_elem_button.elem_value = filter_history[2]
+        -- remove two entries
+        table.remove(filter_history, 1)
+        table.remove(filter_history, 1)
+      end
+    end
+    searchbar.apply_filter(gui_data, event)
+  end
+end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function searchbar.clear_filter(gui_data, event)
+  if event.button and event.element.tags and event.button ~= defines.mouse_button_type[event.element.tags.button] then
+    return
+  end
+  gui_data.gui.search_field.text = ""
+  gui_data.gui.choose_elem_button.elem_value = nil
+  refresh(gui_data, event)
+end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_selection_state_changed
+function searchbar.apply_surface(gui_data, event)
+  local surface = "All"
+  if event.element.items[event.element.selected_index][3] then
+    surface = event.element.items[event.element.selected_index][3] --[[@as string]]
+  else
+    surface = event.element.items[event.element.selected_index] --[[@as string]]
+  end
+  storage.settings[event.player_index].surface = surface
+  refresh(gui_data, event)
+end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData
+function searchbar.linked_focus_search(gui_data, event)
+  if gui_data.gui and gui_data.state == "open" and not gui_data.pinned then
+    gui_data.gui.search_field.focus()
+    gui_data.gui.search_field.select_all()
+  end
+end
+
+flib_gui.add_handlers(searchbar, function(event, handler)
+  local gui_id = gui_utils.get_gui_id(event.player_index)
+  ---@type GuiData
+  local gui_data = storage.guis[gui_id]
+  if gui_data then
+    handler(gui_data, event)
+  end
+end)
+
+searchbar.events = {
+  ["vtm-linked-focus-search"] = searchbar.linked_focus_search,
+
 }
+return searchbar

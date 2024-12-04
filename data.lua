@@ -24,27 +24,34 @@ data:extend {
       },
 
     },
+  },
+  {
+    type = "sprite",
+    name = "vtm_refresh_white",
+    layers = {
+      {
+        type = "sprite",
+        filename = "__core__/graphics/refresh-white-animation.png",
+        position = { 0, 0 },
+        size = 32,
+        flags = { "icon" },
+      },
+    },
   }
 }
-
---sprites
-data:extend {
-  data_util.build_sprite("vtm_refresh_white", { 0, 0 }, "__core__/graphics/refresh-white-animation.png", { 32, 32 }),
-}
-
 
 
 -- custom input
 data:extend {
   {
     type = 'custom-input',
-    name = 'vtm-open',
+    name = 'vtm-key',
     key_sequence = 'SHIFT + T',
     enabled_while_spectating = false,
   },
   {
     type = 'custom-input',
-    name = 'vtm-groups-open',
+    name = 'vtm-groups-key',
     key_sequence = 'SHIFT + G',
     enabled_while_spectating = false,
   },
@@ -61,25 +68,25 @@ data:extend {
 
   {
     type                     = "shortcut",
-    name                     = "vtm-open",
+    name                     = "vtm-shortcut",
     icon                     = "__virtm__/graphics/icons/shortcut.png",
     small_icon               = "__virtm__/graphics/icons/shortcut_white24.png",
     icon_size                = 32,
     small_icon_size          = 24,
     toggleable               = false,
     action                   = "lua",
-    associated_control_input = "vtm-open",
+    associated_control_input = "vtm-key",
   },
   {
     type                     = "shortcut",
-    name                     = "vtm-groups-open",
+    name                     = "vtm-groups-shortcut",
     icon                     = "__virtm__/graphics/icons/shortcutG.png",
     small_icon               = "__virtm__/graphics/icons/shortcutG.png",
     icon_size                = 32,
     small_icon_size          = 24,
     toggleable               = false,
     action                   = "lua",
-    associated_control_input = "vtm-groups-open",
+    associated_control_input = "vtm-groups-key",
   },
 }
 

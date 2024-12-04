@@ -128,30 +128,21 @@ end
 --   end
 -- end)
 
-function vtm_open(event)
-  main_gui.open_or_close_gui(event.player_index)
-end
+-- function vtm_open(event)
+--   main_gui.open_or_close_gui(event.player_index)
+-- end
 
-function vtm_groups_open(event)
+function vtm_groups_key(event)
   groups.toggle_groups_gui(event.player_index)
 end
 
 -- move to corresponding files
 function on_lua_shortcut(event)
-  if event.prototype_name == "vtm-open" then
-    main_gui.open_or_close_gui(event.player_index)
-  elseif event.prototype_name == "vtm-groups-open" then
+  -- if event.prototype_name == "vtm-shortcut" then
+  --   main_gui.open_or_close_gui(event.player_index)
+    if event.prototype_name == "vtm-groups-shortcut" then
     groups.toggle_groups_gui(event.player_index)
   end
-end
-
--- move to main_gui
-function linked_focus_search(event)
-  main_gui.handle_action({
-    type = "generic",
-    action = "focus_search",
-    gui_id = gui_utils.get_gui_id(event.player_index)
-  }, event)
 end
 
 function on_player_created(event)
@@ -194,16 +185,14 @@ control.events = {
   [defines.events.on_player_created] = on_player_created,
   [defines.events.on_lua_shortcut] = on_lua_shortcut,
   [defines.events.on_tick] = on_tick,
-  ["vtm-linked-focus-search"] = linked_focus_search,
-  ["vtm-open"] = vtm_open,
-  ["vtm-groups-open"] = vtm_groups_open,
+  ["vtm-groups-key"] = vtm_groups_key,
 
 }
 
 
 handler.add_lib(control)
 handler.add_lib(require("__flib__/gui"))
--- handler.add_lib()
+handler.add_lib(main_gui)
 -- handler.add_lib()
 -- handler.add_lib()
 -- handler.add_lib()

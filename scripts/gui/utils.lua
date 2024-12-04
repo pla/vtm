@@ -157,7 +157,7 @@ function utils.slot_table_update(icon_table, sources, gui_id, max_lines)
   end
 end
 
-function utils.sprite_button_type_name_amount(type, name, amount, color, gui_id)
+function utils.sprite_button_type_name_amount(type, name, amount, color, gui_id) -- todo add quality
   local prototype = nil
   if type == "item" then
     prototype = prototypes.item[name]
@@ -189,6 +189,7 @@ function utils.sprite_button_type_name_amount(type, name, amount, color, gui_id)
     actions = {
       on_click = { type = "searchbar", action = "filter", filter = type, value = name, gui_id = gui_id }
     },
+    tags = { filter = "filter", type = type, name = name }, --TODO ,quality = quality},
     tooltip = tooltip
   }
 end
