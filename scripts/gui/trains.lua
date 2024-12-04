@@ -2,7 +2,7 @@ local flib_train = require("__flib__.train")
 local tables     = require("__flib__.table")
 local flib_gui   = require("__flib__.gui")
 -- local gui        = require("__virtm__.scripts.flib-gui")
-local gui_utils   = require("__virtm__.scripts.gui.utils")
+local gui_utils  = require("__virtm__.scripts.gui.utils")
 local constants  = require("__virtm__.scripts.constants")
 local match      = require("__virtm__.scripts.match")
 local format     = require("__flib__.format")
@@ -127,6 +127,7 @@ end
 --- @param event? EventData|EventData.on_gui_click
 function trains.update_trains_tab(gui_data, event)
   local surface = storage.settings[gui_data.player.index].surface or "All"
+  ---@type table<uint,TrainData>
   local train_datas = {}
   local inv_trains = {}
   local table_index = 0
@@ -160,10 +161,10 @@ function trains.update_trains_tab(gui_data, event)
   local children = scroll_pane.children
   local width = constants.gui.trains
 
-  -- if storage.settings[gui_data.player.index].current_tab ~= "trains" then
-  --   gui_data.gui.tabs.trains_tab.badge_text = table_size(train_datas)
-  --   return
-  -- end
+  if storage.settings[gui_data.player.index].current_tab ~= "trains" then
+    gui_data.gui.trains.badge_text = table_size(train_datas)
+    return
+  end
 
   for _, train_data in pairs(train_datas) do
     if train_data.train.valid then
@@ -199,7 +200,7 @@ function trains.update_trains_tab(gui_data, event)
                 type = "label",
                 name = "train_id",
                 style = "vtm_trainid_label",
-                handler = {[defines.events.on_gui_click]=trains.open_train}
+                handler = { [defines.events.on_gui_click] = trains.open_train }
               },
             },
           },
@@ -228,14 +229,14 @@ function trains.update_trains_tab(gui_data, event)
       local status_string = train_status_message(train_data)
       local since = format.time(game.tick - train_data.last_change --[[@as uint]])
       -- Fill with data
-      row.sprite.sprite=train_data.sprite
-      row.train_id.caption=train_data.train.id
-      row.train_id.tooltip={ "vtm.train-open-ui-follow-train", train_data.train.id }
-      row.train_id.tags = {train_id = train_data.train.id}
+      row.sprite.sprite = train_data.sprite
+      row.train_id.caption = train_data.train.id
+      row.train_id.tooltip = { "vtm.train-open-ui-follow-train", train_data.train.id }
+      row.train_id.tags = { train_id = train_data.train.id }
       row.status.captio = status_string
       row.status.tooltip = { "", inv_states[train_data.train.state], " : ", train_data.train.state }
-      row.since.caption=since
-      row.composition=train_data.composition
+      row.since.caption = since
+      row.composition.caption = train_data.composition
 
       gui_utils.slot_table_update_train(row.cargo_table, train_data.contents, gui_data.gui_id)
     end
@@ -257,13 +258,10 @@ function trains.build_trains_tab()
       caption = { "gui-trains.trains-tab" },
       name = "trains",
       style_mods = { badge_horizontal_spacing = 6 },
-      -- actions = {
-      --   on_click = { type = "generic", action = "change_tab", tab = "trains" },
-      -- },
     },
     content = {
       type = "frame",
-      name = "trains_content",
+      name = "trains_content_frame",
       style = "vtm_main_content_frame",
       direction = "vertical",
       -- table header
@@ -336,10 +334,10 @@ end
 
 --- @param gui_data GuiData
 --- @param event EventData|EventData.on_gui_click
-function trains.open_train(gui_data,event)
+function trains.open_train(gui_data, event)
   local train_id
   if event.element.tags and event.element.tags.train_id then
-    train_id=event.element.tags.train_id
+    train_id = event.element.tags.train_id
   else
     return
   end

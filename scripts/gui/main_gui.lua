@@ -109,7 +109,7 @@ function main_gui.create_gui(player)
             -- tab trains
             trains.build_trains_tab(),
             -- -- tab stations
-            -- stations.build_stations_tab(),
+            stations.build_stations_tab(),
             -- -- tab space
             -- add_space_tab(),
             -- -- tab depots
@@ -276,7 +276,7 @@ function main_gui.dispatch_refresh(gui_data, event) -- unify parameters for add 
   -- if current_tab == "trains" then
     trains.update_trains_tab(gui_data, event)
   -- elseif current_tab == "stations" then
-  --   stations.update_stations(gui_data, event)
+    stations.update_stations_tab(gui_data, event)
   -- elseif current_tab == "space" then
   --   space.update_tab(gui_id)
   -- elseif current_tab == "depots" then
