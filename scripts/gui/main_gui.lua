@@ -107,17 +107,17 @@ function main_gui.create_gui(player)
             style = "vtm_tabbed_pane",
             handler = { [defines.events.on_gui_selected_tab_changed] = main_gui.change_tab },
             -- tab trains
-            -- trains.build_gui(),
+            trains.build_trains_tab(),
             -- -- tab stations
-            -- stations.build_gui(),
+            -- stations.build_stations_tab(),
             -- -- tab space
             -- add_space_tab(),
             -- -- tab depots
-            -- depots.build_gui(),
+            -- depots.build_depots_tab(),
             -- -- tab groups
-            -- groups_tab.build_gui(),
+            -- groups_tab.build_groups_tab(),
             -- -- tab history
-            -- history.build_gui(),
+            -- history.build_history_tab),
           }, -- end tabbed pane
         },
       }
@@ -267,16 +267,16 @@ end
 
 function main_gui.dispatch_refresh(gui_data, event) -- unify parameters for add handlers?
   if not gui_data then return end
-  -- local current_tab = storage.settings[gui_data.player_index].current_tab
+  local current_tab = storage.settings[gui_data.player.index].current_tab
   -- if not storage.showSpaceTab and current_tab == "space" then
   --   current_tab = "trains"
   -- end
   -- refresh all data, the tab badges and then the current tab
-  -- searchbar.update(gui_id)
-  -- if current_tab == "stations" then
-  --   stations.update_tab(gui_id)
-  -- elseif current_tab == "trains" then
-  --   trains.update_tab(gui_id)
+  searchbar.update(gui_data)
+  -- if current_tab == "trains" then
+    trains.update_trains_tab(gui_data, event)
+  -- elseif current_tab == "stations" then
+  --   stations.update_stations(gui_data, event)
   -- elseif current_tab == "space" then
   --   space.update_tab(gui_id)
   -- elseif current_tab == "depots" then

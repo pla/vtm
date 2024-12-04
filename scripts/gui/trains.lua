@@ -1,8 +1,8 @@
 local flib_train = require("__flib__.train")
 local tables     = require("__flib__.table")
--- local gui         = require("__flib__.gui")
-local gui        = require("__virtm__.scripts.flib-gui")
-local gui_util   = require("__virtm__.scripts.gui.utils")
+local flib_gui   = require("__flib__.gui")
+-- local gui        = require("__virtm__.scripts.flib-gui")
+local gui_utils   = require("__virtm__.scripts.gui.utils")
 local constants  = require("__virtm__.scripts.constants")
 local match      = require("__virtm__.scripts.match")
 local format     = require("__flib__.format")
@@ -123,17 +123,16 @@ local function train_status_message(train_data)
   return msg
 end
 
-function trains.update_tab(gui_id)
-  local vtm_gui = storage.guis[gui_id]
-  local surface = storage.settings[storage.guis[gui_id].player.index].surface or "All"
+--- @param gui_data GuiData
+--- @param event? EventData|EventData.on_gui_click
+function trains.update_trains_tab(gui_data, event)
+  local surface = storage.settings[gui_data.player.index].surface or "All"
   local train_datas = {}
   local inv_trains = {}
   local table_index = 0
   local max_lines = storage.max_lines
   local filters = {
-    -- item = vtm_gui.gui.filter.item.elem_value.name,
-    -- fluid = vtm_gui.gui.filter.fluid.elem_value,
-    search_field = vtm_gui.gui.filter.search_field.text:lower(),
+    search_field = gui_data.gui.search_field.text:lower(),
   }
 
   -- select trains from global
@@ -141,7 +140,7 @@ function trains.update_tab(gui_id)
     if not train_data.train.valid then
       table.insert(inv_trains, train_id)
     end
-    if train_data.force_index == vtm_gui.player.force.index and
+    if train_data.force_index == gui_data.player.force.index and
         train_data.train.valid and
         (surface == "All" or surface == train_data.train.carriages[1].surface.name)
     then
@@ -157,15 +156,20 @@ function trains.update_tab(gui_id)
 
   table.sort(train_datas, function(a, b) return a.last_change > b.last_change end)
 
-  local scroll_pane = vtm_gui.gui.trains.scroll_pane or {}
+  local scroll_pane = gui_data.gui.trains_scrollpane
   local children = scroll_pane.children
   local width = constants.gui.trains
+
+  -- if storage.settings[gui_data.player.index].current_tab ~= "trains" then
+  --   gui_data.gui.tabs.trains_tab.badge_text = table_size(train_datas)
+  --   return
+  -- end
 
   for _, train_data in pairs(train_datas) do
     if train_data.train.valid then
       if table_index >= max_lines and
           max_lines > 0 and
-          storage.settings[vtm_gui.player.index].gui_refresh == "auto" and
+          storage.settings[gui_data.player.index].gui_refresh == "auto" and
           filters.search_field == ""
       then
         -- max entries
@@ -173,12 +177,13 @@ function trains.update_tab(gui_id)
       end
 
       table_index = table_index + 1
-      vtm_gui.gui.trains.warning.visible = false
+      gui_data.gui.trains_warning.visible = false
       -- get or create gui row
       local row = children[table_index]
       if not row then
-        row = gui.add(scroll_pane, {
+        local gui_contents = {
           type = "frame",
+          name = "row_frame",
           direction = "horizontal",
           style = "vtm_table_row_frame",
           {
@@ -187,95 +192,80 @@ function trains.update_tab(gui_id)
             style_mods = { horizontal_align = "center", width = width.train_id },
             {
               type = "sprite",
+              name = "sprite",
               sprite = "utility/side_menu_train_icon",
               tooltip = { "vtm.train-removed" },
               {
                 type = "label",
+                name = "train_id",
                 style = "vtm_trainid_label",
+                handler = {[defines.events.on_gui_click]=trains.open_train}
               },
             },
           },
           {
             type = "label",
+            name = "status",
             style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.status },
           },
           {
             type = "label",
+            name = "since",
             style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.since, horizontal_align = "center" },
           },
           {
             type = "label",
+            name = "composition",
             style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.composition },
           },
-          gui_util.slot_table(width, nil, "cargo"),
-        })
+          gui_utils.slot_table(width, nil, "cargo"),
+        }
+        row = flib_gui.add(scroll_pane, gui_contents)
       end
       local status_string = train_status_message(train_data)
       local since = format.time(game.tick - train_data.last_change --[[@as uint]])
-      gui.update(row, {
-        { {
-          -- train_id button
-          elem_mods = {
-            sprite = train_data.sprite,
-          },
-          {
-            elem_mods = {
-              caption = train_data.train.id,
-              tooltip = { "vtm.train-open-ui-follow-train", train_data.train.id },
-            },
-            actions = {
-              on_click = { type = "trains", action = "open-train", train_id = train_data.train.id },
-            },
-          },
-        },
-        },
-        {
-          --status
-          elem_mods = {
-            caption = status_string,
-            tooltip = { "", inv_states[train_data.train.state], " : ", train_data.train.state }
-          }
-        },
-        {
-          elem_mods = { caption = since }
-        },
-        { --composition
-          elem_mods = { caption = train_data.composition }
-        }
-      })
-      gui_util.slot_table_update_train(row.cargo_table, train_data.contents, vtm_gui.gui_id)
+      -- Fill with data
+      row.sprite.sprite=train_data.sprite
+      row.train_id.caption=train_data.train.id
+      row.train_id.tooltip={ "vtm.train-open-ui-follow-train", train_data.train.id }
+      row.train_id.tags = {train_id = train_data.train.id}
+      row.status.captio = status_string
+      row.status.tooltip = { "", inv_states[train_data.train.state], " : ", train_data.train.state }
+      row.since.caption=since
+      row.composition=train_data.composition
+
+      gui_utils.slot_table_update_train(row.cargo_table, train_data.contents, gui_data.gui_id)
     end
   end
-  vtm_gui.gui.tabs.trains_tab.badge_text = table_index
+  gui_data.gui.trains.badge_text = table_index
   if table_index == 0 then
-    vtm_gui.gui.trains.warning.visible = true
+    gui_data.gui.trains_warning.visible = true
   end
   for child_index = table_index + 1, #children do
-    children[child_index].destroy()
+    children[child_index].destroy() -- TODO change to visible
   end
 end
 
-function trains.build_gui(gui_id)
+function trains.build_trains_tab()
   local width = constants.gui.trains
   return {
     tab = {
       type = "tab",
       caption = { "gui-trains.trains-tab" },
-      ref = { "tabs", "trains_tab" },
       name = "trains",
       style_mods = { badge_horizontal_spacing = 6 },
-      actions = {
-        on_click = { type = "generic", action = "change_tab", tab = "trains" },
-      },
+      -- actions = {
+      --   on_click = { type = "generic", action = "change_tab", tab = "trains" },
+      -- },
     },
     content = {
       type = "frame",
+      name = "trains_content",
       style = "vtm_main_content_frame",
       direction = "vertical",
-      ref = { "trains", "content_frame" },
       -- table header
       {
         type = "frame",
@@ -317,16 +307,16 @@ function trains.build_gui(gui_id)
       },
       { -- scroll pane for the actual traindata, data will be filled in by the update gui function
         type = "scroll-pane",
+        name = "trains_scrollpane",
         style = "vtm_table_scroll_pane",
-        ref = { "trains", "scroll_pane" },
         vertical_scroll_policy = "always",
         horizontal_scroll_policy = "never",
       },
       { -- warning no train here
         type = "frame",
+        name = "trains_warning",
         direction = "horizontal",
         style = "negative_subheader_frame",
-        ref = { "trains", "warning" },
         visible = true,
         {
           type = "flow",
@@ -344,28 +334,62 @@ function trains.build_gui(gui_id)
   }
 end
 
----Handle gui actions
----@param action GuiAction
----@param event EventData.on_gui_click
-function trains.handle_action(action, event)
-  if action.action == "open-train" then
-    if storage.trains[tonumber(action.train_id)] then
-      local train = storage.trains[tonumber(action.train_id)].train
-      if not train.valid then return end
-      local loco = flib_train.get_main_locomotive(train)
-      local player = game.players[event.player_index]
-      if event.shift and loco and loco.valid then
-        -- follow train in map/remote view
-        player.centered_on = loco
-      else
-        if loco and loco.valid then
-          gui_util.open_entity_gui(event.player_index, loco)
-        end
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function trains.open_train(gui_data,event)
+  local train_id
+  if event.element.tags and event.element.tags.train_id then
+    train_id=event.element.tags.train_id
+  else
+    return
+  end
+  if storage.trains[tonumber(train_id)] then
+    local train = storage.trains[tonumber(train_id)].train
+    if not train.valid then return end
+    local loco = flib_train.get_main_locomotive(train)
+    local player = gui_data.player
+    if event.shift and loco and loco.valid then
+      -- follow train in map/remote view
+      player.centered_on = loco
+    else
+      if loco and loco.valid then
+        gui_utils.open_entity_gui(event.player_index, loco)
       end
     end
-  elseif action.action == "refresh" then
-    trains.update_tab(action.gui_id)
   end
 end
+
+-- ---Handle gui actions
+-- ---@param action GuiAction
+-- ---@param event EventData.on_gui_click
+-- function trains.handle_action(action, event)
+--   if action.action == "open-train" then
+--     if storage.trains[tonumber(action.train_id)] then
+--       local train = storage.trains[tonumber(action.train_id)].train
+--       if not train.valid then return end
+--       local loco = flib_train.get_main_locomotive(train)
+--       local player = game.players[event.player_index]
+--       if event.shift and loco and loco.valid then
+--         -- follow train in map/remote view
+--         player.centered_on = loco
+--       else
+--         if loco and loco.valid then
+--           gui_util.open_entity_gui(event.player_index, loco)
+--         end
+--       end
+--     end
+--   elseif action.action == "refresh" then
+--     trains.update_tab(action.gui_id)
+--   end
+-- end
+
+flib_gui.add_handlers(trains, function(event, handler)
+  local gui_id = gui_utils.get_gui_id(event.player_index)
+  ---@type GuiData
+  local gui_data = storage.guis[gui_id]
+  if gui_data then
+    handler(gui_data, event)
+  end
+end)
 
 return trains
