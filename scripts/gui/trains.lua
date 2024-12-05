@@ -181,10 +181,11 @@ function trains.update_trains_tab(gui_data, event)
       gui_data.gui.trains_warning.visible = false
       -- get or create gui row
       local row = children[table_index]
+      local refs = {}
       if not row then
         local gui_contents = {
           type = "frame",
-          name = "row_frame",
+          -- name = "row_frame",
           direction = "horizontal",
           style = "vtm_table_row_frame",
           {
@@ -193,7 +194,7 @@ function trains.update_trains_tab(gui_data, event)
             style_mods = { horizontal_align = "center", width = width.train_id },
             {
               type = "sprite",
-              name = "sprite",
+              name = "train_sprite",
               sprite = "utility/side_menu_train_icon",
               tooltip = { "vtm.train-removed" },
               {
@@ -224,21 +225,25 @@ function trains.update_trains_tab(gui_data, event)
           },
           gui_utils.slot_table(width, nil, "cargo"),
         }
-        row = flib_gui.add(scroll_pane, gui_contents)
+        refs, row = flib_gui.add(scroll_pane, gui_contents)
+      end
+      -- create refs for existing row
+      if table_size(refs) == 0 then
+        refs = gui_utils.recreate_gui_refs(row)
       end
       local status_string = train_status_message(train_data)
       local since = format.time(game.tick - train_data.last_change --[[@as uint]])
       -- Fill with data
-      row.sprite.sprite = train_data.sprite
-      row.train_id.caption = train_data.train.id
-      row.train_id.tooltip = { "vtm.train-open-ui-follow-train", train_data.train.id }
-      row.train_id.tags = { train_id = train_data.train.id }
-      row.status.captio = status_string
-      row.status.tooltip = { "", inv_states[train_data.train.state], " : ", train_data.train.state }
-      row.since.caption = since
-      row.composition.caption = train_data.composition
+      refs.train_sprite.sprite = train_data.sprite
+      refs.train_id.caption = train_data.train.id
+      refs.train_id.tooltip = { "vtm.train-open-ui-follow-train", train_data.train.id }
+      refs.train_id.tags = { train_id = train_data.train.id }
+      refs.status.caption = status_string
+      refs.status.tooltip = { "", inv_states[train_data.train.state], " : ", train_data.train.state }
+      refs.since.caption = since
+      refs.composition.caption = train_data.composition
 
-      gui_utils.slot_table_update_train(row.cargo_table, train_data.contents, gui_data.gui_id)
+      gui_utils.slot_table_update_train(row.cargo_table, train_data.contents)
     end
   end
   gui_data.gui.trains.badge_text = table_index

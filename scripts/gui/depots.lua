@@ -177,7 +177,7 @@ local function update_tab(gui_id)
           { elem_mods = { caption = limit_text } },
         },
         { elem_mods = { caption = station_data.type } }, --type
-        gui_util.slot_table_update(row.stock_table, station_stock, gui_id)
+        gui_util.slot_table_update(row.stock_table, station_stock)
       })
     end
   end

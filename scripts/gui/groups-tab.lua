@@ -285,8 +285,7 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
           },
         },
       })
-    gui_util.slot_table_update(row.left_side.main_station_frame.member_stock_table, group_data.main_station.stock, gui_id,
-      1)
+    gui_util.slot_table_update(row.left_side.main_station_frame.member_stock_table, group_data.main_station.stock)
     local scroll_pane_member = row.list_frame.scroll_pane_member or {}
     local member_children = scroll_pane_member.children or {}
     local member_index = 0
@@ -345,7 +344,7 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
           }
         },
       })
-      gui_util.slot_table_update(member.member_stock_table, station_data.stock, gui_id, 1)
+      gui_util.slot_table_update(member.member_stock_table, station_data.stock)
     end
     --add resource tags
     for _, tag_data in pairs(group_data.resource_tags or {}) do
@@ -396,7 +395,7 @@ local function update_gui_group_detail_view(gui_id, scroll_pane, group_list)
         },
       })
       -- send nothing to clear old entries
-      gui_util.slot_table_update(tag.member_stock_table, {}, gui_id)
+      gui_util.slot_table_update(tag.member_stock_table, {})
     end
 
     -- cleanup member scroll pane

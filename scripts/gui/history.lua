@@ -391,7 +391,7 @@ local function update_tab(gui_id)
       if #row.route.children == 0 then
         row.visible = false
       end
-      gui_util.slot_table_update(row.shipment_table, history_data.shipment, vtm_gui.gui_id)
+      gui_util.slot_table_update(row.shipment_table, history_data.shipment)
     end
   end
 

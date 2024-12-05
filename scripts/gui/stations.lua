@@ -1,12 +1,10 @@
 -- stations.lua
-local tables    = require("__flib__.table")
 local flib_gui  = require("__flib__.gui")
--- local gui         = require("__virtm__.scripts.flib-gui")
 local gui_utils = require("__virtm__.scripts.gui.utils")
 local match     = require("__virtm__.scripts.match")
 local constants = require("__virtm__.scripts.constants")
 local backend   = require("__virtm__.scripts.backend")
-local groups    = require("__virtm__.scripts.gui.groups")
+-- local groups    = require("__virtm__.scripts.gui.groups")
 
 local stations  = {}
 ---comment
@@ -107,15 +105,16 @@ function stations.update_stations_tab(gui_data, event)
       -- name,status,prio,type,stock,intransit
       -- limit manual or circuit,type(PR),group
       local row = children[table_index]
+      local refs = {}
       if not row then
         local gui_contents = {
           type = "frame",
-          name = "row_frame",
+          -- name = "row_frame",
           direction = "horizontal",
           style = "vtm_table_row_frame",
           {
             type = "sprite-button",
-            name = "sprite",
+            name = "stations_sprite",
             style = "transparent_slot",
             style_mods = { size = width.icon },
             sprite = "utility/side_menu_train_icon",
@@ -124,7 +123,7 @@ function stations.update_stations_tab(gui_data, event)
           },
           {
             type = "label",
-            name = "name",
+            name = "station_name",
             style = "vtm_clickable_semibold_label_with_padding",
             style_mods = { width = width.name },
             tooltip = { "gui-train.open-in-map" },
@@ -147,7 +146,7 @@ function stations.update_stations_tab(gui_data, event)
           },
           {
             type = "label",
-            name = "type",
+            name = "station_type",
             style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.type, horizontal_align = "center" },
             tooltip = { "vtm.type-tooltip" },
@@ -165,7 +164,7 @@ function stations.update_stations_tab(gui_data, event)
             {
               -- groups button
               type = "sprite-button",
-              name = _ "groups_button",
+              name = "groups_button",
               style = "transparent_slot",
               style_mods = { size = 32 },
               sprite = "utility/expand",
@@ -174,7 +173,7 @@ function stations.update_stations_tab(gui_data, event)
             },
           }
         }
-        row = flib_gui.add(scroll_pane, gui_contents)
+        refs, row = flib_gui.add(scroll_pane, gui_contents)
       end
       -- insert data
       -- name,status,prio,type,stock,intransit
@@ -197,21 +196,24 @@ function stations.update_stations_tab(gui_data, event)
         in_transit_data = gui_utils.read_inbound_trains(station_data)
       end
       local limit_text, color = station_limit(station_data, is_circuit_limit)
+      if table_size(refs) == 0 then
+        refs = gui_utils.recreate_gui_refs(row)
+      end
       -- Fill with data
-      row.sprite.sprite = station_data.sprite
-      row.sprite.tags = { station_id = station_data.station.unit_number }
-      row.name.caption = station_data.station.backer_name
-      row.name.tags = { station_id = station_data.station.unit_number }
+      refs.stations_sprite.sprite = station_data.sprite
+      refs.stations_sprite.tags = { station_id = station_data.station.unit_number }
+      refs.station_name.caption = station_data.station.backer_name
+      refs.station_name.tags = { station_id = station_data.station.unit_number }
       --status: InTransit =blue, open yellow, TODO : open for too long red
-      row.indicator.children[1].sprite = "flib_indicator_" .. color
-      row.indicator.children[2].caption = limit_text
-      row.prio.caption = station_data.station.train_stop_priority
-      row.type.caption = station_data.type
-      row.groups_button.sprite = sprite
-      row.groups_button.tags = { group_id = group_id }
+      refs.indicator.children[1].sprite = "flib_indicator_" .. color
+      refs.indicator.children[2].caption = limit_text
+      refs.prio.caption = station_data.station.train_stop_priority
+      refs.station_type.caption = station_data.type
+      refs.groups_button.sprite = sprite
+      refs.groups_button.tags = { group_id = group_id }
 
-      gui_utils.slot_table_update(row.stock_table, station_data.stock, gui_data.gui_id)
-      gui_utils.slot_table_update(row.in_transit_table, in_transit_data, gui_data.gui_id)
+      gui_utils.slot_table_update(row.stock_table, station_data.stock)
+      gui_utils.slot_table_update(row.in_transit_table, in_transit_data)
     end
   end
   gui_data.gui.stations.badge_text = table_index or 0
@@ -372,7 +374,6 @@ function stations.show_group_ui(gui_data, event)
   end
   -- TODO Fixme
   -- groups.open_gui(group_id)
-
 end
 
 -- ---comment

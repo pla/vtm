@@ -140,11 +140,19 @@ end
 --- @param gui_data GuiData
 --- @param event EventData|EventData.on_gui_click|EventData.on_gui_confirmed|EventData.on_gui_elem_changed
 function searchbar.apply_filter(gui_data, event)
-  -- TODO check where the search field applies the filter
   local filter_history = gui_data.filter_history
+  local name, type
   if event.element.name ~= "search_field" then
+    -- do nothing when right click (clears search on text and chooser)
+    if gui_utils.mouse_button_filter(event.button, "right") then
+      -- if event.button and event.button == defines.mouse_button_type.right then
+      return
+    end
     -- check filter tag (a sprite button was clicked)
     if event.element.tags ~= nil and event.element.tags.filter ~= nil then
+      type = event.element.tags.type --[[@as string]]
+      name = event.element.tags.name --[[@as string]]
+
       gui_data.gui.choose_elem_button.elem_value = {
         type = event.element.tags.type --[[@as string]],
         name = event.element.tags.name --[[@as string]],
@@ -152,26 +160,23 @@ function searchbar.apply_filter(gui_data, event)
         -- quality = event.element.tags.quality or "normal"
       }
     end
-    -- do nothing when right click (clears search on text and chooser)
-    if event.button and event.button == defines.mouse_button_type.right then
-      return
-    end
-
+    -- choose elem button was used
     if event.element.name == "choose_elem_button" then
       if event.element.elem_value == nil then
+        -- nothing todo on clearing the filter
         return
-      else
-        local name = event.element.elem_value.name
-        local type = event.element.elem_value.type or "item" --TODO add quality
-        gui_data.gui.search_field.text = "[" .. type .. "=" .. name .. "]"
-        -- TODO only insert if different from prev entry
-        if #filter_history == 0 or (#filter_history > 0 and gui_data.gui.choose_elem_button.elem_value.name ~= filter_history[1].name) then
-          table.insert(filter_history, 1, gui_data.gui.choose_elem_button.elem_value)
-        end
-        while #filter_history > 10 do
-          table.remove(filter_history, 11)
-        end
       end
+      name = event.element.elem_value.name
+      type = event.element.elem_value.type or "item" -- nil when "item"
+      --TODO add quality
+    end
+    gui_data.gui.search_field.text = "[" .. type .. "=" .. name .. "]"
+    -- TODO only insert if different from prev entry
+    if #filter_history == 0 or (#filter_history > 0 and gui_data.gui.choose_elem_button.elem_value.name ~= filter_history[1].name) then
+      table.insert(filter_history, 1, gui_data.gui.choose_elem_button.elem_value)
+    end
+    while #filter_history > 10 do
+      table.remove(filter_history, 11)
     end
   end
   refresh(gui_data, event)

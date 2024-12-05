@@ -1,10 +1,24 @@
 -- gui/util.lua
--- local gui         = require("__flib__.gui")
-local gui       = require("__virtm__.scripts.flib-gui")
-local flib_box  = require("__flib__.bounding-box")
-local constants = require("__virtm__.scripts.constants")
+local flib_gui   = require("__flib__.gui")
+-- local gui        = require("__virtm__.scripts.flib-gui")
+local flib_box   = require("__flib__.bounding-box")
+local constants  = require("__virtm__.scripts.constants")
+local flib_table = require("__flib__.table")
+-- local searchbar  = require("__virtm__.scripts.gui.searchbar")
 
-local utils     = {}
+local utils      = {}
+utils.handler = nil
+
+function utils.mouse_button_filter(button_pressed, button_wanted)
+  local result = false
+  if button_pressed ~= nil
+      and defines.mouse_button_type[button_wanted]
+      and button_pressed == defines.mouse_button_type[button_wanted] then
+    result = true
+  end
+
+  return result
+end
 
 function utils.get_gui_id(player_index)
   local player = game.get_player(player_index)
@@ -39,9 +53,35 @@ function utils.default_list_box(name, action, item_data, items_num, refs_table, 
   return content
 end
 
+function utils.contents_to_slot_table(contents, slot_table)
+  for type, item_data in pairs(contents) do
+    if type == "items" then
+      for _, v in pairs(item_data) do
+        local row = {}
+        row.type = "item"
+        row.name = v.name
+        row.count = v.count
+        row.quality = v.quality
+        row.color = "blue"
+        table.insert(slot_table, row)
+      end
+    elseif type == "fluids" then
+      --fluids, have no quality
+      for name, count in pairs(item_data) do
+        local row = {}
+        row.type = "fluid"
+        row.name = name
+        row.count = count
+        row.color = nil
+        table.insert(slot_table, row)
+      end
+    end
+  end
+end
+
 function utils.read_inbound_trains(station_data)
   local station = station_data.station
-  local contents = {}
+  local slot_table = {}
   local invalid_trains = {}
   if station.valid and station.trains_count then
     local trains = station.get_train_stop_trains()
@@ -49,29 +89,7 @@ function utils.read_inbound_trains(station_data)
       local train_data = storage.trains[train.id]
       if train_data and train_data.train.valid then
         if train_data.path_end_stop == station.unit_number then
-          for type, item_data in pairs(train_data.contents) do
-            if type == "items" then
-              for _, v in pairs(item_data) do
-                local row = {}
-                row.type = "item"
-                row.name = v.name
-                row.count = v.count
-                row.quality = v.quality
-                row.color = "blue"
-                table.insert(contents, row)
-              end
-            elseif type == "fluids" then
-              --fluids, have no quality
-              for name, count in pairs(item_data) do
-                local row = {}
-                row.type = "fluid"
-                row.name = name
-                row.count = count
-                row.color = nil
-                table.insert(contents, row)
-              end
-            end
-          end
+          utils.contents_to_slot_table(train_data.contents, slot_table)
         end
       else
         table.insert(invalid_trains, train.id)
@@ -82,7 +100,7 @@ function utils.read_inbound_trains(station_data)
       storage.trains[train_id] = nil
     end
   end
-  return contents
+  return slot_table
 end
 
 ---Slave table will be added to master table
@@ -121,23 +139,27 @@ function utils.slot_table(widths, style, name)
       cell_padding = 2,
       left_padding = 8,
     },
-    column_count = widths[name .. "_columns"]
+    column_count = widths[name .. "_columns"],
+    -- handler = { [defines.events.on_gui_click] = utils.handler }
+
   }
 end
 
 --- Updates a slot table based on the passed criteria.
 --- @param icon_table LuaGuiElement
 --- @param sources SlotTableDef[]
---- @param gui_id uint
 --- @param max_lines uint?
-function utils.slot_table_update(icon_table, sources, gui_id, max_lines)
+function utils.slot_table_update(icon_table, sources, max_lines)
   local children = icon_table.children
   local i = 0
   for _, source_data in pairs(sources) do
     i = i + 1
     local button = children[i]
     if not button then
-      button = gui.add(icon_table, { type = "sprite-button" })
+      _, button = flib_gui.add(icon_table, {
+        type = "sprite-button",
+        handler = { [defines.events.on_gui_click] = utils.handler }
+      })
     end
     utils.update_sprite_button(
       button,
@@ -145,8 +167,7 @@ function utils.slot_table_update(icon_table, sources, gui_id, max_lines)
       source_data.name,
       source_data.count,
       source_data.quality,
-      source_data.color,
-      gui_id
+      source_data.color
     )
     -- button.enabled = false
     if max_lines and i == (icon_table.column_count * max_lines) then break end
@@ -157,44 +178,45 @@ function utils.slot_table_update(icon_table, sources, gui_id, max_lines)
   end
 end
 
-function utils.sprite_button_type_name_amount(type, name, amount, color, gui_id) -- todo add quality
-  local prototype = nil
-  if type == "item" then
-    prototype = prototypes.item[name]
-  elseif type == "fluid" then
-    prototype = prototypes.fluid[name]
-  elseif type == "virtual-signal" then
-    prototype = prototypes.virtual_signal[name]
-  end
-  local sprite, tooltip, style
-  if prototype then
-    sprite = type .. "/" .. name
-    if color ~= nil and (color == "red" or color == "green") then
-      local color_item = prototypes.item[color .. "-wire"]
-      tooltip = { "", prototype.localised_name, ", ", color_item.localised_name }
-    else
-      tooltip = prototype.localised_name
-    end
-    style = "transparent_slot"
-  else
-    tooltip = "Error"
-    sprite = "warning-white"
-    style = "flib_tool_button_dark_red"
-  end
-  return {
-    type = "sprite-button",
-    style = style,
-    sprite = sprite,
-    number = amount,
-    actions = {
-      on_click = { type = "searchbar", action = "filter", filter = type, value = name, gui_id = gui_id }
-    },
-    tags = { filter = "filter", type = type, name = name }, --TODO ,quality = quality},
-    tooltip = tooltip
-  }
-end
+-- delete later, seems to be unused
+-- function utils.sprite_button_type_name_amount(type, name, amount, color, gui_id) -- todo add quality
+--   local prototype = nil
+--   if type == "item" then
+--     prototype = prototypes.item[name]
+--   elseif type == "fluid" then
+--     prototype = prototypes.fluid[name]
+--   elseif type == "virtual-signal" then
+--     prototype = prototypes.virtual_signal[name]
+--   end
+--   local sprite, tooltip, style
+--   if prototype then
+--     sprite = type .. "/" .. name
+--     if color ~= nil and (color == "red" or color == "green") then
+--       local color_item = prototypes.item[color .. "-wire"]
+--       tooltip = { "", prototype.localised_name, ", ", color_item.localised_name }
+--     else
+--       tooltip = prototype.localised_name
+--     end
+--     style = "transparent_slot"
+--   else
+--     tooltip = "Error"
+--     sprite = "warning-white"
+--     style = "flib_tool_button_dark_red"
+--   end
+--   return {
+--     type = "sprite-button",
+--     style = style,
+--     sprite = sprite,
+--     number = amount,
+--     actions = {
+--       on_click = { type = "searchbar", action = "filter", filter = type, value = name, gui_id = gui_id }
+--     },
+--     tags = { filter = "filter", type = type, name = name }, --TODO ,quality = quality},
+--     tooltip = tooltip
+--   }
+-- end
 
-function utils.update_sprite_button(button, type, name, amount, quality, color, gui_id)
+function utils.update_sprite_button(button, type, name, amount, quality, color)
   local prototype = nil
   if type == "item" then
     prototype = prototypes.item[name]
@@ -229,47 +251,43 @@ function utils.update_sprite_button(button, type, name, amount, quality, color, 
     sprite = "warning-white"
     style = "flib_tool_button_dark_red"
   end
-  gui.update(button, {
-    elem_mods = {
-      style = style,
-      sprite = sprite,
-      number = amount,
-      tooltip = tooltip,
-    },
-    actions = {
-      on_click = { type = "searchbar", action = "filter", filter = type, value = name, gui_id = gui_id }
-    },
-  })
+  button.sprite = sprite
+  button.number = amount
+  button.tooltip = tooltip
+  button.style = style
+  button.tags =flib_table.shallow_merge({ button.tags, { filter = "filter", type = type, name = name } })
+  -- button.tags = { filter = "filter", type = type, name = name } --TODO ,quality = quality},
 end
 
-function utils.slot_table_update_train(icon_table, sources, gui_id)
-  local new_table = {}
-  for k, y in pairs(sources) do
-    -- items
-    if k == "items" then
-      for _, v in pairs(y) do
-        local row = {}
-        row.type = "item"
-        row.name = v.name
-        row.count = v.count
-        row.quality = v.quality
-        row.color = nil
-        table.insert(new_table, row)
-      end
-      --fluids, have no quality
-    elseif k == "fluids" then
-      for name, count in pairs(y) do
-        local row = {}
-        row.type = "fluid"
-        row.name = name
-        row.count = count
-        row.color = nil
-        table.insert(new_table, row)
-      end
-    end
-  end
+function utils.slot_table_update_train(icon_table, sources)
+  local slot_table = {}
+  utils.contents_to_slot_table(sources, slot_table)
+  -- for k, y in pairs(sources) do
+  --   -- items
+  --   if k == "items" then
+  --     for _, v in pairs(y) do
+  --       local row = {}
+  --       row.type = "item"
+  --       row.name = v.name
+  --       row.count = v.count
+  --       row.quality = v.quality
+  --       row.color = nil
+  --       table.insert(slot_table, row)
+  --     end
+  --     --fluids, have no quality
+  --   elseif k == "fluids" then
+  --     for name, count in pairs(y) do
+  --       local row = {}
+  --       row.type = "fluid"
+  --       row.name = name
+  --       row.count = count
+  --       row.color = nil
+  --       table.insert(slot_table, row)
+  --     end
+  --   end
+  -- end
 
-  utils.slot_table_update(icon_table, new_table, gui_id)
+  utils.slot_table_update(icon_table, slot_table)
 end
 
 ---Return Zoom level for minimap
@@ -428,9 +446,7 @@ end
 ---@param element LuaGuiElement
 ---@param style string must be a gui-style name
 function utils.set_style(element, style)
-  gui.update(element, {
-    style = style
-  })
+  element.style = style
 end
 
 ---Check if string ends with given string
@@ -466,6 +482,25 @@ end
 
 function utils.ticks(time_period_index)
   return constants.time_period_items[time_period_index].time * 60
+end
+
+---comment
+---@param row LuaGuiElement
+---@return table
+function utils.recreate_gui_refs(row)
+  local refs = {}
+  if row then
+    for key, value in pairs(row.children_names) do
+      if value ~= "" then
+        refs[value] = row.children[key]
+      end
+      if row.children[key].children then
+        local temp = utils.recreate_gui_refs(row.children[key])
+        refs = flib_table.shallow_merge({ refs, temp })
+      end
+    end
+  end
+  return refs
 end
 
 return utils

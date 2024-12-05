@@ -31,7 +31,6 @@ local function header(gui_id)
     type = "flow",
     style = "flib_titlebar_flow",
     drag_target = "window",
-    mouse_button_filter = { "middle" },
     handler = {
       [defines.events.on_gui_click] = main_gui.center_window,
       [defines.events.on_gui_closed] = main_gui.hide,
@@ -86,6 +85,7 @@ end
 
 function main_gui.create_gui(player)
   local gui_id = player.index
+  gui_utils.handler=searchbar.apply_filter
   local gui_contents = {
     {
       type = "frame",
@@ -142,7 +142,11 @@ function main_gui.create_gui(player)
   -- refs.titlebar.flow.drag_target = refs.window
   searchbar.update(gui_data)
   -- get and set current tab
-  local current_tab = storage.settings[player.index].current_tab or "trains"
+  local current_tab = storage.settings[player.index].current_tab
+  if tab_list[current_tab] == nil then
+    current_tab = "trains"
+    storage.settings[player.index].current_tab = current_tab
+  end
   refs.tabbed_pane.selected_tab_index = tab_list[current_tab]
   -- center window on initial build
   refs.window.force_auto_center()
@@ -212,17 +216,22 @@ function main_gui.destroy(gui_data, event)
   storage.guis[gui_data.gui_id] = nil
 end
 
---- @param gui_data GuiData
 --- @param event EventData|EventData.on_lua_shortcut
-function on_lua_shortcut(gui_data, event)
+function main_gui.on_lua_shortcut(event)
   if event.prototype_name == "vtm-shortcut" then
+    local gui_data = storage.guis[gui_utils.get_gui_id(event.player_index)]
     main_gui.open_or_close_gui(gui_data, event)
   end
 end
 
 --- @param gui_data GuiData
---- @param event? EventData|EventData.on_gui_click
+--- @param event? EventData|EventData.CustomInputEvent
 function main_gui.open_or_close_gui(gui_data, event)
+  if event == nil then
+    event = gui_data --[[@as EventData.CustomInputEvent]]
+
+    gui_data = storage.guis[gui_utils.get_gui_id(event.player_index)]
+  end
   if gui_data.state ~= "open" then
     main_gui.dispatch_refresh(gui_data, event)
     main_gui.open(gui_data, event)
@@ -262,7 +271,11 @@ function main_gui.refresh(gui_data, event)
   main_gui.dispatch_refresh(gui_data, event)
 end
 
-function main_gui.refresh_event(custom_event_data) -- unify parameters for add handlers?
+---unspecific refresh
+---@param event CustomEventDef
+function main_gui.refresh_event(event)
+  local gui_data = storage.guis[gui_utils.get_gui_id(event.player_index)]
+  main_gui.dispatch_refresh(gui_data, event)
 end
 
 function main_gui.dispatch_refresh(gui_data, event) -- unify parameters for add handlers?
@@ -274,9 +287,9 @@ function main_gui.dispatch_refresh(gui_data, event) -- unify parameters for add 
   -- refresh all data, the tab badges and then the current tab
   searchbar.update(gui_data)
   -- if current_tab == "trains" then
-    trains.update_trains_tab(gui_data, event)
+  trains.update_trains_tab(gui_data, event)
   -- elseif current_tab == "stations" then
-    stations.update_stations_tab(gui_data, event)
+  stations.update_stations_tab(gui_data, event)
   -- elseif current_tab == "space" then
   --   space.update_tab(gui_id)
   -- elseif current_tab == "depots" then
@@ -366,13 +379,16 @@ end
 --- @param gui_data GuiData
 --- @param event EventData|EventData.on_gui_click
 function main_gui.change_tab(gui_data, event)
-  storage.settings[event.player_index].current_tab = event.element.name
+  storage.settings[event.player_index].current_tab = event.element.tabs[event.element.selected_tab_index].tab.name
   main_gui.dispatch_refresh(gui_data, event)
 end
 
 --- @param gui_data GuiData
 --- @param event EventData|EventData.on_gui_click
 function main_gui.center_window(gui_data, event)
+  if event and event.button and not gui_utils.mouse_button_filter(event.button,"middle") then
+    return
+  end
   gui_data.gui.window.force_auto_center()
 end
 

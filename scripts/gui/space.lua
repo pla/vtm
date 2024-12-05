@@ -134,7 +134,7 @@ function space.update_tab(gui_id)
         elem_mods = { caption = p.weight .. " t"}
       }
     })
-    gui_util.slot_table_update_train(row.cargo_table, p.contents, vtm_gui.gui_id)
+    gui_util.slot_table_update_train(row.cargo_table, p.contents)
   end
 
 

@@ -1,4 +1,4 @@
-local main_gui    = require("__virtm__.scripts.gui.main_gui")
+local main_gui   = require("__virtm__.scripts.gui.main_gui")
 local backend    = require("__virtm__.scripts.backend")
 local utils      = require("__virtm__.scripts.gui.utils")
 local groups     = require("__virtm__.scripts.gui.groups")
@@ -29,12 +29,16 @@ function migrations.generic()
 
       -- recreate gui
       local gui_id = utils.get_gui_id(player.index)
-      if gui_id and storage.guis[gui_id].group_gui then
+      local gui_data
+      if gui_id then
+        gui_data = storage.guis[gui_id]
+      end
+      if gui_data and gui_data.group_gui then
         groups.destroy_gui(gui_id)
       end
 
       if gui_id ~= nil then
-        main_gui.destroy(gui_id)
+        main_gui.destroy(gui_data)
       end
 
       main_gui.create_gui(player)
@@ -43,10 +47,11 @@ function migrations.generic()
       player.print({ "vtm.config-change2" })
 
       -- do the button thing
-      migrations.add_mod_gui_button(player)
+      main_gui.add_mod_gui_button(player)
     end
   end
 end
+
 -- legacy, but stays so I don't have to relearn how to do this in the future
 migrations.by_version = {
   ["0.1.2"] = function()

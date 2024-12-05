@@ -84,7 +84,12 @@
 
 ---@class CustomEventDef Custom Refresh Event
 ---@field player_index uint
----@field action table
+---The identifier of the event this handler was registered to.
+---@field name uint
+---The tick during which the event happened.
+---@field tick uint
+---The name of the mod that raised the event if it was raised using [LuaBootstrap::raise\_event](https://lua-api.factorio.com/latest/classes/LuaBootstrap.html#raise_event).
+---@field mod_name? string
 
 --- A dataset to put into a slot table.
 ---@class SlotTableDef

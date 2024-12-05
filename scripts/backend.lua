@@ -599,7 +599,6 @@ local function on_trainstop_renamed(event)
     end
     -- log(serpent.block(event))
     -- script.raise_event(constants.refresh_event, {
-    --   event = event,
     --   player_index = event.player_index
     -- })
   end
