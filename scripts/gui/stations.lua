@@ -1,5 +1,6 @@
 -- stations.lua
 local flib_gui  = require("__flib__.gui")
+local flib_table = require("__flib__.table")
 local gui_utils = require("__virtm__.scripts.gui.utils")
 local match     = require("__virtm__.scripts.match")
 local constants = require("__virtm__.scripts.constants")
@@ -201,16 +202,16 @@ function stations.update_stations_tab(gui_data, event)
       end
       -- Fill with data
       refs.stations_sprite.sprite = station_data.sprite
-      refs.stations_sprite.tags = { station_id = station_data.station.unit_number }
+      refs.stations_sprite.tags = flib_table.shallow_merge({ refs.stations_sprite.tags, { station_id = station_data.station.unit_number }})
       refs.station_name.caption = station_data.station.backer_name
-      refs.station_name.tags = { station_id = station_data.station.unit_number }
+      refs.station_name.tags = flib_table.shallow_merge({ refs.station_name.tags,{ station_id = station_data.station.unit_number }})
       --status: InTransit =blue, open yellow, TODO : open for too long red
       refs.indicator.children[1].sprite = "flib_indicator_" .. color
       refs.indicator.children[2].caption = limit_text
       refs.prio.caption = station_data.station.train_stop_priority
       refs.station_type.caption = station_data.type
       refs.groups_button.sprite = sprite
-      refs.groups_button.tags = { group_id = group_id }
+      refs.groups_button.tags = flib_table.shallow_merge({ refs.groups_button.tags,{ group_id = group_id }})
 
       gui_utils.slot_table_update(row.stock_table, station_data.stock)
       gui_utils.slot_table_update(row.in_transit_table, in_transit_data)
@@ -375,36 +376,6 @@ function stations.show_group_ui(gui_data, event)
   -- TODO Fixme
   -- groups.open_gui(group_id)
 end
-
--- ---comment
--- ---@param action GuiAction
--- ---@param event EventData|any
--- local function handle_action(action, event)
---   if action.action == "open-station" then
---     -- if storage.stations[action.station_id] then
---     --   local station = storage.stations[action.station_id].station --[[@as LuaEntity]]
---     --   if not station.valid then return end
---     --   gui_utils.open_entity_gui(event.player_index, station)
---     -- end
---   elseif action.action == "position" then
---     -- local player = game.players[event.player_index]
---     -- local position, surface
---     -- if action.station_id then
---     --   local station = storage.stations[action.station_id].station --[[@as LuaEntity]]
---     --   if not station.valid then return end
---     --   position = station.position --[[@as MapPosition]]
---     --   surface = station.surface.name --[[@as string]]
---     -- elseif action.position and action.surface_name then
---     --   position = action.position --[[@as MapPosition]]
---     --   surface = action.surface_name --[[@as string]]
---     -- end
---     -- player.set_controller({ type = defines.controllers.remote, position = position, surface = surface })
---     -- player.zoom = 0.5
---   elseif action.action == "show_group_ui" then
---     local player = game.players[event.player_index]
---     groups.open_gui(action)
---   end
--- end
 
 flib_gui.add_handlers(stations, function(event, handler)
   local gui_id = gui_utils.get_gui_id(event.player_index)

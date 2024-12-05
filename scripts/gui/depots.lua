@@ -1,9 +1,10 @@
 -- depots.lua
-local constants = require("__virtm__.scripts.constants")
-local tables    = require("__flib__.table")
--- local gui         = require("__flib__.gui")
-local gui       = require("__virtm__.scripts.flib-gui")
-local gui_util  = require("__virtm__.scripts.gui.utils")
+local constants  = require("__virtm__.scripts.constants")
+local flib_table = require("__flib__.table")
+local flib_gui   = require("__flib__.gui")
+local gui_utils  = require("__virtm__.scripts.gui.utils")
+
+local depots     = {}
 
 local function depot_limit(station_data)
   local limit = station_data.limit
@@ -33,7 +34,7 @@ local function add_stock(stock, all_stock)
     if all_stock[key] then
       all_stock[key].count = all_stock[key].count + count
     else
-      all_stock[key] = { type = "fluid", name = fluid, count = count}
+      all_stock[key] = { type = "fluid", name = fluid, count = count }
     end
   end
 end
@@ -43,8 +44,11 @@ local function read_depot_cargo(station_data)
   if not station_data.station.valid then return {} end
   local tm = game.train_manager
   -- local surface = station_data.station.surface
-  local depots = tm.get_train_stops({ force = station_data.station.force, station_name = station_data.station
-  .backer_name })
+  local depots = tm.get_train_stops({
+    force = station_data.station.force,
+    station_name = station_data.station
+        .backer_name
+  })
   for _, s in pairs(depots) do
     local stock = {}
     local t = s.get_stopped_train()
@@ -57,13 +61,32 @@ local function read_depot_cargo(station_data)
   return station_stock
 end
 
-local function update_tab(gui_id)
-  local vtm_gui = storage.guis[gui_id]
-  local player = vtm_gui.player
-  local vgui = vtm_gui.gui
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function depots.show_depot(gui_data, event)
+  if event.element.tags and event.element.tags.station_id then
+    station_id = event.element.tags.station_id
+  else
+    return
+  end
+
+  local player = gui_data.player
+  local position, surface
+  if station_id then
+    local station = storage.stations[station_id].station --[[@as LuaEntity]]
+    if not station.valid then return end
+    position = station.position --[[@as MapPosition]]
+    surface = station.surface.name --[[@as string]]
+  end
+  player.set_controller({ type = defines.controllers.remote, position = position, surface = surface })
+  player.zoom = 0.5
+end
+
+function depots.update_depots_tab(gui_data, event)
+  local player = gui_data.player
   local surface = storage.settings[player.index].surface or "All"
   local depots_compact = {}
-  local depots = {}
+  local depots_datas = {}
   local limit
   local table_index = 0
 
@@ -87,7 +110,7 @@ local function update_tab(gui_id)
           depots_compact[station_data.station.backer_name].inbound =
               depots_compact[station_data.station.backer_name].inbound +
               station_data.station.trains_count
-          tables.insert(depots_compact[station_data.station.backer_name].rails,
+          flib_table.insert(depots_compact[station_data.station.backer_name].rails,
             station_data.station.connected_rail)
         else
           -- new record
@@ -106,40 +129,49 @@ local function update_tab(gui_id)
     end
   end
   -- only valid stations from here
-  local scroll_pane = vgui.depots.scroll_pane or {}
+  local scroll_pane = gui_data.gui.depots_scrollpane or {}
   local children = scroll_pane.children
   local width = constants.gui.depots
   -- new table to make sorting possible
   for _, value in pairs(depots_compact) do
-    table.insert(depots, value)
+    table.insert(depots_datas, value)
   end
   --sorting by name and type
   if storage.TCS_active then
     -- special sort for TCS icons, depots always first
-    table.sort(depots, function(a, b) return a.sort_prio .. a.name < b.sort_prio .. b.name end)
+    table.sort(depots_datas, function(a, b) return a.sort_prio .. a.name < b.sort_prio .. b.name end)
   else
-    table.sort(depots, function(a, b) return a.type .. a.name < b.type .. b.name end)
+    table.sort(depots_datas, function(a, b) return a.type .. a.name < b.type .. b.name end)
+  end
+  -- finish when not current tab
+  if storage.settings[gui_data.player.index].current_tab ~= "depots" then
+    gui_data.gui.depots.badge_text = table_size(depots_datas)
+    return
   end
 
-  for _, station_data in pairs(depots) do
+  for _, station_data in pairs(depots_datas) do
     if station_data.station.valid then
       table_index = table_index + 1
-      vgui.depots.warning.visible = false
+      gui_data.gui.depots_warning.visible = false
       -- get or create gui row
       local row = children[table_index]
+      local refs = {}
       if not row then
-        row = gui.add(scroll_pane, {
+        local gui_contents = {
           type = "frame",
           direction = "horizontal",
           style = "vtm_table_row_frame",
           {
             type = "label",
+            name = "depot_name",
             style = "vtm_clickable_semibold_label_with_padding",
             style_mods = { width = width.name },
             tooltip = { "vtm.show-station-on-map-tooltip" },
+            handler = { [defines.events.on_gui_click] = depots.show_depot }
           },
           {
             type = "flow",
+            name = "indicator",
             style = "flib_indicator_flow",
             style_mods = { width = width.status, },
             { type = "sprite", style = "flib_indicator" },
@@ -147,66 +179,58 @@ local function update_tab(gui_id)
           },
           {
             type = "label",
+            name = "depot_type",
             style = "vtm_semibold_label_with_padding",
             style_mods = { width = width.type, horizontal_align = "center", },
             tooltip = { "vtm.type-depot-tooltip" },
           },
-          gui_util.slot_table(width, nil, "stock"),
-        })
+          gui_utils.slot_table(width, nil, "stock"),
+        }
+        refs, row = flib_gui.add(scroll_pane, gui_contents)
       end
       -- read cargo from trains parking at depot
       local station_stock = {}
       if station_data.inbound > 0 and not storage.dont_read_depot_stock then
         station_stock = read_depot_cargo(station_data)
         if station_data.station.name == "se-space-elevator" then
-          station_stock = gui_util.read_inbound_trains(station_data)
+          station_stock = gui_utils.read_inbound_trains(station_data)
         end
       end
       local limit_text, color = depot_limit(station_data)
-
+      if table_size(refs) == 0 then
+        refs = gui_utils.recreate_gui_refs(row)
+      end
       -- insert data
-      gui.update(row, {
-        { -- name
-          elem_mods = { caption = station_data.name },
-          actions = {
-            on_click = { type = "depots", action = "position", position = station_data.station.position, surface = station_data.station.surface },
-          },
-        },
-        { --status
-          { elem_mods = { sprite = "flib_indicator_" .. color } },
-          { elem_mods = { caption = limit_text } },
-        },
-        { elem_mods = { caption = station_data.type } }, --type
-        gui_util.slot_table_update(row.stock_table, station_stock)
-      })
+      refs.depot_name.caption = station_data.name
+      refs.depot_name.tags = flib_table.shallow_merge({ refs.depot_name.tags, {station_id = station_data.station.unit_number }})
+      refs.indicator.children[1].sprite = "flib_indicator_" .. color
+      refs.indicator.children[2].caption = limit_text
+      refs.depot_type.caption = station_data.type
+      gui_utils.slot_table_update(row.stock_table, station_stock)
     end
   end
-  vgui.tabs.depots_tab.badge_text = table_index
+  gui_data.gui.depots.badge_text = table_index
   if table_index == 0 then
-    vgui.depots.warning.visible = true
+    gui_data.gui.depots_warning.visible = true
   end
   for child_index = table_index + 1, #children do
     children[child_index].destroy()
   end
 end
 
-local function build_gui(gui_id)
+function depots.build_depots_tab(gui_id)
   local width = constants.gui.depots
   return {
     tab = {
       type = "tab",
       caption = { "vtm.tab-depots" },
-      ref = { "tabs", "depots_tab" },
       name = "depots",
-      actions = {
-        on_click = { type = "generic", action = "change_tab", tab = "depots" },
-      },
     },
     content = {
       type = "frame",
       style = "vtm_main_content_frame",
       direction = "vertical",
-      ref = { "depots", "content_frame" },
+      name = "depots_content_frame",
       -- table header
       {
         type = "frame",
@@ -241,7 +265,7 @@ local function build_gui(gui_id)
       {
         type = "scroll-pane",
         style = "vtm_table_scroll_pane",
-        ref = { "depots", "scroll_pane" },
+        name = "depots_scrollpane",
         vertical_scroll_policy = "always",
         horizontal_scroll_policy = "auto",
       },
@@ -249,7 +273,7 @@ local function build_gui(gui_id)
         type = "frame",
         direction = "horizontal",
         style = "negative_subheader_frame",
-        ref = { "depots", "warning" },
+        name = "depots_warning",
         visible = true,
         {
           type = "flow",
@@ -259,7 +283,7 @@ local function build_gui(gui_id)
             type = "label",
             style = "bold_label",
             caption = { "", "[img=warning-white] ", { "gui-trains.no-stations" } },
-            ref = { "depots", "warning_label" },
+            name = "depots_warning_label",
           },
         },
       },
@@ -267,18 +291,13 @@ local function build_gui(gui_id)
   }
 end
 
-local function handle_action(action, event)
-  if action.action == "position" then
-    local player = game.players[event.player_index]
-    if action.position then
-      --player.zoom_to_world(action.position, 0.5)
-      player.set_controller({ type = defines.controllers.remote, position = action.position, surface = action.surface })
-    end
+flib_gui.add_handlers(depots, function(event, handler)
+  local gui_id = gui_utils.get_gui_id(event.player_index)
+  ---@type GuiData
+  local gui_data = storage.guis[gui_id]
+  if gui_data then
+    handler(gui_data, event)
   end
-end
+end)
 
-return {
-  build_gui = build_gui,
-  update_tab = update_tab,
-  handle_action = handle_action,
-}
+return depots

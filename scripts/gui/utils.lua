@@ -1,10 +1,8 @@
 -- gui/util.lua
 local flib_gui   = require("__flib__.gui")
--- local gui        = require("__virtm__.scripts.flib-gui")
 local flib_box   = require("__flib__.bounding-box")
 local constants  = require("__virtm__.scripts.constants")
 local flib_table = require("__flib__.table")
--- local searchbar  = require("__virtm__.scripts.gui.searchbar")
 
 local utils      = {}
 utils.handler = nil

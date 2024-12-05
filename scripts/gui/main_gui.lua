@@ -113,7 +113,7 @@ function main_gui.create_gui(player)
             -- -- tab space
             -- add_space_tab(),
             -- -- tab depots
-            -- depots.build_depots_tab(),
+            depots.build_depots_tab(),
             -- -- tab groups
             -- groups_tab.build_groups_tab(),
             -- -- tab history
@@ -293,7 +293,7 @@ function main_gui.dispatch_refresh(gui_data, event) -- unify parameters for add 
   -- elseif current_tab == "space" then
   --   space.update_tab(gui_id)
   -- elseif current_tab == "depots" then
-  --   depots.update_tab(gui_id)
+    depots.update_depots_tab(gui_data, event)
   -- elseif current_tab == "groups" then
   --   groups_tab.update_tab(gui_id)
   -- elseif current_tab == "history" then

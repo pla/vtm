@@ -1,7 +1,6 @@
 local flib_train = require("__flib__.train")
 local tables     = require("__flib__.table")
 local flib_gui   = require("__flib__.gui")
--- local gui        = require("__virtm__.scripts.flib-gui")
 local gui_utils  = require("__virtm__.scripts.gui.utils")
 local constants  = require("__virtm__.scripts.constants")
 local match      = require("__virtm__.scripts.match")
