@@ -34,16 +34,17 @@ function migrations.generic()
         gui_data = storage.guis[gui_id]
       end
       if gui_data and gui_data.group_gui then
-        groups.destroy_gui(gui_id)
+        groups.destroy_gui(gui_data)
       end
 
-      if gui_id ~= nil then
+      if gui_data ~= nil then
         main_gui.destroy(gui_data)
       end
 
       main_gui.create_gui(player)
       gui_id = utils.get_gui_id(player.index)
-      groups.create_gui(gui_id)
+      gui_data = storage.guis[gui_id]
+      groups.create_gui(gui_data)
       player.print({ "vtm.config-change2" })
 
       -- do the button thing

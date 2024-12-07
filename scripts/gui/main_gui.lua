@@ -1,7 +1,6 @@
 local constants  = require("__virtm__.scripts.constants")
 local classdef   = require("__virtm__.scripts.classdef")
 local flib_gui   = require("__flib__.gui")
--- local gui        = require("__virtm__.scripts.flib-gui")
 local mod_gui    = require("__core__.lualib.mod-gui")
 
 local searchbar  = require("__virtm__.scripts.gui.searchbar")
@@ -16,7 +15,7 @@ local backend    = require("__virtm__.scripts.backend")
 local gui_utils  = require("__virtm__.scripts.gui.utils")
 
 local function add_space_tab()
-  if script.active_mods["space-age"] and space then
+  if storage.SA_active then
     return space.build_gui()
   end
 end
@@ -75,7 +74,6 @@ local function header(gui_id)
         style = "frame_action_button",
         mouse_button_filter = { "left" },
         sprite = "utility/close",
-        ref = { "titlebar", "close_button" },
         handler = { [defines.events.on_gui_click] = main_gui.hide },
         tooltip = { "gui.close-instruction" }
       },
@@ -85,7 +83,7 @@ end
 
 function main_gui.create_gui(player)
   local gui_id = player.index
-  gui_utils.handler=searchbar.apply_filter
+  gui_utils.handler = searchbar.apply_filter
   local gui_contents = {
     {
       type = "frame",
@@ -107,17 +105,17 @@ function main_gui.create_gui(player)
             style = "vtm_tabbed_pane",
             handler = { [defines.events.on_gui_selected_tab_changed] = main_gui.change_tab },
             -- tab trains
-            trains.build_trains_tab(),
+            trains.build_tab(),
             -- -- tab stations
             stations.build_stations_tab(),
             -- -- tab space
-            -- add_space_tab(),
+            add_space_tab(),
             -- -- tab depots
-            depots.build_depots_tab(),
+            depots.build_tab(),
             -- -- tab groups
-            -- groups_tab.build_groups_tab(),
+            groups_tab.build_tab(),
             -- -- tab history
-            -- history.build_history_tab),
+            history.build_tab(),
           }, -- end tabbed pane
         },
       }
@@ -159,25 +157,25 @@ end
 ---@param to_state string? "off"|"auto"
 local function toggle_auto_refresh(gui_data, to_state)
   -- get player settings
-  local ps = storage.settings[gui_data.player.index]
+  local gui_state = storage.settings[gui_data.player.index]
   if to_state ~= nil then
     -- force given state
     if to_state == "off" then
-      ps.gui_refresh = ""
+      gui_state.gui_refresh = ""
       gui_data.gui.refresh_button.toggled = false
     elseif to_state == "auto" then
-      ps.gui_refresh = "auto"
+      gui_state.gui_refresh = "auto"
     end
   else
     -- toggle
-    if ps.gui_refresh == "auto" then
-      ps.gui_refresh = ""
+    if gui_state.gui_refresh == "auto" then
+      gui_state.gui_refresh = ""
     else
-      ps.gui_refresh = "auto"
+      gui_state.gui_refresh = "auto"
     end
   end
 
-  if ps.gui_refresh == "auto" then
+  if gui_state.gui_refresh == "auto" then
     gui_data.gui.refresh_button.toggled = true
     gui_data.player.print({ "vtm.auto-refresh-on" })
   else
@@ -278,29 +276,22 @@ function main_gui.refresh_event(event)
   main_gui.dispatch_refresh(gui_data, event)
 end
 
-function main_gui.dispatch_refresh(gui_data, event) -- unify parameters for add handlers?
+function main_gui.dispatch_refresh(gui_data, event)
   if not gui_data then return end
   local current_tab = storage.settings[gui_data.player.index].current_tab
-  -- if not storage.showSpaceTab and current_tab == "space" then
-  --   current_tab = "trains"
-  -- end
+  if not settings.global["vtm-showSpaceTab"].value and current_tab == "space" then
+    current_tab = "trains"
+  end
   -- refresh all data, the tab badges and then the current tab
   searchbar.update(gui_data)
-  -- if current_tab == "trains" then
-  trains.update_trains_tab(gui_data, event)
-  -- elseif current_tab == "stations" then
+  trains.update_tab(gui_data, event)
   stations.update_stations_tab(gui_data, event)
-  -- elseif current_tab == "space" then
-  --   space.update_tab(gui_id)
-  -- elseif current_tab == "depots" then
-    depots.update_depots_tab(gui_data, event)
-  -- elseif current_tab == "groups" then
-  --   groups_tab.update_tab(gui_id)
-  -- elseif current_tab == "history" then
-  --   history.update_tab(gui_id)
-  -- elseif current_tab == "requests" then
-  --   -- not existent
-  -- end
+  if storage.SA_active and settings.global["vtm-showSpaceTab"].value then
+    space.update_tab(gui_data, event)
+  end
+  depots.update_tab(gui_data, event)
+  groups_tab.update_tab(gui_data, event)
+  history.update_tab(gui_data, event)
 end
 
 function main_gui.remove_mod_gui_button(player)
@@ -311,8 +302,9 @@ function main_gui.remove_mod_gui_button(player)
 end
 
 function main_gui.add_mod_gui_button(player)
-  local button_flow = mod_gui.get_button_flow(player) --[[@type LuaGuiElement]]
-  if not settings.player_default["vtm-showModgui"] then
+  local button_flow = mod_gui.get_button_flow(player) --[[@as LuaGuiElement]]
+  if not settings.player_default["vtm-showModgui"].value then
+    main_gui.remove_mod_gui_button(player)
     return
   end
   if button_flow.vtm_button then
@@ -322,6 +314,7 @@ function main_gui.add_mod_gui_button(player)
   -- TODO: different style when gui_unifier
   flib_gui.add(button_flow, {
     type = "button",
+    name = "vtm_button",
     style = mod_gui.button_style,
     caption = "VTM",
     tooltip = { "vtm.mod-gui-tooltip" },
@@ -339,10 +332,10 @@ local function handle_action(action, event)
     -- end
     -- main_gui.hide(action.gui_id)
   elseif action.action == "clear_history" then
-    -- delete history older 2 mins
-    local older_than = game.tick - gui_utils.ticks(1)
-    backend.clear_older(event.player_index, older_than)
-    main_gui.dispatch_refresh(gui_data, event)
+    -- -- delete history older 2 mins
+    -- local older_than = game.tick - gui_utils.ticks(1)
+    -- backend.clear_older(event.player_index, older_than)
+    -- main_gui.dispatch_refresh(gui_data, event)
   elseif action.action == "change_tab" then
     -- storage.settings[event.player_index].current_tab = action.tab
     -- dispatch_refresh(gui_data,event)
@@ -353,8 +346,8 @@ local function handle_action(action, event)
   elseif action.action == "open-vtm" then -- mod-gui-button
     -- main_gui.open_or_close_gui(event.player_index)
   elseif action.action == "history_switch" then
-    storage.settings[event.player_index].history_switch = event.element.switch_state
-    main_gui.dispatch_refresh(gui_data, event)
+    -- storage.settings[event.player_index].history_switch = event.element.switch_state
+    -- main_gui.dispatch_refresh(gui_data, event)
   elseif action.action == "recenter" then
     -- if event.button == defines.mouse_button_type.middle then
     --   local gui_data = storage.guis[action.gui_id]
@@ -386,7 +379,7 @@ end
 --- @param gui_data GuiData
 --- @param event EventData|EventData.on_gui_click
 function main_gui.center_window(gui_data, event)
-  if event and event.button and not gui_utils.mouse_button_filter(event.button,"middle") then
+  if event and event.button and not gui_utils.mouse_button_filter(event.button, "middle") then
     return
   end
   gui_data.gui.window.force_auto_center()
@@ -399,7 +392,7 @@ flib_gui.add_handlers(main_gui, function(event, handler)
   if gui_data then
     handler(gui_data, event)
   end
-end)
+end, "main_gui")
 
 flib_gui.handle_events()
 

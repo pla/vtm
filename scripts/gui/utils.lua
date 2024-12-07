@@ -1,8 +1,9 @@
 -- gui/util.lua
 local flib_gui   = require("__flib__.gui")
 local flib_box   = require("__flib__.bounding-box")
-local constants  = require("__virtm__.scripts.constants")
 local flib_table = require("__flib__.table")
+local flib_train = require("__flib__.train")
+local constants  = require("__virtm__.scripts.constants")
 
 local utils      = {}
 utils.handler = nil
@@ -28,15 +29,14 @@ function utils.get_gui_id(player_index)
   return nil
 end
 
-function utils.default_list_box(name, action, item_data, items_num, refs_table, style)
+function utils.default_list_box(name, item_data, items_num, style,handler)
   if item_data == nil then
-    --default list
+    --empty list
     item_data = {}
   end
   local content = {
     type = "list-box",
     style = style,
-    ref = refs_table,
     name = name,
     style_mods = {
       minimal_height           = items_num * 28,
@@ -44,9 +44,7 @@ function utils.default_list_box(name, action, item_data, items_num, refs_table, 
       horizontally_stretchable = true
     },
     items = item_data,
-    actions = {
-      on_selection_state_changed = { type = action.type, action = action.action, gui_id = action.gui_id }
-    },
+    handler =  handler,
   }
   return content
 end
@@ -390,7 +388,7 @@ function utils.iterate_backwards(tbl)
   return utils.iterate_backwards_iterator, tbl, table_size(tbl) + 1
 end
 
---- Open entity GUI for one player. eg LuaTrain
+--- Open entity GUI for one player. eg LuaTrain, doesn't work for platform hub
 --- @param player_index number
 --- @param entity LuaEntity
 --- @return boolean --gui_opened If the GUI was opened.
@@ -499,6 +497,69 @@ function utils.recreate_gui_refs(row)
     end
   end
   return refs
+end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function utils.open_train(gui_data, event)
+  local train_id
+  if event.element.tags and event.element.tags.train_id then
+    train_id = event.element.tags.train_id
+  else
+    return
+  end
+  if storage.trains[tonumber(train_id)] then
+    local train = storage.trains[tonumber(train_id)].train
+    if not train.valid then return end
+    local loco = flib_train.get_main_locomotive(train)
+    local player = gui_data.player
+    if event.shift and loco and loco.valid then
+      -- follow train in map/remote view
+      player.centered_on = loco
+    else
+      if loco and loco.valid then
+        utils.open_entity_gui(event.player_index, loco)
+      end
+    end
+  end
+end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function utils.open_station(gui_data, event)
+  local station_id
+  if event.element.tags and event.element.tags.station_id then
+    station_id = event.element.tags.station_id
+  else
+    return
+  end
+
+  if storage.stations[station_id] then
+    local station = storage.stations[station_id].station --[[@as LuaEntity]]
+    if not station.valid then return end
+    utils.open_entity_gui(event.player_index, station)
+  end
+end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function utils.show_station(gui_data, event)
+  local player = gui_data.player
+  local position, surface
+  if event.element.tags and event.element.tags.station_id then
+    station_id = event.element.tags.station_id
+      local station = storage.stations[station_id].station --[[@as LuaEntity]]
+    if not station.valid then return end
+    position = station.position --[[@as MapPosition]]
+    surface = station.surface.name --[[@as string]]
+  elseif event.element.tags and event.element.tags.position then
+    position = event.element.tags.position --[[@as MapPosition]]
+    surface = event.element.tags.surface_name --[[@as string]]
+
+  end
+if not position or not surface then return end
+  player.set_controller({ type = defines.controllers.remote, position = position, surface = surface })
+  player.zoom = 0.5
 end
 
 return utils

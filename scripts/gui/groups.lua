@@ -1,14 +1,13 @@
 -- groups.lua station groups
-local table     = require("__flib__.table")
--- local gui         = require("__flib__.gui")
-local gui         = require("__virtm__.scripts.flib-gui")
-local gui_util  = require("__virtm__.scripts.gui.utils")
-local util      = require("__core__.lualib.util")
-local constants = require("__virtm__.scripts.constants")
-local backend = require("__virtm__.scripts.backend")
-local flib_box  = require("__flib__.bounding-box")
+local flib_table = require("__flib__.table")
+local flib_gui   = require("__flib__.gui")
+local gui_utils  = require("__virtm__.scripts.gui.utils")
+local util       = require("__core__.lualib.util")
+local constants  = require("__virtm__.scripts.constants")
+local backend    = require("__virtm__.scripts.backend")
+local flib_box   = require("__flib__.bounding-box")
 
-
+local groups     = {}
 
 -- config sprite: side_menu_menu_icon
 -- search sprite: search_white
@@ -16,7 +15,7 @@ local flib_box  = require("__flib__.bounding-box")
 local function header(gui_id)
   return {
     type = "flow",
-    ref = { "titlebar", "flow" },
+    drag_target = "groups_window",
     children = {
       {
         type = "label",
@@ -35,13 +34,8 @@ local function header(gui_id)
         style = "frame_action_button",
         sprite = "utility/close",
         mouse_button_filter = { "left" },
-        hovered_sprite = "utility/close_black",
-        clicked_sprite = "utility/close_black",
-        ref = { "titlebar", "close_button" },
-        actions = {
-          on_click = { type = "groups", action = "close-window", gui_id = gui_id },
-        },
-        tooltip = { "gui.close" }
+        tooltip = { "gui.close" },
+        handler = { [defines.events.on_gui_click] = groups.close_gui },
       }
     }
   }
@@ -51,17 +45,14 @@ local function dialog_buttons(gui_id)
   return {
     type = "flow",
     style = "dialog_buttons_horizontal_flow",
-    -- ref = { "dialog_buttons", "flow" },
     children = {
       {
         type = "button",
+        name = "clear_button",
         style = "back_button",
         caption = { "gui.clear" },
         mouse_button_filter = { "left" },
-        ref = { "dialog_buttons", "left" },
-        actions = {
-          on_click = { type = "groups", action = "clear", gui_id = gui_id },
-        },
+        handler = { [defines.events.on_gui_click] = groups.clear_selected },
       },
       {
         type = "empty-widget",
@@ -71,13 +62,11 @@ local function dialog_buttons(gui_id)
       {
         type = "button",
         style = "dialog_button",
+        name = "select_button",
         mouse_button_filter = { "left", "right" },
-        ref = { "dialog_buttons", "middle" },
         caption = { "gui-permissions-names.SelectArea" },
         tooltip = { "vtm.groups-select-area" },
-        actions = {
-          on_click = { type = "groups", action = "select_area", gui_id = gui_id },
-        },
+        handler = { [defines.events.on_gui_click] = groups.select_area },
       },
       {
         type = "empty-widget",
@@ -87,13 +76,11 @@ local function dialog_buttons(gui_id)
       {
         type = "button",
         style = "confirm_button",
+        name = "save_button",
         caption = { "gui.save" },
         tooltip = { "vtm.groups-save-and-clear" },
         mouse_button_filter = { "left" },
-        ref = { "dialog_buttons", "right" },
-        actions = {
-          on_click = { type = "groups", action = "save", gui_id = gui_id },
-        },
+        handler = { [defines.events.on_gui_click] = groups.save_groups },
       },
     }
   }
@@ -114,10 +101,7 @@ local function build_top_buttons(gui_id)
       mouse_button_filter = { "left" },
       name = "overlay_button",
       tooltip = { "vtm.groups-toggle-overlay-tooltip" },
-      ref = { "top_buttons", "overlay_button" },
-      actions = {
-        on_click = { type = "groups", action = "toggle_overlay", gui_id = gui_id },
-      },
+      handler = { [defines.events.on_gui_click] = groups.toggle_overlay },
     },
     {
       type = "sprite-button",
@@ -126,11 +110,8 @@ local function build_top_buttons(gui_id)
       name = "toggle_mode_button",
       mouse_button_filter = { "left" },
       tooltip = { "vtm.groups-toggle-additive-selection-tooltip" },
-      ref = { "top_buttons", "toggle_mode_button" },
       enabled = true,
-      actions = {
-        on_click = { type = "groups", action = "toggle_mode_button", gui_id = gui_id },
-      },
+      handler = { [defines.events.on_gui_click] = groups.toggle_mode_button },
     },
     {
       type = "sprite-button",
@@ -139,11 +120,8 @@ local function build_top_buttons(gui_id)
       name = "remove_button",
       tooltip = { "vtm.groups-remove-station-tooltip" },
       mouse_button_filter = { "left" },
-      ref = { "top_buttons", "remove_button" },
       enabled = false,
-      actions = {
-        on_click = { type = "groups", action = "remove_station", gui_id = gui_id },
-      },
+      handler = { [defines.events.on_gui_click] = groups.remove_station_from_list },
     },
     {
       type = "sprite-button",
@@ -152,11 +130,8 @@ local function build_top_buttons(gui_id)
       name = "reload_grp_button",
       tooltip = { "vtm.groups-reload-grp-tooltip" },
       mouse_button_filter = { "left" },
-      ref = { "top_buttons", "reload_grp_button" },
       enabled = false,
-      actions = {
-        on_click = { type = "groups", action = "reload_grp", gui_id = gui_id },
-      },
+      handler = { [defines.events.on_gui_click] = groups.reload_group },
     },
     {
       type = "sprite-button",
@@ -165,31 +140,22 @@ local function build_top_buttons(gui_id)
       name = "delgrp_button",
       tooltip = { "vtm.groups-delete-group-tooltip" },
       mouse_button_filter = { "left" },
-      ref = { "top_buttons", "delgrp_button" },
       enabled = false,
-      actions = {
-        on_click = { type = "groups", action = "delgrp", gui_id = gui_id },
-      },
+      handler = { [defines.events.on_gui_click] = groups.delete_group },
     },
-
   }
   return content
 end
-local function build_gui(gui_id, name)
+
+local function gui_content(gui_id)
   local width = constants.gui.groups
-  if name == nil then
-    name = "vtm_groups"
-  end
   return {
     {
       type = "frame",
       direction = "vertical",
-      name = name,
+      name = "groups_window",
       style_mods = { minimal_width = width.window_min_width },
-      ref = { "groups_window" },
-      actions = {
-        on_closed = { type = "groups", action = "window_closed", gui_id = gui_id }
-      },
+      handler = { [defines.events.on_gui_closed] = groups.on_window_closed },
       children = {
         header(gui_id),
         {
@@ -201,16 +167,16 @@ local function build_gui(gui_id, name)
             type = "frame",
             style = "subheader_frame",
             direction = "horizontal",
-            ref = { "groups", "top_header" },
+            name = "top_buttons",
             style_mods = { horizontally_stretchable = true, horizontal_align = "right" },
             children = build_top_buttons(gui_id),
           },
-          gui_util.default_list_box("top_list",
-            { type = "groups", action = "select_element", gui_id = gui_id },
-            nil, width.top_rows,
-            { "top_list" },
-            "list_box_under_subheader"
-          ),
+          gui_utils.default_list_box(
+            "top_list",
+            nil,
+            width.top_rows,
+            "list_box_under_subheader",
+            { [defines.events.on_gui_selection_state_changed] = groups.on_gui_elem_changed }),
           {
             type = "line",
             direction = "horizontal",
@@ -219,15 +185,15 @@ local function build_gui(gui_id, name)
             type = "frame",
             style = "subheader_frame",
             direction = "horizontal",
-            ref = { "bottom_header" },
+            name = "bottom_header",
             style_mods = { horizontally_stretchable = true },
           },
-          gui_util.default_list_box("bottom_list",
-            { type = "groups", action = "select_element", gui_id = gui_id },
-            nil, width.bottom_rows,
-            { "bottom_list" },
-            "list_box_under_subheader"
-          ),
+          gui_utils.default_list_box(
+            "bottom_list",
+            nil,
+            width.bottom_rows,
+            "list_box_under_subheader",
+            { [defines.events.on_gui_selection_state_changed] = groups.on_gui_elem_changed }),
         },
         dialog_buttons(gui_id),
       }
@@ -235,23 +201,19 @@ local function build_gui(gui_id, name)
   }
 end
 
-local function create_gui(gui_id)
-  local vtm_gui = storage.guis[gui_id]
-  local player = vtm_gui.player
+--- @param gui_data GuiData
+--- @param event? EventData|EventData.on_gui_click
+function groups.create_gui(gui_data, event)
+  local player = gui_data.player
   if storage.groups[player.index] == nil then
     storage.groups[player.index] = {}
   end
-  local ui = build_gui(gui_id)
-  local refs = gui.build(player.gui.screen, ui)
-  refs.titlebar.flow.drag_target = refs.groups_window
-  refs.groups_window.visible = false
-  storage.guis[gui_id].group_gui = refs
-  storage.guis[gui_id].state_groups = "closed"
-  gui.update(refs.groups_window, {
-    elem_mods = {
-      location = { 10, 150 }
-    }
-  })
+  local ui = gui_content(gui_data.gui_id)
+  local refs, window = flib_gui.add(player.gui.screen, ui)
+  window.visible = false
+  window.location = { 10, 150 }
+  gui_data.group_gui = refs
+  gui_data.state_groups = "closed"
 end
 
 local function split_stations(stations)
@@ -261,9 +223,9 @@ local function split_stations(stations)
   local requester = {}
   for _, station in pairs(stations or {}) do
     if storage.stations[station.unit_number].type == "P" then
-      table.insert(provider, station)
+      flib_table.insert(provider, station)
     elseif storage.stations[station.unit_number].type == "R" then
-      table.insert(requester, station)
+      flib_table.insert(requester, station)
     end
   end
   return provider, requester
@@ -292,24 +254,26 @@ local function merge_tag_list(tags, new_tags)
 end
 
 --- clear all temp data
----@param gui_id uint
-local function clear_selected_data(gui_id)
-  local vgui = storage.guis[gui_id]
-  local group_gui = vgui.group_gui
+--- @param gui_data GuiData
+local function clear_selected_data(gui_data)
+  local group_gui = gui_data.group_gui
   if not group_gui then return end
   local top_buttons = group_gui.top_buttons
   local top_list = group_gui.top_list
   local bottom_list = group_gui.bottom_list
-  local edit = storage.settings[vgui.player.index].group_edit
+  -- actual group in editing
+  local edit = storage.settings[gui_data.player.index].group_edit
   edit.selected_stations = nil
   edit.selected_tags = nil
   edit.selected_group_id = nil
   edit.group_area = nil
+
   top_list.selected_index = 0
   bottom_list.selected_index = 0
   top_buttons.reload_grp_button.enabled = false
   top_buttons.remove_button.enabled = false
 end
+
 local function remove_group_tags(player)
   if not storage.group_tags or not player then return end
   local force = player.force
@@ -340,7 +304,7 @@ local function create_map_tag(force, surface, position, text, player_index)
     last_user = player_index
   })
   if tag and tag.valid then
-    table.insert(storage.group_tags[force.index], tag)
+    flib_table.insert(storage.group_tags[force.index], tag)
   end
   return tag
 end
@@ -406,42 +370,40 @@ local function show_overlay(gui_id)
   end
 end
 
-local function remove_overlay()
+local function remove_overlay(player)
   -- FIXME this will clear all overlays of all players, maybe there is a better solution to this
   rendering.clear(script.mod_name)
 end
 
 ---Toggle overlay button
----@param action GuiAction
----@param event EventData.on_gui_click
-local function toggle_overlay(action, event)
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function groups.toggle_overlay(gui_data, event)
   local edit = storage.settings[event.player_index].group_edit
   if edit and edit.show_overlay then
     event.element.style = "tool_button"
     edit.show_overlay = false
-    remove_overlay()
-    remove_group_tags(game.get_player(event.player_index))
+    remove_overlay(gui_data.player)
+    remove_group_tags(gui_data.player)
   else
     event.element.style = "flib_selected_tool_button"
     edit.show_overlay = true
-    show_overlay(action.gui_id)
-    create_group_tags(action.gui_id)
+    show_overlay(gui_data.gui_id)
+    create_group_tags(gui_data.gui_id)
   end
 end
 
----update Edit group dialog
----@param gui_id uint
----@param station_list_temp? table<uint,LuaEntity>
-local function update_gui(gui_id, station_list_temp)
-  local vtm_gui = storage.guis[gui_id]
-  local surface = storage.settings[vtm_gui.player.index].surface or "All"
-  local top_buttons = vtm_gui.group_gui.top_buttons
-  local edit = storage.settings[vtm_gui.player.index].group_edit
+--- @param gui_data GuiData
+--- @param event? EventData|EventData.on_gui_click
+function groups.update_gui(gui_data, event)
+  local surface = storage.settings[gui_data.player.index].surface or "All"
+  local top_buttons = gui_data.group_gui.top_buttons
+  local edit = storage.settings[gui_data.player.index].group_edit
 
   local top_names = {}
   local bottom_names = {}
-  local top_list = vtm_gui.group_gui.top_list
-  local bottom_list = vtm_gui.group_gui.bottom_list
+  local top_list = gui_data.group_gui.top_list
+  local bottom_list = gui_data.group_gui.bottom_list
   local provider = {}
   local requester = {}
   local top_index = 0
@@ -460,15 +422,15 @@ local function update_gui(gui_id, station_list_temp)
     if storage.groups[station.force_index][station.unit_number] then
       name = name .. constants.group_exist_suffix
     end
-    table.insert(top_names, name)
+    flib_table.insert(top_names, name)
   end
   for _, station in pairs(requester) do
     bottom_index = bottom_index + 1
-    table.insert(bottom_names, station.backer_name)
+    flib_table.insert(bottom_names, station.backer_name)
   end
   for _, tag in pairs(tag_list or {}) do
     bottom_index = bottom_index + 1
-    table.insert(bottom_names, tag.text)
+    flib_table.insert(bottom_names, tag.text)
   end
 
   top_list.items = #top_names > 0 and top_names or {}
@@ -489,50 +451,49 @@ local function update_gui(gui_id, station_list_temp)
   end
 end
 
----@param gui_id uint
----@param group_id uint
-local function update_gui_from_group(gui_id, group_id)
-  local vtm_gui = storage.guis[gui_id]
-  local edit = storage.settings[vtm_gui.player.index].group_edit
+--- @param gui_data GuiData
+--- @param group_id uint
+local function update_gui_from_group(gui_data, group_id)
+  local edit = storage.settings[gui_data.player.index].group_edit
 
   if group_id then
     local stations = {}
     local group_data = backend.read_group(group_id)
     if group_data then
-      clear_selected_data(gui_id)
+      clear_selected_data(gui_data)
       edit.selected_group_id = group_data.group_id
       edit.selected_stations = {}
       edit.selected_tags = {}
-      table.insert(stations, group_data.main_station.station)
+      flib_table.insert(stations, group_data.main_station.station)
       edit.group_area = group_data.area
       for _, station_data in pairs(group_data.members) do
         if station_data.station.valid then
-          table.insert(stations, station_data.station)
+          flib_table.insert(stations, station_data.station)
         end
       end
       merge_station_list(edit.selected_stations, stations)
       merge_tag_list(edit.selected_tags, group_data.resource_tags)
     end
-    update_gui(gui_id)
+    groups.update_gui(gui_data)
   end
 end
 
----Make groups gui visible, action can contain group_id to show, optional clear argument to remove all content
----@param action GuiAction
----@param clear? boolean
-local function open_gui(action, clear)
-  local gui_id = action.gui_id
-  local gui = storage.guis[gui_id]
-  gui.group_gui.groups_window.visible = true
-  gui.state_groups = "open"
-  if action.group_id then
-    update_gui_from_group(action.gui_id, action.group_id)
+---Make groups gui visible, tags can contain group_id or clear argument to remove all content
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click|EventData.on_lua_shortcut
+function groups.open_gui(gui_data, event)
+  gui_data.group_gui.groups_window.visible = true
+  gui_data.state_groups = "open"
+  if event.element and event.element.tags and event.element.tags.group_id then
+    group_id = event.element.tags.group_id --[[@as string]]
+    update_gui_from_group(gui_data, event.element.tags.group_id --[[@as uint]])
+    return
+  elseif event.element and event.element.tags and event.element.tags.clear then
+    clear_selected_data(gui_data)
+  elseif event.prototype_name ~= "vtm-groups-shortcut" then
     return
   end
-  if clear then
-    clear_selected_data(action.gui_id)
-  end
-  update_gui(action.gui_id)
+  groups.update_gui(gui_data, event)
 end
 
 ---Create set or add station
@@ -548,7 +509,7 @@ local function register_group_set(name, group_id)
       return
     end
   end
-  table.insert(storage.group_set[name], group_id)
+  flib_table.insert(storage.group_set[name], group_id)
 end
 
 ---Validate group members and tags
@@ -591,26 +552,24 @@ local function add_group_overlay(gui_id, group_data, show)
 end
 
 --- Save selceted group data, can be more then one
----@param action GuiAction
----@param event EventData.on_gui_click
-local function save_groups(action, event)
-  local player = game.get_player(event.player_index)
-  if not player then return false end
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function groups.save_groups(gui_data, event)
   local edit = storage.settings[event.player_index].group_edit
   -- validate data
   if not validate_group_data(edit) then
-    player.create_local_flying_text({
+    gui_data.player.create_local_flying_text({
       text = { "vtm.groups-error-saving-group" },
       create_at_cursor = true,
     })
-    update_gui(action.gui_id)
+    groups.update_gui(gui_data, event)
     return false
   end
 
   local tag_list = edit.selected_tags or {}
   local provider, requester = split_stations(edit.selected_stations)
   if #provider == 0 or (#requester == 0 and table_size(tag_list) == 0) then
-    player.create_local_flying_text({
+    gui_data.player.create_local_flying_text({
       text = { "vtm.groups-error-saving-group" },
       create_at_cursor = true,
     })
@@ -620,7 +579,7 @@ local function save_groups(action, event)
   local group_members = {}
 
   for _, r_station in pairs(requester) do
-    table.insert(group_members, backend.get_or_create_station_data(r_station))
+    flib_table.insert(group_members, backend.get_or_create_station_data(r_station))
   end
   for _, p_station in pairs(provider) do
     ---@type GroupData
@@ -632,29 +591,37 @@ local function save_groups(action, event)
       surface = p_station.surface.name,
       area = edit.group_area,
       resource_tags = tag_list,
-      zoom = gui_util.get_zoom_from_area(edit.group_area)
+      zoom = gui_utils.get_zoom_from_area(edit.group_area)
     }
     storage.groups[p_station.force_index][p_station.unit_number] = group_data
     register_group_set(p_station.backer_name, p_station.unit_number)
-    player.print({ "vtm.groups-saved", p_station.unit_number })
-    add_group_overlay(action.gui_id, group_data, edit.show_overlay)
+    gui_data.player.print({ "vtm.groups-saved", p_station.unit_number })
+    add_group_overlay(gui_data.gui_id, group_data, edit.show_overlay)
   end
-  clear_selected_data(action.gui_id)
-  update_gui(action.gui_id, {})
+  clear_selected_data(gui_data)
+  groups.update_gui(gui_data, event)
   return true
 end
 
----Clear edit window
----@param event EventData.on_gui_click
-local function clear_selected(action, event)
-  clear_selected_data(action.gui_id)
-  update_gui(action.gui_id, {})
+local function give_selector(player)
+  if player.clear_cursor() then
+    player.cursor_stack.set_stack({ name = "vtm-station-group-selector" })
+    player.cursor_stack_temporary = true
+  end
 end
 
----@param event EventData.on_gui_elem_changed
-local function on_gui_elem_changed(event)
-  local gui_id      = gui_util.get_gui_id(event.player_index)
-  local group_gui   = storage.guis[gui_id].group_gui
+---Clear edit window
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function groups.clear_selected(gui_data, event)
+  clear_selected_data(gui_data)
+  groups.update_gui(gui_data, event)
+end
+
+--- @param gui_data GuiData
+--- @param event EventData.on_gui_elem_changed
+function groups.on_gui_elem_changed(gui_data, event)
+  local group_gui   = gui_data.group_gui
   ---@type LuaGuiElement
   local top_buttons = group_gui.top_buttons
   ---@type LuaGuiElement
@@ -665,11 +632,11 @@ local function on_gui_elem_changed(event)
   if event.element.name == "top_list" then
     bottom_list.selected_index = 0
     -- check for existing group
-    local str = top_list.get_item(event.element.selected_index)  --[[@as string]]
+    local str = top_list.get_item(event.element.selected_index) --[[@as string]]
     -- enable delgrp_button
-    if gui_util.string_ends_with(str, constants.group_exist_suffix) then
+    if gui_utils.string_ends_with(str, constants.group_exist_suffix) then
       top_buttons.delgrp_button.enabled = true
-      gui_util.set_style(top_buttons.delgrp_button, constants.button_style_red)
+      gui_utils.set_style(top_buttons.delgrp_button, constants.button_style_red)
       top_buttons.reload_grp_button.enabled = true
     else
       top_buttons.delgrp_button.enabled = false
@@ -689,9 +656,9 @@ local function on_gui_elem_changed(event)
 end
 
 ---Toggle additive selection button
----@param action table
----@param event EventData.on_gui_click
-local function toggle_tool_mode_button(action, event)
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function groups.toggle_mode_button(gui_data, event)
   local edit = storage.settings[event.player_index].group_edit
   if edit and edit.add_to_selection then
     event.element.style = "tool_button"
@@ -702,51 +669,31 @@ local function toggle_tool_mode_button(action, event)
   end
 end
 
-local function give_selector(player)
-  if player.clear_cursor() then
-    player.cursor_stack.set_stack({ name = "vtm-station-group-selector" })
-    player.cursor_stack_temporary = true
-  end
-end
-
-local function close_gui(gui_id)
-  local vgui = storage.guis[gui_id]
-  local edit = storage.settings[vgui.player.index].group_edit
-  local refs = vgui.group_gui
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function groups.close_gui(gui_data, event)
+  local edit = storage.settings[gui_data.player.index].group_edit or {}
+  local refs = gui_data.group_gui
   refs.groups_window.visible = false
-  vgui.state_groups = "closed"
+  gui_data.state_groups = "closed"
   edit.show_overlay = false
-  remove_overlay()
-  remove_group_tags(vgui.player)
-  vgui.player.clear_cursor()
+  remove_overlay(gui_data.player)
+  remove_group_tags(gui_data.player)
+  gui_data.player.clear_cursor()
 end
 
-local function destroy_gui(gui_id)
-  close_gui(gui_id)
-  local vgui = storage.guis[gui_id]
-  vgui.group_gui.groups_window.destroy()
-  vgui.group_gui = nil
-  clear_selected_data(gui_id)
+function groups.destroy_gui(gui_data, event)
+  groups.close_gui(gui_data, event)
+  clear_selected_data(gui_data)
+  gui_data.group_gui.groups_window.destroy()
+  gui_data.group_gui = nil
 end
 
-local function toggle_groups_gui(player_index)
-  local gui_id = gui_util.get_gui_id(player_index)
-  if not gui_id then return end
-
-  if gui_id and
-      storage.guis[gui_id].state_groups and
-      storage.guis[gui_id].state_groups == "closed" then
-    open_gui({ gui_id = gui_id })
-    give_selector(storage.guis[gui_id].player)
-  else
-    close_gui(gui_id)
-  end
-end
-
-local function remove_station_from_list(action, event)
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function groups.remove_station_from_list(gui_data, event)
   local edit                = storage.settings[event.player_index].group_edit
-  local gui_id              = action.gui_id
-  local group_gui           = storage.guis[gui_id].group_gui
+  local group_gui           = gui_data.group_gui
   local top_buttons         = group_gui.top_buttons
   local top_list            = group_gui.top_list
   local bottom_list         = group_gui.bottom_list
@@ -786,7 +733,8 @@ local function remove_station_from_list(action, event)
   top_buttons.reload_grp_button.enabled = false
   top_list.selected_index = 0
   bottom_list.selected_index = 0
-  update_gui(action.gui_id, edit.selected_stations)
+  -- update_gui(action.gui_id, edit.selected_stations)
+  groups.update_gui(gui_data, event)
 end
 
 local function remove_group_from_set(station)
@@ -799,19 +747,19 @@ local function remove_group_from_set(station)
       remove = key
     end
   end
-  table.remove(set, remove)
+  flib_table.remove(set, remove)
   if table_size(set) == 0 then
     storage.group_set[station.backer_name] = nil
   end
 end
 
----@param action table
----@param event table
-local function delete_group(action, event)
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function groups.delete_group(gui_data, event)
   --two steps
   local edit        = storage.settings[event.player_index].group_edit
   local player      = game.get_player(event.player_index)
-  local group_gui   = storage.guis[action.gui_id].group_gui
+  local group_gui   = gui_data.group_gui
   local top_buttons = group_gui.top_buttons
   local button      = top_buttons.delgrp_button
   local top_list    = group_gui.top_list
@@ -836,16 +784,18 @@ local function delete_group(action, event)
   if not button or not button.enabled or not p_station or not player then return end
 
   if button.style.name == style_green then
-    gui_util.set_style(button, style_red)
+    gui_utils.set_style(button, style_red)
     -- delete set entry
     remove_group_from_set(p_station)
     --delete the group
     storage.groups[p_station.force_index][p_station.unit_number] = nil
-    clear_selected_data(action.gui_id)
-    update_gui(action.gui_id, {})
+    clear_selected_data(gui_data)
+    -- update_gui(action.gui_id, {})
+    groups.update_gui(gui_data, event)
+
     player.print({ "vtm.groups-group-deleted", p_station.unit_number })
   elseif button.style.name == style_red then
-    gui_util.set_style(button, style_green)
+    button.style = style_green
     player.create_local_flying_text({
       text = { "vtm.groups-click-again" },
       time_to_live = 100,
@@ -859,7 +809,7 @@ local function extract_train_stops(event)
   local stations = {}
   for _, entity in pairs(event.entities) do
     if entity.type == "train-stop" and entity.name ~= "se-space-elevator" then
-      table.insert(stations, entity)
+      flib_table.insert(stations, entity)
     end
   end
   if next(stations) then
@@ -890,7 +840,8 @@ local function on_alt_station_selection(event)
   local player = game.get_player(event.player_index)
   if player and event.entities then
     local selected_stations = extract_train_stops(event)
-    local gui_id = gui_util.get_gui_id(player.index)
+    local gui_id = gui_utils.get_gui_id(player.index)
+    local gui_data = storage.guis[gui_id]
     --TODO no elevator
     if selected_stations and gui_id then
       local edit = storage.settings[player.index].group_edit
@@ -913,7 +864,8 @@ local function on_alt_station_selection(event)
           edit.selected_stations[remove] = nil
         end
       end
-      update_gui(gui_id, edit.selected_stations)
+      -- update_gui(gui_id, edit.selected_stations)
+      groups.update_gui(gui_data, event)
     else
       player.create_local_flying_text({
         text = { "vtm.no_train_stop_selected" },
@@ -941,7 +893,8 @@ local function on_tag_selection(event)
 
   ---@type LuaCustomChartTag[]
   local selected_tags = player.force.find_chart_tags(event.surface, event.area)
-  local gui_id = gui_util.get_gui_id(player.index)
+  local gui_id = gui_utils.get_gui_id(player.index)
+  local gui_data = storage.guis[gui_id]
   if next(selected_tags) then
     filter_own_tags(selected_tags)
   end
@@ -953,7 +906,7 @@ local function on_tag_selection(event)
     end
     -- merge and store in global
     merge_tag_list(edit.selected_tags, selected_tags)
-    update_gui(gui_id)
+    groups.update_gui(gui_data, event)
   end
 end
 
@@ -963,7 +916,8 @@ local function on_station_selection(event)
   local player = game.get_player(event.player_index)
   if player and event.entities then
     local selected_stations = extract_train_stops(event)
-    local gui_id = gui_util.get_gui_id(player.index)
+    local gui_id = gui_utils.get_gui_id(player.index)
+    local gui_data = storage.guis[gui_id]
     if selected_stations and gui_id then
       local edit = storage.settings[player.index].group_edit
       if player.mod_settings["vtm-dismiss-tool"].value then
@@ -980,7 +934,8 @@ local function on_station_selection(event)
       merge_station_list(edit.selected_stations, selected_stations)
       -- ensure all stations are inside the selected area
       edit.group_area = check_area(edit.group_area, edit.selected_stations)
-      update_gui(gui_id, edit.selected_stations)
+      -- update_gui(gui_id, edit.selected_stations)
+      groups.update_gui(gui_data, event)
     else
       player.create_local_flying_text({
         text = { "vtm.groups-no-train-stop-selected" },
@@ -1011,52 +966,103 @@ local function on_player_alt_selected_area(event)
   on_alt_station_selection(event)
 end
 
-local function reload_group(action, event)
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function groups.reload_group(gui_data, event)
   local edit = storage.settings[event.player_index].group_edit
-  update_gui_from_group(action.gui_id, edit.selected_group_id)
+  update_gui_from_group(gui_data, edit.selected_group_id)
 end
 
----React on user input
----@param action table
----@param event table
-local function handle_action(action, event)
-  if action.action == "close-window" then
-    close_gui(action.gui_id)
-  elseif action.action == "select_element" then
-    on_gui_elem_changed(event)
-  elseif action.action == "select_area" then
-    local player = game.get_player(event.player_index)
-    if not player then return end
-    give_selector(player)
-  elseif action.action == "save" then
-    save_groups(action, event)
-    -- todo give better feedback on error
-  elseif action.action == "toggle_mode_button" then
-    toggle_tool_mode_button(action, event)
-  elseif action.action == "toggle_overlay" then
-    toggle_overlay(action, event)
-  elseif action.action == "remove_station" then
-    remove_station_from_list(action, event)
-  elseif action.action == "reload_grp" then
-    reload_group(action, event)
-  elseif action.action == "delgrp" then
-    delete_group(action, event)
-  elseif action.action == "clear" then
-    clear_selected(action, event)
+-- ---React on user input
+-- ---@param action table
+-- ---@param event table
+-- local function handle_action(action, event)
+--   if action.action == "close-window" then
+--     -- groups.close_gui(gui_data, event)
+--   elseif action.action == "select_element" then
+--     -- on_gui_elem_changed(event)
+--   elseif action.action == "select_area" then
+--     -- local player = game.get_player(event.player_index)
+--     -- if not player then return end
+--     -- give_selector(player)
+--   elseif action.action == "save" then
+--     -- save_groups(action, event)
+--     -- todo give better feedback on error
+--   elseif action.action == "toggle_mode_button" then
+--     -- toggle_tool_mode_button(action, event)
+--   elseif action.action == "toggle_overlay" then
+--     -- toggle_overlay(action, event)
+--   elseif action.action == "remove_station" then
+--     -- remove_station_from_list(action, event)
+--   elseif action.action == "reload_grp" then
+--     -- reload_group(action, event)
+--   elseif action.action == "delgrp" then
+--     -- delete_group(action, event)
+--   elseif action.action == "clear" then
+--     -- clear_selected(action, event)
+--   end
+-- end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function groups.select_area(gui_data, event)
+  give_selector(gui_data.player)
+end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function groups.toggle_groups_gui(gui_data, event)
+  if gui_data.state_groups and
+      gui_data.state_groups == "closed" or
+      gui_data.state_groups == nil then
+    groups.open_gui(gui_data, event)
+    give_selector(gui_data.player)
+  else
+    groups.close_gui(gui_data, event)
   end
 end
 
-script.on_event(defines.events.on_player_selected_area, on_player_selected_area)
-script.on_event(defines.events.on_player_alt_selected_area, on_player_alt_selected_area)
-script.on_event(defines.events.on_player_reverse_selected_area, on_player_reverse_selected_area)
 -- script.on_event(defines.events.on_player_alt_reverse_selected_area, on_player_alt_reverse_selected_area)
+--- @param event EventData|EventData.on_lua_shortcut
+function groups.on_lua_shortcut(event)
+  if event.prototype_name == "vtm-groups-shortcut" then
+    local gui_data = storage.guis[gui_utils.get_gui_id(event.player_index)]
+    groups.toggle_groups_gui(gui_data, event)
+  end
+end
 
-return {
-  open_gui = open_gui,
-  update_gui = update_gui,
-  close_gui = close_gui,
-  destroy_gui = destroy_gui,
-  create_gui = create_gui,
-  handle_action = handle_action,
-  toggle_groups_gui = toggle_groups_gui,
+--- @param event EventData|EventData.CustomInputEvent
+function groups.open_or_close_gui(event)
+  if event.input_name == "vtm-groups-key" then
+    local gui_data = storage.guis[gui_utils.get_gui_id(event.player_index)]
+    groups.toggle_groups_gui(gui_data, event)
+  end
+end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function groups.on_window_closed(gui_data, event)
+  if gui_data.pinned then
+    return
+  end
+  groups.close_gui(gui_data, event)
+end
+
+flib_gui.add_handlers(groups, function(event, handler)
+  local gui_id = gui_utils.get_gui_id(event.player_index)
+  ---@type GuiData
+  local gui_data = storage.guis[gui_id]
+  if gui_data then
+    handler(gui_data, event)
+  end
+end, "groups")
+
+groups.events = {
+  ["vtm-groups-key"] = groups.open_or_close_gui,
+  [defines.events.on_lua_shortcut] = groups.on_lua_shortcut,
+  [defines.events.on_player_selected_area] = on_player_selected_area,
+  [defines.events.on_player_alt_selected_area] = on_player_alt_selected_area,
+  [defines.events.on_player_reverse_selected_area] = on_player_reverse_selected_area,
 }
+
+return groups

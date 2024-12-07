@@ -1,12 +1,14 @@
 -- history.lua
-local util      = require("__core__.lualib.util")
--- local gui         = require("__flib__.gui")
-local gui       = require("__virtm__.scripts.flib-gui")
-local gui_util  = require("__virtm__.scripts.gui.utils")
-local match     = require("__virtm__.scripts.match")
-local constants = require("__virtm__.scripts.constants")
-local format    = require("__flib__.format")
+local util        = require("__core__.lualib.util")
+local flib_gui    = require("__flib__.gui")
+local flib_table  = require("__flib__.table")
+local flib_format = require("__flib__.format")
+local gui_utils   = require("__virtm__.scripts.gui.utils")
+local match       = require("__virtm__.scripts.match")
+local constants   = require("__virtm__.scripts.constants")
+local backend     = require("__virtm__.scripts.backend")
 
+local history     = {}
 local function material_icon_list(event)
   local result = ""
   local zero = 0
@@ -62,14 +64,14 @@ local function create_history_msg(event, compact)
     if compact then skip = true end
   elseif event.state == defines.train_state.on_the_path then
     if event.old_tick then
-      msg = { "vtm.histstory-waited", format.time(event.tick - event.old_tick --[[@as uint]]) }
+      msg = { "vtm.histstory-waited", flib_format.time(event.tick - event.old_tick --[[@as uint]]) }
       if compact then skip = true end
     else
       msg = { "vtm.histstory-done-waiting" }
       if compact then skip = true end
     end
   elseif event.old_tick then
-    msg = { "vtm.histstory-waited", format.time(event.tick - event.old_tick --[[@as uint]]) }
+    msg = { "vtm.histstory-waited", flib_format.time(event.tick - event.old_tick --[[@as uint]]) }
     if compact then skip = true end
   elseif event.state == defines.train_state.destination_full then
     msg = { "vtm.histstory-waiting" }
@@ -110,6 +112,18 @@ local function add_diff_to_shipment(shipment, event)
   end
 end
 
+-- --- @param gui_data GuiData
+-- --- @param event EventData|EventData.on_gui_click
+-- function history.show_station(gui_data, event)
+--   gui_utils.show_station(gui_data, event)
+-- end
+
+--- @param gui_data GuiData
+--- @param event EventData|EventData.on_gui_click
+function history.open_train(gui_data, event)
+  gui_utils.open_train(gui_data, event)
+end
+
 local function update_route_flow(flow, history_data, compact)
   local table_index = 0
   local children = flow.children
@@ -126,16 +140,12 @@ local function update_route_flow(flow, history_data, compact)
       -- get or create gui row
       local row = children[table_index]
       if not row then
-        row = gui.add(flow, {
+        refs, row = flib_gui.add(flow, {
           type = "label",
           style = "vtm_semibold_label_with_padding",
         })
       end
-      gui.update(row, {
-        elem_mods = {
-          caption = { "", msg },
-        }
-      })
+      row.caption = { "", msg }
     end
   end
   history_data.shipment = shipment
@@ -144,24 +154,20 @@ local function update_route_flow(flow, history_data, compact)
   end
 end
 
-local function build_gui()
+function history.build_tab()
   local width = constants.gui.history
   return {
     tab = {
       type = "tab",
       caption = { "vtm.tab-history" },
-      ref = { "tabs", "history_tab" },
       name = "history",
       style_mods = { badge_horizontal_spacing = 6 },
-      actions = {
-        on_click = { type = "generic", action = "change_tab", tab = "history" },
-      },
     },
     content = {
       type = "frame",
+      name = "history_content_frame",
       style = "vtm_main_content_frame",
       direction = "vertical",
-      ref = { "history", "content_frame" },
       -- table header
       {
         type = "frame",
@@ -189,16 +195,14 @@ local function build_gui()
           },
           {
             type = "switch",
-            ref = { "history", "switch" },
+            name = "history_switch",
             style = "vtm_subheader_switch",
             left_label_caption = { "vtm.table-header-compact" },
             right_label_caption = { "vtm.table-header-detail" },
-            right_label_tooltip = { "vtm.table-header-detail-tooltip" },
+            left_label_tooltip = { "vtm.table-header-compact-tooltip" },
             allow_none_state = false,
             switch_state = "right",
-            actions = {
-              on_switch_state_changed = { type = "generic", action = "history_switch" },
-            },
+            handler = { [defines.events.on_gui_switch_state_changed] = history.history_switch },
           },
         },
         {
@@ -225,19 +229,17 @@ local function build_gui()
         },
         {
           type = "sprite-button",
+          name = "history_clear_button",
           style = "tool_button_red",
           sprite = "utility/trash",
           tooltip = { "vtm.clear-history" },
-          ref = { "history", "clear_button" },
-          actions = {
-            on_click = { type = "generic", action = "clear_history" },
-          },
+          handler = { [defines.events.on_gui_click] = history.clear_history },
         },
       },
       {
         type = "scroll-pane",
+        name = "history_scrollpane",
         style = "vtm_table_scroll_pane",
-        ref = { "history", "scroll_pane" },
         vertical_scroll_policy = "always",
         horizontal_scroll_policy = "auto",
       },
@@ -245,7 +247,7 @@ local function build_gui()
         type = "frame",
         direction = "horizontal",
         style = "negative_subheader_frame",
-        ref = { "history", "warning" },
+        name = "history_warning",
         visible = true,
         {
           type = "flow",
@@ -255,7 +257,7 @@ local function build_gui()
             type = "label",
             style = "bold_label",
             caption = { "", "[img=warning-white] ", { "vtm.no-history" } },
-            ref = { "history", "warning_label" },
+            name = "history_warning_label",
           },
         },
       },
@@ -263,142 +265,140 @@ local function build_gui()
   }
 end
 
-local function update_tab(gui_id)
-  local vtm_gui = storage.guis[gui_id]
-  local player = storage.guis[gui_id].player
-  local vsettings = storage.settings[player.index]
-  local surface = vsettings.surface or "All"
-  local history = {}
+function history.update_tab(gui_data, event)
+  local player = gui_data.player
+  local surface = storage.settings[player.index].surface or "All"
+  local history_datas = {}
   local max_hist = storage.max_hist
   local table_index = 0
-  local filters = { search_field = vtm_gui.gui.filter.search_field.text:lower() }
+  local filters = { search_field = gui_data.gui.search_field.text:lower() }
 
-  local switch_state = vsettings.history_switch or "left"
+  local switch_state = storage.settings[player.index].history_switch or "left"
   local compact = switch_state == "left" or false
-  local scroll_pane = vtm_gui.gui.history.scroll_pane or {}
-  local children = scroll_pane.children
-  local width = constants.gui.history
 
-  vtm_gui.gui.history.switch.switch_state = switch_state
-  history = storage.history
+  gui_data.gui.history_switch.switch_state = switch_state
 
   -- filter
-  for _, history_data in pairs(history) do
-    if history_data.force_index == vtm_gui.player.force.index and
+  for _, history_data in pairs(storage.history) do
+    if history_data.force_index == gui_data.player.force.index and
         (surface == "All" or surface == history_data.surface) and
         table_size(history_data.events) > 2 and
         match.filter_history(history_data, filters)
     then
-      if table_index >= max_hist then
-        -- max entries
-        break
-      end
-      table_index = table_index + 1
-      vtm_gui.gui.history.warning.visible = false
-      -- get or create gui row
-      local row = children[table_index]
-      if not row then
-        row = gui.add(scroll_pane, {
-          type = "frame",
-          direction = "horizontal",
-          style = "vtm_table_row_frame",
-          {
-            -- train id
-            type = "flow",
-            style_mods = { horizontal_align = "center", width = width.train_id },
-            {
-              type = "sprite",
-              sprite = "utility/side_menu_train_icon",
-              tooltip = { "vtm.train-removed" },
-              {
-                type = "label",
-                style = "vtm_trainid_label",
-              },
-            }
-          },
-          {
-            -- route
-            type = "flow",
-            direction = "vertical",
-            name = "route",
-            style_mods = { width = width.route },
-          },
-          {
-            -- runtime
-            type = "label",
-            style = "vtm_semibold_label_with_padding",
-            style_mods = { width = width.runtime, horizontal_align = "right" },
-          },
-          {
-            -- finished
-            type = "label",
-            style = "vtm_semibold_label_with_padding",
-            style_mods = { width = width.finished, horizontal_align = "right" },
-          },
-          gui_util.slot_table(width, nil, "shipment"),
-        })
-      end
-
-      local prototype
-      local sprite = "warning-white"
-      local train_id_str = ""
-      ---@type LocalisedString
-      local tooltip = { "vtm.train-removed" }
-
-      if history_data.train.valid then
-        prototype = history_data.prototype
-        sprite = history_data.sprite
-        train_id_str = tostring(history_data.train.id)
-        tooltip = prototype.localised_name
-      elseif history_data.surface2 and helpers.is_valid_sprite_path("item/se-space-elevator") then
-        sprite = "item/se-space-elevator"
-      end
-
-      -- local runtime = util.formattime(history_data.last_change - history_data.started_at --[[@as uint]])
-      local runtime = format.time(history_data.last_change - history_data.started_at --[[@as uint]])
-      -- local finished = util.formattime(game.tick - history_data.last_change --[[@as uint]])
-      local finished = format.time(game.tick - history_data.last_change --[[@as uint]])
-
-      gui.update(row, {
-        { {
-          -- train_id button
-          elem_mods = {
-            sprite = sprite,
-            tooltip = tooltip,
-          },
-          {
-            elem_mods = {
-              caption = train_id_str
-            },
-            actions = {
-              on_click = { type = "trains", action = "open-train", train_id = train_id_str },
-            },
-          },
-          tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", train_id_str },
-        } },
-        { -- route, gets updated below
-        },
-        { -- runtime
-          elem_mods = { caption = runtime },
-        },
-        { -- finished
-          elem_mods = { caption = finished },
-        },
-      })
-      update_route_flow(row.route, history_data, compact)
-      -- Light Running, hide empty row in comact mode (most likely, interrupt disturbs the schedule)
-      row.visible = true
-      if #row.route.children == 0 then
-        row.visible = false
-      end
-      gui_util.slot_table_update(row.shipment_table, history_data.shipment)
+      table.insert(history_datas, history_data)
     end
   end
 
+  -- finish when not current tab
+  if storage.settings[gui_data.player.index].current_tab ~= "history" then
+    gui_data.gui.history.badge_text = table_size(history_datas)
+    return
+  end
+  local scroll_pane = gui_data.gui.history_scrollpane or {}
+  local children = scroll_pane.children
+  local width = constants.gui.history
+
+  for _, history_data in pairs(history_datas) do
+    if table_index >= max_hist then
+      -- max entries
+      break
+    end
+    table_index = table_index + 1
+    gui_data.gui.history_warning.visible = false
+    -- get or create gui row
+    local row = children[table_index]
+    local refs = {}
+    if not row then
+      local gui_contents = {
+        type = "frame",
+        direction = "horizontal",
+        style = "vtm_table_row_frame",
+        {
+          -- train id
+          type = "flow",
+          style_mods = { horizontal_align = "center", width = width.train_id },
+          {
+            type = "sprite",
+            name = "history_sprite",
+            sprite = "utility/side_menu_train_icon",
+            tooltip = { "vtm.train-removed" },
+            {
+              type = "label",
+              name = "history_train_id",
+              style = "vtm_trainid_label",
+              handler = { [defines.events.on_gui_click] = history.open_train }
+            },
+          }
+        },
+        {
+          -- route
+          type = "flow",
+          direction = "vertical",
+          name = "history_route",
+          style_mods = { width = width.route },
+        },
+        {
+          -- runtime
+          type = "label",
+          name = "history_runtime",
+          style = "vtm_semibold_label_with_padding",
+          style_mods = { width = width.runtime, horizontal_align = "right" },
+        },
+        {
+          -- finished
+          type = "label",
+          name = "history_finished",
+          style = "vtm_semibold_label_with_padding",
+          style_mods = { width = width.finished, horizontal_align = "right" },
+        },
+        gui_utils.slot_table(width, nil, "shipment"),
+      }
+      refs, row = flib_gui.add(scroll_pane, gui_contents)
+    end
+
+    local prototype
+    local sprite = "warning-white"
+    local train_id_str = ""
+    ---@type LocalisedString
+    local tooltip = { "vtm.train-removed" }
+
+    if history_data.train.valid then
+      prototype = history_data.prototype
+      sprite = history_data.sprite
+      train_id_str = tostring(history_data.train.id)
+      tooltip = prototype.localised_name
+    elseif history_data.surface2 and helpers.is_valid_sprite_path("item/se-space-elevator") then
+      sprite = "item/se-space-elevator"
+    end
+
+    -- local runtime = util.formattime(history_data.last_change - history_data.started_at --[[@as uint]])
+    local runtime = flib_format.time(history_data.last_change - history_data.started_at --[[@as uint]])
+    -- local finished = util.formattime(game.tick - history_data.last_change --[[@as uint]])
+    local finished = flib_format.time(game.tick - history_data.last_change --[[@as uint]])
+    if table_size(refs) == 0 then
+      refs = gui_utils.recreate_gui_refs(row)
+    end
+    refs.history_sprite.sprite = sprite
+    refs.history_sprite.tooltip = tooltip
+    refs.history_train_id.caption = train_id_str
+    refs.history_train_id.tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", train_id_str }
+    refs.history_runtime.caption = runtime
+    refs.history_finished.caption = finished
+    refs.history_train_id.tags = flib_table.shallow_merge({ refs.history_train_id.tags, { train_id = history_data.train.id } })
+
+    update_route_flow(refs.history_route, history_data, compact)
+    -- Light Running, hide empty row in comact mode (most likely, interrupt disturbs the schedule)
+    row.visible = true
+    if #refs.history_route.children == 0 then
+      row.visible = false
+    end
+    gui_utils.slot_table_update(row.shipment_table, history_data.shipment)
+  end
+
   scroll_pane.scroll_to_top()
-  vtm_gui.gui.tabs.history_tab.badge_text = table_index
+  gui_data.gui.history.badge_text = table_index
   if table_index == 0 then
-    vtm_gui.gui.history.warning.visible = true
+    gui_data.gui.history_warning.visible = true
   end
 
   for child_index = table_index + 1, #children do
@@ -406,8 +406,31 @@ local function update_tab(gui_id)
   end
 end
 
-return {
-  build_gui = build_gui,
-  update_tab = update_tab,
-  -- handle_action = handle_action,
-}
+local function refresh(gui_data, event)
+  script.raise_event(constants.refresh_event, {
+    player_index = gui_data.player.index,
+  })
+end
+
+function history.clear_history(gui_data, event)
+  -- delete history older 2 mins
+  local older_than = game.tick - gui_utils.ticks(1)
+  backend.clear_older(event.player_index, older_than)
+  refresh(gui_data, event)
+end
+
+function history.history_switch(gui_data, event)
+  storage.settings[event.player_index].history_switch = event.element.switch_state
+  refresh(gui_data, event)
+end
+
+flib_gui.add_handlers(history, function(event, handler)
+  local gui_id = gui_utils.get_gui_id(event.player_index)
+  ---@type GuiData
+  local gui_data = storage.guis[gui_id]
+  if gui_data then
+    handler(gui_data, event)
+  end
+end, "history")
+
+return history

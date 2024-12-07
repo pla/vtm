@@ -103,8 +103,9 @@ function setup()
     migrations.init_player_data(player)
     main_gui.create_gui(player)
     local gui_id = gui_utils.get_gui_id(player.index)
-    groups.create_gui(gui_id)
-
+    local gui_data = storage.guis[gui_id]
+    groups.create_gui(gui_data)
+  
     -- do the button thing
     main_gui.add_mod_gui_button(player)
   end
@@ -132,18 +133,18 @@ end
 --   main_gui.open_or_close_gui(event.player_index)
 -- end
 
-function vtm_groups_key(event)
-  groups.toggle_groups_gui(event.player_index)
-end
+-- function vtm_groups_key(event)
+--   groups.toggle_groups_gui(event.player_index)
+-- end
 
 -- move to corresponding files
-function on_lua_shortcut(event)
-  -- if event.prototype_name == "vtm-shortcut" then
-  --   main_gui.open_or_close_gui(event.player_index)
-    if event.prototype_name == "vtm-groups-shortcut" then
-    groups.toggle_groups_gui(event.player_index)
-  end
-end
+-- function on_lua_shortcut(event)
+--   if event.prototype_name == "vtm-shortcut" then
+--     main_gui.open_or_close_gui(event.player_index)
+--     if event.prototype_name == "vtm-groups-shortcut" then
+--     groups.toggle_groups_gui(event.player_index)
+--   end
+-- end
 
 function on_player_created(event)
   local player = game.players[event.player_index]
@@ -151,7 +152,8 @@ function on_player_created(event)
   main_gui.create_gui(player)
   main_gui.add_mod_gui_button(player)
   local gui_id = gui_utils.get_gui_id(player.index)
-  groups.create_gui(gui_id)
+  local gui_data = storage.guis[gui_id]
+  groups.create_gui(gui_data,event)
 end
 
 function on_runtime_mod_setting_changed(event)
@@ -183,9 +185,9 @@ control.on_load = loading
 control.events = {
   [defines.events.on_runtime_mod_setting_changed] = on_runtime_mod_setting_changed,
   [defines.events.on_player_created] = on_player_created,
-  [defines.events.on_lua_shortcut] = on_lua_shortcut,
+  -- [defines.events.on_lua_shortcut] = on_lua_shortcut,
   [defines.events.on_tick] = on_tick,
-  ["vtm-groups-key"] = vtm_groups_key,
+  -- ["vtm-groups-key"] = vtm_groups_key,
 
 }
 
@@ -194,7 +196,7 @@ handler.add_lib(control)
 handler.add_lib(require("__flib__/gui"))
 handler.add_lib(main_gui)
 handler.add_lib(require("__virtm__.scripts.gui.searchbar"))
--- handler.add_lib(require("__virtm__.scripts.gui.trains"))
+handler.add_lib(require("__virtm__.scripts.gui.groups"))
 -- handler.add_lib(require("__virtm__.scripts.gui.stations"))
 -- handler.add_lib()
 -- handler.add_lib()

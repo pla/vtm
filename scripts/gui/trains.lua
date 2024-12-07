@@ -1,13 +1,14 @@
 local flib_train = require("__flib__.train")
-local tables     = require("__flib__.table")
+local flib_table = require("__flib__.table")
 local flib_gui   = require("__flib__.gui")
 local gui_utils  = require("__virtm__.scripts.gui.utils")
 local constants  = require("__virtm__.scripts.constants")
+local backend    = require("__virtm__.scripts.backend")
 local match      = require("__virtm__.scripts.match")
 local format     = require("__flib__.format")
 
 
-local inv_states = tables.invert(defines.train_state)
+local inv_states = flib_table.invert(defines.train_state)
 
 local trains = {}
 
@@ -124,7 +125,7 @@ end
 
 --- @param gui_data GuiData
 --- @param event? EventData|EventData.on_gui_click
-function trains.update_trains_tab(gui_data, event)
+function trains.update_tab(gui_data, event)
   local surface = storage.settings[gui_data.player.index].surface or "All"
   ---@type table<uint,TrainData>
   local train_datas = {}
@@ -184,7 +185,6 @@ function trains.update_trains_tab(gui_data, event)
       if not row then
         local gui_contents = {
           type = "frame",
-          -- name = "row_frame",
           direction = "horizontal",
           style = "vtm_table_row_frame",
           {
@@ -236,13 +236,13 @@ function trains.update_trains_tab(gui_data, event)
       refs.train_sprite.sprite = train_data.sprite
       refs.train_id.caption = train_data.train.id
       refs.train_id.tooltip = { "vtm.train-open-ui-follow-train", train_data.train.id }
-      refs.train_id.tags = { train_id = train_data.train.id }
+      refs.train_id.tags = flib_table.shallow_merge({ refs.train_id.tags,{ train_id = train_data.train.id }})
       refs.status.caption = status_string
       refs.status.tooltip = { "", inv_states[train_data.train.state], " : ", train_data.train.state }
       refs.since.caption = since
       refs.composition.caption = train_data.composition
 
-      gui_utils.slot_table_update_train(row.cargo_table, train_data.contents)
+      gui_utils.slot_table_update_train(row.cargo_table, backend.read_contents(train_data.train))
     end
   end
   gui_data.gui.trains.badge_text = table_index
@@ -254,7 +254,7 @@ function trains.update_trains_tab(gui_data, event)
   end
 end
 
-function trains.build_trains_tab()
+function trains.build_tab()
   local width = constants.gui.trains
   return {
     tab = {
@@ -328,7 +328,7 @@ function trains.build_trains_tab()
             type = "label",
             style = "bold_label",
             caption = { "", "[img=warning-white] ", { "gui-trains.no-trains" } },
-            ref = { "trains", "warning_label" },
+            name = "trains_warning_label",
           },
         },
       },
@@ -339,51 +339,8 @@ end
 --- @param gui_data GuiData
 --- @param event EventData|EventData.on_gui_click
 function trains.open_train(gui_data, event)
-  local train_id
-  if event.element.tags and event.element.tags.train_id then
-    train_id = event.element.tags.train_id
-  else
-    return
-  end
-  if storage.trains[tonumber(train_id)] then
-    local train = storage.trains[tonumber(train_id)].train
-    if not train.valid then return end
-    local loco = flib_train.get_main_locomotive(train)
-    local player = gui_data.player
-    if event.shift and loco and loco.valid then
-      -- follow train in map/remote view
-      player.centered_on = loco
-    else
-      if loco and loco.valid then
-        gui_utils.open_entity_gui(event.player_index, loco)
-      end
-    end
-  end
+  gui_utils.open_train(gui_data, event)
 end
-
--- ---Handle gui actions
--- ---@param action GuiAction
--- ---@param event EventData.on_gui_click
--- function trains.handle_action(action, event)
---   if action.action == "open-train" then
---     if storage.trains[tonumber(action.train_id)] then
---       local train = storage.trains[tonumber(action.train_id)].train
---       if not train.valid then return end
---       local loco = flib_train.get_main_locomotive(train)
---       local player = game.players[event.player_index]
---       if event.shift and loco and loco.valid then
---         -- follow train in map/remote view
---         player.centered_on = loco
---       else
---         if loco and loco.valid then
---           gui_util.open_entity_gui(event.player_index, loco)
---         end
---       end
---     end
---   elseif action.action == "refresh" then
---     trains.update_tab(action.gui_id)
---   end
--- end
 
 flib_gui.add_handlers(trains, function(event, handler)
   local gui_id = gui_utils.get_gui_id(event.player_index)
@@ -392,6 +349,6 @@ flib_gui.add_handlers(trains, function(event, handler)
   if gui_data then
     handler(gui_data, event)
   end
-end)
+end, "trains")
 
 return trains

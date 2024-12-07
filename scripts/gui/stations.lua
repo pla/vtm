@@ -1,13 +1,13 @@
 -- stations.lua
-local flib_gui  = require("__flib__.gui")
+local flib_gui   = require("__flib__.gui")
 local flib_table = require("__flib__.table")
-local gui_utils = require("__virtm__.scripts.gui.utils")
-local match     = require("__virtm__.scripts.match")
-local constants = require("__virtm__.scripts.constants")
-local backend   = require("__virtm__.scripts.backend")
+local gui_utils  = require("__virtm__.scripts.gui.utils")
+local match      = require("__virtm__.scripts.match")
+local constants  = require("__virtm__.scripts.constants")
+local backend    = require("__virtm__.scripts.backend")
 -- local groups    = require("__virtm__.scripts.gui.groups")
 
-local stations  = {}
+local stations   = {}
 ---comment
 ---@param station_data StationData
 ---@param is_circuit_limit boolean
@@ -202,16 +202,16 @@ function stations.update_stations_tab(gui_data, event)
       end
       -- Fill with data
       refs.stations_sprite.sprite = station_data.sprite
-      refs.stations_sprite.tags = flib_table.shallow_merge({ refs.stations_sprite.tags, { station_id = station_data.station.unit_number }})
+      refs.stations_sprite.tags = flib_table.shallow_merge({ refs.stations_sprite.tags, { station_id = station_data.station.unit_number } })
       refs.station_name.caption = station_data.station.backer_name
-      refs.station_name.tags = flib_table.shallow_merge({ refs.station_name.tags,{ station_id = station_data.station.unit_number }})
+      refs.station_name.tags = flib_table.shallow_merge({ refs.station_name.tags, { station_id = station_data.station.unit_number } })
       --status: InTransit =blue, open yellow, TODO : open for too long red
       refs.indicator.children[1].sprite = "flib_indicator_" .. color
       refs.indicator.children[2].caption = limit_text
       refs.prio.caption = station_data.station.train_stop_priority
       refs.station_type.caption = station_data.type
       refs.groups_button.sprite = sprite
-      refs.groups_button.tags = flib_table.shallow_merge({ refs.groups_button.tags,{ group_id = group_id }})
+      refs.groups_button.tags = flib_table.shallow_merge({ refs.groups_button.tags, { group_id = group_id } })
 
       gui_utils.slot_table_update(row.stock_table, station_data.stock)
       gui_utils.slot_table_update(row.in_transit_table, in_transit_data)
@@ -328,41 +328,13 @@ end
 --- @param gui_data GuiData
 --- @param event EventData|EventData.on_gui_click
 function stations.open_station(gui_data, event)
-  if event.element.tags and event.element.tags.station_id then
-    station_id = event.element.tags.station_id
-  else
-    return
-  end
-
-  if storage.stations[station_id] then
-    local station = storage.stations[station_id].station --[[@as LuaEntity]]
-    if not station.valid then return end
-    gui_utils.open_entity_gui(event.player_index, station)
-  end
+  gui_utils.open_station(gui_data, event)
 end
 
 --- @param gui_data GuiData
 --- @param event EventData|EventData.on_gui_click
 function stations.show_station(gui_data, event)
-  if event.element.tags and event.element.tags.station_id then
-    station_id = event.element.tags.station_id
-  else
-    return
-  end
-
-  local player = gui_data.player
-  local position, surface
-  if station_id then
-    local station = storage.stations[station_id].station --[[@as LuaEntity]]
-    if not station.valid then return end
-    position = station.position --[[@as MapPosition]]
-    surface = station.surface.name --[[@as string]]
-    -- elseif action.position and action.surface_name then
-    --   position = action.position --[[@as MapPosition]]
-    --   surface = action.surface_name --[[@as string]]
-  end
-  player.set_controller({ type = defines.controllers.remote, position = position, surface = surface })
-  player.zoom = 0.5
+  gui_utils.show_station(gui_data, event)
 end
 
 --- @param gui_data GuiData

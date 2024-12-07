@@ -64,25 +64,10 @@ end
 --- @param gui_data GuiData
 --- @param event EventData|EventData.on_gui_click
 function depots.show_depot(gui_data, event)
-  if event.element.tags and event.element.tags.station_id then
-    station_id = event.element.tags.station_id
-  else
-    return
-  end
-
-  local player = gui_data.player
-  local position, surface
-  if station_id then
-    local station = storage.stations[station_id].station --[[@as LuaEntity]]
-    if not station.valid then return end
-    position = station.position --[[@as MapPosition]]
-    surface = station.surface.name --[[@as string]]
-  end
-  player.set_controller({ type = defines.controllers.remote, position = position, surface = surface })
-  player.zoom = 0.5
+  gui_utils.show_station(gui_data, event)
 end
 
-function depots.update_depots_tab(gui_data, event)
+function depots.update_tab(gui_data, event)
   local player = gui_data.player
   local surface = storage.settings[player.index].surface or "All"
   local depots_compact = {}
@@ -218,7 +203,7 @@ function depots.update_depots_tab(gui_data, event)
   end
 end
 
-function depots.build_depots_tab(gui_id)
+function depots.build_tab(gui_id)
   local width = constants.gui.depots
   return {
     tab = {
@@ -298,6 +283,6 @@ flib_gui.add_handlers(depots, function(event, handler)
   if gui_data then
     handler(gui_data, event)
   end
-end)
+end, "depots")
 
 return depots

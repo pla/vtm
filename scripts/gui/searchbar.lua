@@ -160,6 +160,10 @@ function searchbar.apply_filter(gui_data, event)
         -- quality = event.element.tags.quality or "normal"
       }
     end
+    if event.element.name == "prev_filter" then
+      type = gui_data.gui.choose_elem_button.elem_value.type or "item"  --[[@as string]]
+      name = gui_data.gui.choose_elem_button.elem_value.name --[[@as string]]
+    end
     -- choose elem button was used
     if event.element.name == "choose_elem_button" then
       if event.element.elem_value == nil then

@@ -494,7 +494,7 @@ function backend.migrate_train_SE(event)
   end
 end
 
-local function read_contents(train)
+function backend.read_contents(train)
   return {
     items = train.get_contents(),
     fluids = train.get_fluid_contents()
@@ -532,7 +532,7 @@ local function on_train_changed_state(event)
   if event.old_state == defines.train_state.wait_station then
     local item_diff = diff_items(train_data.contents.items, train.get_contents())
     local fluid_diff = diff_fluids(train_data.contents.fluids, train.get_fluid_contents())
-    train_data.contents = read_contents(train)
+    train_data.contents = backend.read_contents(train)
     log.diff = {
       items = item_diff,
       fluids = fluid_diff
@@ -543,7 +543,7 @@ local function on_train_changed_state(event)
 
   if new_state == defines.train_state.wait_station then
     if train.station then
-      train_data.contents = read_contents(train)
+      train_data.contents = backend.read_contents(train)
       train_data.last_station = train.station
       log.contents = train_data.contents.items
       log.fluids = train_data.contents.fluids
