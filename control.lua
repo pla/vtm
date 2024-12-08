@@ -170,7 +170,7 @@ function on_runtime_mod_setting_changed(event)
   end
   if event["setting"] == "vtm-showModgui" then
     local player = game.players[event.player_index]
-    if settings.get_player_settings(event.player_index)["vtm-showModgui"].value == false then
+    if settings.get_player_settings(player)["vtm-showModgui"].value == false then
       main_gui.remove_mod_gui_button(player)
     else
       main_gui.add_mod_gui_button(player)
@@ -197,7 +197,7 @@ handler.add_lib(require("__flib__/gui"))
 handler.add_lib(main_gui)
 handler.add_lib(require("__virtm__.scripts.gui.searchbar"))
 handler.add_lib(require("__virtm__.scripts.gui.groups"))
--- handler.add_lib(require("__virtm__.scripts.gui.stations"))
+-- handler.add_lib()
 -- handler.add_lib()
 -- handler.add_lib()
 -- handler.add_lib()

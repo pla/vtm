@@ -232,7 +232,7 @@ function stations.update_stations_tab(gui_data, event)
   end
 end
 
-function stations.build_stations_tab(gui_id)
+function stations.build_tab(gui_id)
   local width = constants.gui.stations
 
   -- name,status,prio,type,stock,intransit
@@ -356,6 +356,6 @@ flib_gui.add_handlers(stations, function(event, handler)
   if gui_data then
     handler(gui_data, event)
   end
-end)
+end,"stations")
 
 return stations

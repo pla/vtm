@@ -14,10 +14,12 @@ local groups_tab = require("__virtm__.scripts.gui.groups-tab")
 local backend    = require("__virtm__.scripts.backend")
 local gui_utils  = require("__virtm__.scripts.gui.utils")
 
-local function add_space_tab()
+
+local function add_space_tab(tabbed_pane,refs)
   if storage.SA_active then
-    return space.build_gui()
+    refs = flib_gui.add(tabbed_pane, space.build_gui(), refs)
   end
+    return refs
 end
 
 local main_gui = {}
@@ -104,24 +106,33 @@ function main_gui.create_gui(player)
             name = "tabbed_pane",
             style = "vtm_tabbed_pane",
             handler = { [defines.events.on_gui_selected_tab_changed] = main_gui.change_tab },
-            -- tab trains
-            trains.build_tab(),
-            -- -- tab stations
-            stations.build_stations_tab(),
-            -- -- tab space
-            add_space_tab(),
-            -- -- tab depots
-            depots.build_tab(),
-            -- -- tab groups
-            groups_tab.build_tab(),
-            -- -- tab history
-            history.build_tab(),
+            -- -- tab trains
+            -- trains.build_tab(),
+            -- -- -- tab stations
+            -- stations.build_stations_tab(),
+            -- -- -- tab space
+            -- add_space_tab(),
+            -- -- -- tab depots
+            -- depots.build_tab(),
+            -- -- -- tab groups
+            -- groups_tab.build_tab(),
+            -- -- -- tab history
+            -- history.build_tab(),
           }, -- end tabbed pane
         },
       }
     }
   }
+
   local refs = flib_gui.add(player.gui.screen, gui_contents)
+  local tabbed_pane = refs.tabbed_pane
+  refs = flib_gui.add(tabbed_pane, trains.build_tab(), refs)
+  refs = flib_gui.add(tabbed_pane, stations.build_tab(), refs)
+  refs = flib_gui.add(tabbed_pane, depots.build_tab(), refs)
+  refs = flib_gui.add(tabbed_pane, groups_tab.build_tab(), refs)
+  refs = flib_gui.add(tabbed_pane, history.build_tab(), refs)
+  refs = add_space_tab(tabbed_pane, refs)
+
   local gui_data = {
     gui_id = gui_id,
     gui = refs,
@@ -303,7 +314,7 @@ end
 
 function main_gui.add_mod_gui_button(player)
   local button_flow = mod_gui.get_button_flow(player) --[[@as LuaGuiElement]]
-  if not settings.player_default["vtm-showModgui"].value then
+  if not settings.get_player_settings(player)["vtm-showModgui"].value then
     main_gui.remove_mod_gui_button(player)
     return
   end
@@ -320,44 +331,6 @@ function main_gui.add_mod_gui_button(player)
     tooltip = { "vtm.mod-gui-tooltip" },
     handler = main_gui.open_or_close_gui,
   })
-end
-
-local function handle_action(action, event)
-  local gui_data
-  if action.action == "close-window" then -- x button
-    -- main_gui.hide(action.gui_id)
-  elseif action.action == "window_closed" then
-    -- if storage.guis[action.gui_id].pinned then
-    --   return
-    -- end
-    -- main_gui.hide(action.gui_id)
-  elseif action.action == "clear_history" then
-    -- -- delete history older 2 mins
-    -- local older_than = game.tick - gui_utils.ticks(1)
-    -- backend.clear_older(event.player_index, older_than)
-    -- main_gui.dispatch_refresh(gui_data, event)
-  elseif action.action == "change_tab" then
-    -- storage.settings[event.player_index].current_tab = action.tab
-    -- dispatch_refresh(gui_data,event)
-  elseif action.action == "refresh" then
-    -- dispatch_refresh(event)
-  elseif action.action == "toggle_pinned" then
-    -- toggle_pinned(event)
-  elseif action.action == "open-vtm" then -- mod-gui-button
-    -- main_gui.open_or_close_gui(event.player_index)
-  elseif action.action == "history_switch" then
-    -- storage.settings[event.player_index].history_switch = event.element.switch_state
-    -- main_gui.dispatch_refresh(gui_data, event)
-  elseif action.action == "recenter" then
-    -- if event.button == defines.mouse_button_type.middle then
-    --   local gui_data = storage.guis[action.gui_id]
-    --   if gui_data then
-    --     gui_data.gui.window.force_auto_center()
-    --   end
-    -- end
-    -- elseif action.action == "focus_search" then
-    -- searchbar.handle_action(action, event)
-  end
 end
 
 --- @param gui_data GuiData
