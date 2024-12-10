@@ -111,41 +111,27 @@ function setup()
   end
   on_se_elevator()
   storage.station_refresh = "init"
+end 
+
+---@param event EventData.on_gui_opened
+function on_gui_opened(event)
+  if script.active_mods["debugadapter"] then
+    if event.entity then
+      log("VTM: gui opened" .. event.entity.type)
+    end
+  end
 end
 
--- script.on_event(defines.events.on_gui_opened, function(event)
---   if script.active_mods["debugadapter"] then
---     if event.entity then
---       log("VTM: gui opened" .. event.entity.type)
---     end
---   end
--- end)
+---@param event EventData.on_gui_closed
+function on_gui_closed(event)
+  if script.active_mods["debugadapter"] then
+    if event.entity and event.entity.type == "train-stop" then
+      log("VTM: gui closed" .. event.entity.type)
+    end
+  end
+end
 
--- script.on_event(defines.events.on_gui_closed, function(event)
---   if script.active_mods["debugadapter"] then
---     if event.entity and event.entity.type == "train-stop" then
---       log("VTM: gui closed" .. event.entity.type)
---     end
---   end
--- end)
-
--- function vtm_open(event)
---   main_gui.open_or_close_gui(event.player_index)
--- end
-
--- function vtm_groups_key(event)
---   groups.toggle_groups_gui(event.player_index)
--- end
-
--- move to corresponding files
--- function on_lua_shortcut(event)
---   if event.prototype_name == "vtm-shortcut" then
---     main_gui.open_or_close_gui(event.player_index)
---     if event.prototype_name == "vtm-groups-shortcut" then
---     groups.toggle_groups_gui(event.player_index)
---   end
--- end
-
+---@param event EventData.on_player_created
 function on_player_created(event)
   local player = game.players[event.player_index]
   migrations.init_player_data(player)
@@ -156,6 +142,7 @@ function on_player_created(event)
   groups.create_gui(gui_data,event)
 end
 
+---@param event EventData.on_runtime_mod_setting_changed
 function on_runtime_mod_setting_changed(event)
   if tables.find({
         "vtm-requester-names",
@@ -185,23 +172,18 @@ control.on_load = loading
 control.events = {
   [defines.events.on_runtime_mod_setting_changed] = on_runtime_mod_setting_changed,
   [defines.events.on_player_created] = on_player_created,
-  -- [defines.events.on_lua_shortcut] = on_lua_shortcut,
   [defines.events.on_tick] = on_tick,
-  -- ["vtm-groups-key"] = vtm_groups_key,
-
+  -- [defines.events.on_gui_opened] = on_gui_opened,
+  -- [defines.events.on_gui_closed] = on_gui_closed,
 }
 
 
-handler.add_lib(control)
 handler.add_lib(require("__flib__/gui"))
+handler.add_lib(control)
 handler.add_lib(main_gui)
 handler.add_lib(require("__virtm__.scripts.gui.searchbar"))
 handler.add_lib(require("__virtm__.scripts.gui.groups"))
--- handler.add_lib()
--- handler.add_lib()
--- handler.add_lib()
--- handler.add_lib()
--- handler.add_lib()
+handler.add_lib(require("__virtm__.scripts.backend"))
 
 -- COMMANDS
 commands.add_command("vtm-show-undef-stations", { "vtm.command-help" }, function(event)

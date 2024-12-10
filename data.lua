@@ -22,7 +22,20 @@ data:extend {
         -- scale="0.5",
         -- shift = { 8, 8 }
       },
-
+    },
+  },
+  {
+    type = "sprite",
+    name = "vtm_logo",
+    layers = {
+      {
+        type = "sprite",
+        filename = "__virtm__/graphics/icons/vtm-loco-x64.png",
+        width = 64,
+        height = 64,
+        priority = "extra-high-no-scale",
+        flags = { "gui-icon" },
+      },
     },
   },
   {
@@ -30,7 +43,6 @@ data:extend {
     name = "vtm_refresh_white",
     layers = {
       {
-        type = "sprite",
         filename = "__core__/graphics/refresh-white-animation.png",
         position = { 0, 0 },
         size = 32,

@@ -14,15 +14,46 @@ local groups_tab = require("__virtm__.scripts.gui.groups-tab")
 local backend    = require("__virtm__.scripts.backend")
 local gui_utils  = require("__virtm__.scripts.gui.utils")
 
+local main_gui = {}
 
 local function add_space_tab(tabbed_pane,refs)
-  if storage.SA_active then
+  if storage.showSpaceTab then
     refs = flib_gui.add(tabbed_pane, space.build_gui(), refs)
   end
     return refs
 end
 
-local main_gui = {}
+---Toggle auto refresh
+---@param gui_data GuiData
+---@param to_state string? "off"|"auto"
+local function toggle_auto_refresh(gui_data, to_state)
+  -- get player settings
+  local gui_state = storage.settings[gui_data.player.index]
+  if to_state ~= nil then
+    -- force given state
+    if to_state == "off" then
+      gui_state.gui_refresh = ""
+      gui_data.gui.refresh_button.toggled = false
+    elseif to_state == "auto" then
+      gui_state.gui_refresh = "auto"
+    end
+  else
+    -- toggle
+    if gui_state.gui_refresh == "auto" then
+      gui_state.gui_refresh = ""
+    else
+      gui_state.gui_refresh = "auto"
+    end
+  end
+
+  if gui_state.gui_refresh == "auto" then
+    gui_data.gui.refresh_button.toggled = true
+    gui_data.player.print({ "vtm.auto-refresh-on" })
+  else
+    gui_data.gui.refresh_button.toggled = false
+    gui_data.player.print({ "vtm.auto-refresh-off" })
+  end
+end
 
 -- config sprite: side_menu_menu_icon
 -- search sprite: search_white
@@ -163,38 +194,6 @@ function main_gui.create_gui(player)
   refs.window.visible = false
 end
 
----Toggle auto refresh
----@param gui_data GuiData
----@param to_state string? "off"|"auto"
-local function toggle_auto_refresh(gui_data, to_state)
-  -- get player settings
-  local gui_state = storage.settings[gui_data.player.index]
-  if to_state ~= nil then
-    -- force given state
-    if to_state == "off" then
-      gui_state.gui_refresh = ""
-      gui_data.gui.refresh_button.toggled = false
-    elseif to_state == "auto" then
-      gui_state.gui_refresh = "auto"
-    end
-  else
-    -- toggle
-    if gui_state.gui_refresh == "auto" then
-      gui_state.gui_refresh = ""
-    else
-      gui_state.gui_refresh = "auto"
-    end
-  end
-
-  if gui_state.gui_refresh == "auto" then
-    gui_data.gui.refresh_button.toggled = true
-    gui_data.player.print({ "vtm.auto-refresh-on" })
-  else
-    gui_data.gui.refresh_button.toggled = false
-    gui_data.player.print({ "vtm.auto-refresh-off" })
-  end
-end
-
 --- @param gui_data GuiData
 --- @param event? EventData|EventData.on_gui_click
 function main_gui.open(gui_data, event)
@@ -297,7 +296,7 @@ function main_gui.dispatch_refresh(gui_data, event)
   searchbar.update(gui_data)
   trains.update_tab(gui_data, event)
   stations.update_stations_tab(gui_data, event)
-  if storage.SA_active and settings.global["vtm-showSpaceTab"].value then
+  if storage.showSpaceTab then
     space.update_tab(gui_data, event)
   end
   depots.update_tab(gui_data, event)
@@ -321,13 +320,18 @@ function main_gui.add_mod_gui_button(player)
   if button_flow.vtm_button then
     return
   end
-
+local style = mod_gui.button_style
+local sprite = "vtm_logo"
+if script.active_mods["GUI_Unifyer_Unified"] then
+  style = "slot_button"
+end
   -- TODO: different style when gui_unifier
   flib_gui.add(button_flow, {
-    type = "button",
+    type = "sprite-button",
     name = "vtm_button",
-    style = mod_gui.button_style,
-    caption = "VTM",
+    sprite = sprite,
+    style = style,
+    -- caption = "VTM",
     tooltip = { "vtm.mod-gui-tooltip" },
     handler = main_gui.open_or_close_gui,
   })
