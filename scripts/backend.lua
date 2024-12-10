@@ -309,7 +309,6 @@ function backend.clear_invalid_stations()
   end
 end
 
-
 local function trim_old_history(older_than)
   local size = table_size(storage.history)
   if size < 10 or game.tick - last_sweep < 720 then return end
@@ -500,6 +499,7 @@ function backend.read_contents(train)
     fluids = train.get_fluid_contents()
   }
 end
+
 local function on_train_changed_state(event)
   local train = event.train
   local train_id = train.id
@@ -579,6 +579,8 @@ local function on_trainstop_build(event)
     end
     local station_data = new_station(event.entity)
     storage.stations[event.entity.unit_number] = station_data
+  else 
+    return
   end
 end
 
@@ -597,13 +599,12 @@ local function on_trainstop_renamed(event)
     if not event.player_index then
       event.player_index = event.entity.last_user.index
     end
-    -- log(serpent.block(event))
-    -- script.raise_event(constants.refresh_event, {
-    --   player_index = event.player_index
-    -- })
+  else
+    return
   end
 end
 
+-- unused for now
 local function on_train_schedule_changed(event)
   local train = event.train
   local train_id = train.id
@@ -618,30 +619,10 @@ local function on_train_schedule_changed(event)
   })
 end
 
--- EVENTS
-
-script.on_event(defines.events.on_train_changed_state, function(event)
-  on_train_changed_state(event)
-end)
-
--- script.on_event(defines.events.on_train_schedule_changed, function(event)
---   on_train_schedule_changed(event)
--- end)
-
-script.on_event(defines.events.on_built_entity, function(event)
-    on_trainstop_build(event)
-  end,
-  { { filter = "type", type = "train-stop" } })
-
-script.on_event(defines.events.on_robot_built_entity, function(event)
-    on_trainstop_build(event)
-  end,
-  { { filter = "type", type = "train-stop" } })
-
-script.on_event(defines.events.on_entity_renamed, function(event)
-  if event.entity.type == "train-stop" then
-    on_trainstop_renamed(event)
-  end
-end)
-
+backend.events = {
+  [defines.events.on_train_changed_state] = on_train_changed_state,
+  [defines.events.on_built_entity] = on_trainstop_build,
+  [defines.events.on_robot_built_entity] = on_trainstop_build,
+  [defines.events.on_entity_renamed] = on_trainstop_renamed,
+}
 return backend
