@@ -5,7 +5,6 @@ local mod_gui    = require("__core__.lualib.mod-gui")
 
 local searchbar  = require("__virtm__.scripts.gui.searchbar")
 local trains     = require("__virtm__.scripts.gui.trains")
-local space      = require("__virtm__.scripts.gui.space")
 local stations   = require("__virtm__.scripts.gui.stations")
 local depots     = require("__virtm__.scripts.gui.depots")
 local history    = require("__virtm__.scripts.gui.history")
@@ -13,14 +12,17 @@ local groups     = require("__virtm__.scripts.gui.groups")
 local groups_tab = require("__virtm__.scripts.gui.groups-tab")
 local backend    = require("__virtm__.scripts.backend")
 local gui_utils  = require("__virtm__.scripts.gui.utils")
-
+local space
+if script.active_mods["virtm_space"] then
+  space = require("__virtm_space__.space")
+end
 local main_gui = {}
 
-local function add_space_tab(tabbed_pane,refs)
+local function add_space_tab(tabbed_pane, refs)
   if storage.showSpaceTab then
     refs = flib_gui.add(tabbed_pane, space.build_gui(), refs)
   end
-    return refs
+  return refs
 end
 
 ---Toggle auto refresh
@@ -289,7 +291,7 @@ end
 function main_gui.dispatch_refresh(gui_data, event)
   if not gui_data then return end
   local current_tab = storage.settings[gui_data.player.index].current_tab
-  if not settings.global["vtm-showSpaceTab"].value and current_tab == "space" then
+  if not storage.showSpaceTab and current_tab == "space" then
     current_tab = "trains"
   end
   -- refresh all data, the tab badges and then the current tab
@@ -320,11 +322,11 @@ function main_gui.add_mod_gui_button(player)
   if button_flow.vtm_button then
     return
   end
-local style = mod_gui.button_style
-local sprite = "vtm_logo"
-if script.active_mods["GUI_Unifyer_Unified"] then
-  style = "slot_button"
-end
+  local style = mod_gui.button_style
+  local sprite = "vtm_logo"
+  if script.active_mods["GUI_Unifyer_Unified"] then
+    style = "slot_button"
+  end
   -- TODO: different style when gui_unifier
   flib_gui.add(button_flow, {
     type = "sprite-button",

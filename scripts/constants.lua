@@ -1,4 +1,11 @@
+
+local flib_table     = require("__flib__.table")
+
+
+
 local constants = {
+  inv_platform_states = flib_table.invert(defines.space_platform_state),
+  inv_train_tates = flib_table.invert(defines.train_state),
   gui_content_frame_height       = 700,
   gui_window_min_width           = 990,
   MAX_LIMIT                      = 4294967295,

@@ -1,14 +1,18 @@
-local tables = require("__flib__.table")
-local constants = require("__virtm__.scripts.constants")
-local gui_util = require("__virtm__.scripts.gui.utils")
-local util = require("__core__.lualib.util")
-local flib_train = require("__flib__.train")
+local flib_table    = require("__flib__.table")
+local constants     = require("__virtm__.scripts.constants")
+local gui_utils     = require("__virtm__.scripts.gui.utils")
+local util          = require("__core__.lualib.util")
+local flib_train    = require("__flib__.train")
+
 
 local MAX_KEEP = 60 * 60 * 60 * 5 -- ticks * seconds * minutes * hours
 local last_sweep = 0
 
 local backend = {}
 
+function space_init()
+  
+end
 function backend.load_guess_patterns()
   storage.settings["patterns"] = {
     depot = util.split(tostring(settings.global["vtm-depot-names"].value):lower(), ","),
@@ -123,7 +127,7 @@ local function new_station(station)
     last_changed = game.tick,
     opened = 0,
     closed = 0,
-    sprite = gui_util.signal_to_sprite(gui_util.signal_for_entity(station)),
+    sprite = gui_utils.signal_to_sprite(gui_utils.signal_for_entity(station)),
     train_front_rail = nil,
     type = guess_station_type(station), -- one of P R D F H or ND
     sort_prio = get_TCS_prio(station.backer_name),
@@ -265,7 +269,7 @@ function backend.update_station(station)
       station_data.registered_stock = {}
     end
     if station_data.sprite == nil then
-      station_data.sprite = gui_util.signal_to_sprite(gui_util.signal_for_entity(station_data.station)) or
+      station_data.sprite = gui_utils.signal_to_sprite(gui_utils.signal_for_entity(station_data.station)) or
           "item/train-stop"
     end
   else
@@ -378,7 +382,7 @@ local function new_current_log(train)
     last_change = game.tick,
     composition = flib_train.get_composition_string(train),
     prototype = loco.prototype,
-    sprite = "item/" .. gui_util.signal_for_entity(loco).name,
+    sprite = "item/" .. gui_utils.signal_for_entity(loco).name,
     contents = {},
     events = {}
   }
@@ -439,7 +443,7 @@ local function get_train_data(train, train_id)
 end
 
 function backend.get_logs(force)
-  return tables.filter(storage.trains, function(train_data)
+  return flib_table.filter(storage.trains, function(train_data)
     return train_data.force_index == force.index
   end)
 end
@@ -459,7 +463,7 @@ local function finish_current_log(train, train_id, train_data)
   table.insert(storage.history, 1, train_data)
   if train_data.surface2 then
     -- train passed SE elevator
-    local data = tables.deep_copy(train_data)
+    local data = flib_table.deep_copy(train_data)
     data.surface = data.surface2
     table.insert(storage.history, 1, data)
   end
@@ -579,7 +583,7 @@ local function on_trainstop_build(event)
     end
     local station_data = new_station(event.entity)
     storage.stations[event.entity.unit_number] = station_data
-  else 
+  else
     return
   end
 end

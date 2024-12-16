@@ -22,14 +22,16 @@
 ---@field selected_group_set string? selected group in groups tab
 
 ---@class PlatformData
----@field key uint platform unique index
+---@field index uint platform unique index
+---@field force_index uint
 ---@field name string Platform name
----@field status string?
----@field schedule PlatformSchedule?
----@field location LocalisedString
+---@field platform LuaSpacePlatform
+---@field state uint? defines.space_platform_state
+---@field has_schedule boolean?
+---@field location LocalisedString?
 ---@field next string?
----@field weight uint
----@field contents { [string]: ItemWithQualityCounts } Contents of the platform
+---@field weight uint?
+---@field contents? { [string]: ItemWithQualityCounts } Contents of the platform
 
 ---@class TrainData
 ---@field force_index uint

@@ -1,5 +1,9 @@
 if script.active_mods["gvv"] then require("__gvv__.gvv")() end
-local tables         = require("__flib__.table")
+local backend_space
+if script.active_mods["virtm_space"] then
+  backend_space = require("__virtm_space__.backend_space")
+end
+local flib_table     = require("__flib__.table")
 local flib_migration = require("__flib__.migration")
 local constants      = require("__virtm__.scripts.constants")
 local main_gui       = require("__virtm__.scripts.gui.main_gui")
@@ -48,7 +52,7 @@ local function on_tick(event)
 
   -- station data refresh
   if storage.station_k then
-    storage.station_k = tables.for_n_of(
+    storage.station_k = flib_table.for_n_of(
       storage.station_update_table,
       storage.station_k, 10,
       backend.update_station)
@@ -105,13 +109,16 @@ function setup()
     local gui_id = gui_utils.get_gui_id(player.index)
     local gui_data = storage.guis[gui_id]
     groups.create_gui(gui_data)
-  
+
     -- do the button thing
     main_gui.add_mod_gui_button(player)
   end
   on_se_elevator()
   storage.station_refresh = "init"
-end 
+  if backend_space then
+    backend_space.init_platforms()
+  end
+end
 
 ---@param event EventData.on_gui_opened
 function on_gui_opened(event)
@@ -139,12 +146,12 @@ function on_player_created(event)
   main_gui.add_mod_gui_button(player)
   local gui_id = gui_utils.get_gui_id(player.index)
   local gui_data = storage.guis[gui_id]
-  groups.create_gui(gui_data,event)
+  groups.create_gui(gui_data, event)
 end
 
 ---@param event EventData.on_runtime_mod_setting_changed
 function on_runtime_mod_setting_changed(event)
-  if tables.find({
+  if flib_table.find({
         "vtm-requester-names",
         "vtm-provider-names",
         "vtm-depot-names",
@@ -163,6 +170,9 @@ function on_runtime_mod_setting_changed(event)
       main_gui.add_mod_gui_button(player)
     end
   end
+  if event["setting"] == "vtm-showSpaceTab" then
+
+  end
   --refresh cached settings
   gui_utils.cache_generic_settings()
 end
@@ -173,8 +183,8 @@ control.events = {
   [defines.events.on_runtime_mod_setting_changed] = on_runtime_mod_setting_changed,
   [defines.events.on_player_created] = on_player_created,
   [defines.events.on_tick] = on_tick,
-  -- [defines.events.on_gui_opened] = on_gui_opened,
-  -- [defines.events.on_gui_closed] = on_gui_closed,
+  [defines.events.on_gui_opened] = on_gui_opened,
+  [defines.events.on_gui_closed] = on_gui_closed,
 }
 
 

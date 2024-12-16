@@ -8,7 +8,7 @@ local match      = require("__virtm__.scripts.match")
 local format     = require("__flib__.format")
 
 
-local inv_states = flib_table.invert(defines.train_state)
+local inv_states = constants.inv_train_tates
 
 local trains = {}
 
