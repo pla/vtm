@@ -5,7 +5,7 @@ local gui_utils  = require("__virtm__.scripts.gui.utils")
 local match      = require("__virtm__.scripts.match")
 local constants  = require("__virtm__.scripts.constants")
 local backend    = require("__virtm__.scripts.backend")
--- local groups    = require("__virtm__.scripts.gui.groups")
+local groups_tab    = require("__virtm__.scripts.gui.groups-tab")
 
 local stations   = {}
 ---comment
@@ -345,8 +345,7 @@ function stations.show_group_ui(gui_data, event)
   else
     return
   end
-  -- TODO Fixme
-  -- groups.open_gui(group_id)
+  groups_tab.open_group_edit(gui_data, event)
 end
 
 flib_gui.add_handlers(stations, function(event, handler)
