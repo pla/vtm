@@ -529,6 +529,14 @@ function groups_tab.build_tab()
             direction = "horizontal",
             style_mods = { horizontally_stretchable = true },
             {
+              type = "button",
+              style = "tool_button", --"frame_button",
+              name = "new_group",
+              caption = { "vtm.table-header-open_group_edit" },
+              style_mods = { height = 24, },
+              handler = { groups_tab.open_group_edit },
+            },
+            {
               type = "label",
               style = "subheader_caption_label",
               style_mods = { width = width.icon },
@@ -592,10 +600,11 @@ end
 --- @param gui_data GuiData
 --- @param event EventData|EventData.on_gui_click
 function groups_tab.open_group_edit(gui_data, event)
-  if event.element.tags and event.element.tags.group_id then
-    local group_id = event.element.tags.group_id --[[@as string]]
-    groups.open_gui(gui_data, event)
+  if not event.element.name == "new_group" and
+      not event.element.name == "editgrp_button" then
+    return
   end
+  groups.open_gui(gui_data, event)
 end
 
 --- @param gui_data GuiData
