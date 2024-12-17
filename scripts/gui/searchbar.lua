@@ -167,7 +167,7 @@ function searchbar.apply_filter(gui_data, event)
     -- choose elem button was used
     if event.element.name == "choose_elem_button" then
       if event.element.elem_value == nil then
-        -- nothing todo on clearing the filter
+        -- clearing the filter
         return
       end
       name = event.element.elem_value.name
@@ -175,7 +175,6 @@ function searchbar.apply_filter(gui_data, event)
       --TODO add quality
     end
     gui_data.gui.search_field.text = "[" .. type .. "=" .. name .. "]"
-    -- TODO only insert if different from prev entry
     if #filter_history == 0 or (#filter_history > 0 and gui_data.gui.choose_elem_button.elem_value.name ~= filter_history[1].name) then
       table.insert(filter_history, 1, gui_data.gui.choose_elem_button.elem_value)
     end

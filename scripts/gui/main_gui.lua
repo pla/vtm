@@ -327,7 +327,6 @@ function main_gui.add_mod_gui_button(player)
   if script.active_mods["GUI_Unifyer_Unified"] then
     style = "slot_button"
   end
-  -- TODO: different style when gui_unifier
   flib_gui.add(button_flow, {
     type = "sprite-button",
     name = "vtm_button",

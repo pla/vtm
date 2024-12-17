@@ -71,7 +71,6 @@ function stations.update_stations_tab(gui_data, event)
       elseif station_data.force_index == gui_data.player.force.index and
           station_data.type == "ND"
       then
-        -- TODO setting abfragen
         nd_stations = nd_stations + 1
       end
     end
