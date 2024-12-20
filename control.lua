@@ -1,5 +1,5 @@
-if script.active_mods["gvv"] then require("__gvv__.gvv")() end
 local backend_space
+if script.active_mods["gvv"] then require("__gvv__.gvv")() end
 if script.active_mods["virtm_space"] then
   backend_space = require("__virtm_space__.backend_space")
 end
@@ -41,7 +41,12 @@ local function init_global_data()
   gui_utils.cache_generic_settings()
 end
 
-flib_migration.handle_on_configuration_changed(migrations.by_version, migrations.generic)
+-- flib_migration.handle_on_configuration_changed(migrations.by_version, migrations.generic)
+
+local function on_configuration_changed(event)
+  flib_migration.on_config_changed(event, migrations.by_version , script.mod_name)
+  migrations.generic()
+end
 
 local function on_tick(event)
   -- for _, task in pairs(on_tick_n.retrieve(event.tick) or {}) do
@@ -179,6 +184,7 @@ end
 
 control.on_init = setup
 control.on_load = loading
+control.on_configuration_changed = on_configuration_changed
 control.events = {
   [defines.events.on_runtime_mod_setting_changed] = on_runtime_mod_setting_changed,
   [defines.events.on_player_created] = on_player_created,
