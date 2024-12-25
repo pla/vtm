@@ -9,7 +9,6 @@ Version: 0.2.2
 Date: 2024-12-08
   Changes:
     - Conerted to gui-lite and event_handler
-    - Separated Space Tab in new mod
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.1
 Date: 2024-11-26
