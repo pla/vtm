@@ -64,7 +64,7 @@ local function header(gui_id)
   return {
     type = "flow",
     style = "flib_titlebar_flow",
-    drag_target = "window",
+    drag_target = "vtm_window",
     handler = {
       [defines.events.on_gui_click] = main_gui.center_window,
       [defines.events.on_gui_closed] = main_gui.hide,
@@ -118,12 +118,13 @@ end
 
 function main_gui.create_gui(player)
   local gui_id = player.index
+  -- if storage.guis[gui_id] then return end
   gui_utils.handler = searchbar.apply_filter
   local gui_contents = {
     {
       type = "frame",
       direction = "vertical",
-      name = "window",
+      name = "vtm_window",
       style_mods = { minimal_width = constants.gui_window_min_width },
       handler = { [defines.events.on_gui_closed] = main_gui.on_window_closed },
       children = {
@@ -191,19 +192,19 @@ function main_gui.create_gui(player)
   end
   refs.tabbed_pane.selected_tab_index = tab_list[current_tab]
   -- center window on initial build
-  refs.window.force_auto_center()
+  refs.vtm_window.force_auto_center()
   -- hide until requested
-  refs.window.visible = false
+  refs.vtm_window.visible = false
 end
 
 --- @param gui_data GuiData
 --- @param event? EventData|EventData.on_gui_click
 function main_gui.open(gui_data, event)
   main_gui.dispatch_refresh(gui_data, event)
-  gui_data.gui.window.visible = true
+  gui_data.gui.vtm_window.visible = true
   gui_data.state = "open"
   if not gui_data.pinned then
-    gui_data.player.opened = gui_data.gui.window
+    gui_data.player.opened = gui_data.gui.vtm_window
   end
 end
 
@@ -211,7 +212,7 @@ end
 --- @param event? EventData|EventData.on_gui_click
 function main_gui.hide(gui_data, event)
   if gui_data.state == "closed" then return end
-  gui_data.gui.window.visible = false
+  gui_data.gui.vtm_window.visible = false
   gui_data.state = "closed"
   if storage.settings[gui_data.player.index].gui_refresh == "auto" then
     toggle_auto_refresh(gui_data, "off")
@@ -222,7 +223,7 @@ end
 --- @param gui_data GuiData
 --- @param event? EventData|EventData.on_gui_click
 function main_gui.destroy(gui_data, event)
-  gui_data.gui.window.destroy()
+  gui_data.gui.vtm_window.destroy()
   storage.guis[gui_data.gui_id] = nil
 end
 
@@ -258,15 +259,15 @@ function main_gui.toggle_pinned(gui_data, event)
     gui_data.gui.close_button.tooltip = { "gui.close" }
     -- gui_data.gui.pin_button.sprite = "flib_pin_black"
     -- gui_data.gui.pin_button.style = "flib_selected_frame_action_button"
-    gui_data.player.opened = gui_data.gui.window
-    if gui_data.player.opened == gui_data.gui.window then
+    gui_data.player.opened = gui_data.gui.vtm_window
+    if gui_data.player.opened == gui_data.gui.vtm_window then
       gui_data.player.opened = nil
     end
   else
     gui_data.gui.close_button.tooltip = { "gui.close-instruction" }
     -- gui_data.gui.pin_button.sprite = "flib_pin_white"
     -- gui_data.gui.pin_button.style = "frame_action_button"
-    gui_data.player.opened = gui_data.gui.window
+    gui_data.player.opened = gui_data.gui.vtm_window
   end
 end
 
@@ -360,7 +361,7 @@ function main_gui.center_window(gui_data, event)
   if event and event.button and not gui_utils.mouse_button_filter(event.button, "middle") then
     return
   end
-  gui_data.gui.window.force_auto_center()
+  gui_data.gui.vtm_window.force_auto_center()
 end
 
 flib_gui.add_handlers(main_gui, function(event, handler)
