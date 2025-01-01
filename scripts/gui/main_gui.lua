@@ -223,7 +223,12 @@ end
 --- @param gui_data GuiData
 --- @param event? EventData|EventData.on_gui_click
 function main_gui.destroy(gui_data, event)
-  gui_data.gui.vtm_window.destroy()
+  if gui_data.gui.window and gui_data.gui.window.tags and gui_data.gui.window.tags["__virtm_handler"] then
+    gui_data.gui.window.destroy()
+  end
+  if gui_data.gui.vtm_window then
+    gui_data.gui.vtm_window.destroy()
+  end
   storage.guis[gui_data.gui_id] = nil
 end
 
