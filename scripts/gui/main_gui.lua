@@ -223,10 +223,10 @@ end
 --- @param gui_data GuiData
 --- @param event? EventData|EventData.on_gui_click
 function main_gui.destroy(gui_data, event)
-  if gui_data.gui.window and gui_data.gui.window.tags and gui_data.gui.window.tags["__virtm_handler"] then
+  if gui_data.gui.window --[[@as LuaGuiElement]] and gui_data.gui.window.tags and gui_data.gui.window.tags["__virtm_handler"] then
     gui_data.gui.window.destroy()
   end
-  if gui_data.gui.vtm_window then
+  if gui_data.gui.vtm_window --[[@type LuaGuiElement]] then
     gui_data.gui.vtm_window.destroy()
   end
   storage.guis[gui_data.gui_id] = nil
