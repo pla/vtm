@@ -298,7 +298,7 @@ function backend.schedule_station_refresh()
   storage.station_update_table = game.train_manager.get_train_stops({})
   if next(storage.station_update_table) then
     game.print({ "vtm.station-refresh-start" })
-    storage.station_k = 1
+    storage.station_k = 0 --function starting AFTER this key, so zero (0) here not 1
   end
 end
 
