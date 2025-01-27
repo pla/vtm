@@ -1,6 +1,12 @@
 local constants = require("__virtm__.scripts.constants")
 local styles = data.raw["gui-style"]["default"]
 
+styles.quality_style = {
+  type = 'image_style',
+  left_padding = 16,
+  size = {32,16}
+}
+
 styles.vtm_main_content_frame = {
   type = "frame_style",
   parent = "deep_frame_in_shallow_frame",

@@ -6,7 +6,7 @@ local flib_train = require("__flib__.train")
 local constants  = require("__virtm__.scripts.constants")
 
 local utils      = {}
-utils.handler = nil
+utils.handler    = nil
 
 function utils.mouse_button_filter(button_pressed, button_wanted)
   local result = false
@@ -29,7 +29,7 @@ function utils.get_gui_id(player_index)
   return nil
 end
 
-function utils.default_list_box(name, item_data, items_num, style,handler)
+function utils.default_list_box(name, item_data, items_num, style, handler)
   if item_data == nil then
     --empty list
     item_data = {}
@@ -44,7 +44,7 @@ function utils.default_list_box(name, item_data, items_num, style,handler)
       horizontally_stretchable = true
     },
     items = item_data,
-    handler =  handler,
+    handler = handler,
   }
   return content
 end
@@ -154,7 +154,13 @@ function utils.slot_table_update(icon_table, sources, max_lines)
     if not button then
       _, button = flib_gui.add(icon_table, {
         type = "sprite-button",
-        handler = { [defines.events.on_gui_click] = utils.handler }
+        handler = { [defines.events.on_gui_click] = utils.handler },
+        { -- show quality icon if available
+          type = "sprite",
+          name = "quality_sprite",
+          resize_to_sprite = false,
+          style = "quality_style",
+        }
       })
     end
     utils.update_sprite_button(
@@ -227,7 +233,7 @@ function utils.update_sprite_button(button, type, name, amount, quality, color)
     -- TODO figure out how to display quality sprites
     local item_sprite = nil
     local quali_sprite = nil
-
+    button.quality_sprite.sprite = nil
     if color ~= nil and (color == "red" or color == "green") then
       local color_item = prototypes.item[color .. "-wire"]
       tooltip = { "", prototype.localised_name, ", ", color_item.localised_name }
@@ -236,8 +242,9 @@ function utils.update_sprite_button(button, type, name, amount, quality, color)
     end
     if script.active_mods["quality"] and type == "item" then
       local item_quality = prototypes.quality[quality]
-      if helpers.is_valid_sprite_path(item_quality.type .. "/" .. item_quality.name) then
+      if helpers.is_valid_sprite_path(item_quality.type .. "/" .. item_quality.name) and item_quality.name ~= "normal" then
         quali_sprite = item_quality.type .. "/" .. item_quality.name
+        button.quality_sprite.sprite = quali_sprite
       end
       tooltip = { "", tooltip, ", [", item_quality.type, "=", item_quality.name, "] ", item_quality.localised_name }
     end
@@ -251,37 +258,13 @@ function utils.update_sprite_button(button, type, name, amount, quality, color)
   button.number = amount
   button.tooltip = tooltip
   button.style = style
-  button.tags =flib_table.shallow_merge({ button.tags, { filter = "filter", type = type, name = name } })
+  button.tags = flib_table.shallow_merge({ button.tags, { filter = "filter", type = type, name = name } })
   -- button.tags = { filter = "filter", type = type, name = name } --TODO ,quality = quality},
 end
 
 function utils.slot_table_update_train(icon_table, sources)
   local slot_table = {}
   utils.contents_to_slot_table(sources, slot_table)
-  -- for k, y in pairs(sources) do
-  --   -- items
-  --   if k == "items" then
-  --     for _, v in pairs(y) do
-  --       local row = {}
-  --       row.type = "item"
-  --       row.name = v.name
-  --       row.count = v.count
-  --       row.quality = v.quality
-  --       row.color = nil
-  --       table.insert(slot_table, row)
-  --     end
-  --     --fluids, have no quality
-  --   elseif k == "fluids" then
-  --     for name, count in pairs(y) do
-  --       local row = {}
-  --       row.type = "fluid"
-  --       row.name = name
-  --       row.count = count
-  --       row.color = nil
-  --       table.insert(slot_table, row)
-  --     end
-  --   end
-  -- end
 
   utils.slot_table_update(icon_table, slot_table)
 end
@@ -548,16 +531,15 @@ function utils.show_station(gui_data, event)
   local position, surface
   if event.element.tags and event.element.tags.station_id then
     station_id = event.element.tags.station_id
-      local station = storage.stations[station_id].station --[[@as LuaEntity]]
+    local station = storage.stations[station_id].station --[[@as LuaEntity]]
     if not station.valid then return end
     position = station.position --[[@as MapPosition]]
     surface = station.surface.name --[[@as string]]
   elseif event.element.tags and event.element.tags.position then
     position = event.element.tags.position --[[@as MapPosition]]
     surface = event.element.tags.surface_name --[[@as string]]
-
   end
-if not position or not surface then return end
+  if not position or not surface then return end
   player.set_controller({ type = defines.controllers.remote, position = position, surface = surface })
   player.zoom = 0.5
 end
