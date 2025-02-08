@@ -2,7 +2,8 @@
 Version: 0.2.7
 Date: 2025-01-27
   Bugfixes:
-    - Fixed skip first station on background refresh
+    - Fixed: skip first station on background refresh
+    - Fixed: losing the on click handler for resource filter in tables
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.6
 Date: 2025-01-27
