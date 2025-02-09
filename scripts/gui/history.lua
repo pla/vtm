@@ -384,8 +384,9 @@ function history.update_tab(gui_data, event)
     refs.history_train_id.tooltip = { "", { "gui-trains.open-train" }, " Train ID: ", train_id_str }
     refs.history_runtime.caption = runtime
     refs.history_finished.caption = finished
-    refs.history_train_id.tags = flib_table.shallow_merge({ refs.history_train_id.tags, { train_id = history_data.train.id } })
-
+    if history_data.train.valid then
+      refs.history_train_id.tags = flib_table.shallow_merge({ refs.history_train_id.tags, { train_id = history_data.train.id } })
+    end
     update_route_flow(refs.history_route, history_data, compact)
     -- Light Running, hide empty row in comact mode (most likely, interrupt disturbs the schedule)
     row.visible = true
