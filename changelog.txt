@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.9
+Date: 2025-02-14
+  Bugfixes:
+    - Make renaming new stations aware of ghosts
+    - Fixed crash, when using resource tags in groups
+---------------------------------------------------------------------------------------------------
 Version: 0.2.8
 Date: 2025-02-09
   Bugfixes:

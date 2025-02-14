@@ -100,6 +100,33 @@ local function create_stock_tooltip(stock_table)
   return tooltip
 end
 
+local function member_row_contents()
+  local width = constants.gui.groups_tab
+
+  return  {
+    type = "frame",
+    style = "vtm_list_box_row_frame",
+    style_mods = { horizontally_stretchable = true, height = 36, left_padding = 8, right_padding = 8 },
+    {
+      type = "label",
+      name = "member_name",
+      style = "vtm_clickable_semibold_label",
+      style_mods = {
+        width = width.member_name,
+      },
+      tooltip = { "gui-train.open-in-map" },
+      handler = { [defines.events.on_gui_click] = groups_tab.show_station },
+    },
+    {
+      type = "empty-widget",
+      style = "flib_horizontal_pusher",
+      ignored_by_interaction = true
+    },
+    gui_utils.slot_table(width, nil, "member_stock"),
+  }
+
+end
+
 ---@param gui_data GuiData
 ---@param scroll_pane LuaGuiElement
 ---@param group_list table<uint,GroupData>
@@ -265,27 +292,7 @@ local function update_gui_group_detail_view(gui_data, scroll_pane, group_list)
       local member = member_children[member_index]
       refs = {}
       if not member then
-        local gui_contents = {
-          type = "frame",
-          style = "vtm_list_box_row_frame",
-          style_mods = { horizontally_stretchable = true, height = 36, left_padding = 8, right_padding = 8 },
-          {
-            type = "label",
-            name = "member_name",
-            style = "vtm_clickable_semibold_label",
-            style_mods = {
-              width = width.member_name,
-            },
-            tooltip = { "gui-train.open-in-map" },
-            handler = { [defines.events.on_gui_click] = groups_tab.show_station },
-          },
-          {
-            type = "empty-widget",
-            style = "flib_horizontal_pusher",
-            ignored_by_interaction = true
-          },
-          gui_utils.slot_table(width, nil, "member_stock"),
-        }
+        local gui_contents = member_row_contents()
         refs, member = flib_gui.add(scroll_pane_member, gui_contents)
       end
       if not station_data.stock_tick or (station_data.stock_tick and station_data.stock_tick < game.tick - 60) then
@@ -314,35 +321,15 @@ local function update_gui_group_detail_view(gui_data, scroll_pane, group_list)
       local tag = member_children[member_index]
       refs = {}
       if not tag then
-        local gui_contents = {
-          type = "frame",
-          style = "vtm_list_box_row_frame",
-          style_mods = { horizontally_stretchable = true, height = 36, left_padding = 8, right_padding = 8 },
-          {
-            type = "label",
-            name = "tag_name",
-            style = "vtm_clickable_semibold_label",
-            style_mods = {
-              width = width.member_name,
-            },
-            tooltip = { "gui-train.open-in-map" },
-            handler = { [defines.events.on_gui_click] = groups_tab.show_station },
-          },
-          {
-            type = "empty-widget",
-            style = "flib_horizontal_pusher",
-            ignored_by_interaction = true
-          },
-          gui_utils.slot_table(width, nil, "member_stock"),
-        }
+        local gui_contents = member_row_contents()        
         refs, tag = flib_gui.add(scroll_pane_member, gui_contents)
       end
       if table_size(refs) == 0 then
         refs = gui_utils.recreate_gui_refs(tag)
       end
-      refs.tag_name.caption = tag_data.text
-      refs.tag_name.tooltip = { "gui-train.open-in-map" }
-      refs.tag_name.tags = flib_table.shallow_merge({ refs.tag_name.tags, { position = tag_data.position, surface_name = tag_data.surface.name } })
+      refs.member_name.caption = tag_data.text
+      refs.member_name.tooltip = { "gui-train.open-in-map" }
+      refs.member_name.tags = flib_table.shallow_merge({ refs.member_name.tags, { position = tag_data.position, surface_name = tag_data.surface.name } })
       tag.member_stock_table.style.left_padding = 0
 
       -- send nothing to clear old entries

@@ -1,8 +1,8 @@
-local flib_table    = require("__flib__.table")
-local constants     = require("__virtm__.scripts.constants")
-local gui_utils     = require("__virtm__.scripts.gui.utils")
-local util          = require("__core__.lualib.util")
-local flib_train    = require("__flib__.train")
+local flib_table = require("__flib__.table")
+local constants  = require("__virtm__.scripts.constants")
+local gui_utils  = require("__virtm__.scripts.gui.utils")
+local util       = require("__core__.lualib.util")
+local flib_train = require("__flib__.train")
 
 
 local MAX_KEEP = 60 * 60 * 60 * 5 -- ticks * seconds * minutes * hours
@@ -11,8 +11,9 @@ local last_sweep = 0
 local backend = {}
 
 function space_init()
-  
+
 end
+
 function backend.load_guess_patterns()
   storage.settings["patterns"] = {
     depot = util.split(tostring(settings.global["vtm-depot-names"].value):lower(), ","),
@@ -577,8 +578,8 @@ end
 
 --TODO create Combinator with all signals from Station items for paired drop interrupt
 local function on_trainstop_build(event)
-  if event.entity.name == "train-stop" then
-    if settings.global["vtm-name-new-station"].value and storage.backer_names[event.entity.backer_name] then
+  if event.entity.name == "train-stop" or (event.entity.name == "entity-ghost" and event.entity.ghost_name == "train-stop") then
+    if settings.global["vtm-name-new-station"].value and (storage.backer_names[event.entity.backer_name] or event.entity.backer_name == "") then
       event.entity.backer_name = settings.global["vtm-new-station-name"].value
     end
     local station_data = new_station(event.entity)
@@ -625,7 +626,9 @@ end
 
 backend.events = {
   [defines.events.on_train_changed_state] = on_train_changed_state,
+  [defines.events.script_raised_built] = on_trainstop_build,
   [defines.events.on_built_entity] = on_trainstop_build,
+  [defines.events.script_raised_revive] = on_trainstop_build,
   [defines.events.on_robot_built_entity] = on_trainstop_build,
   [defines.events.on_entity_renamed] = on_trainstop_renamed,
 }
