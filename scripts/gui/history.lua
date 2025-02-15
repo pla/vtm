@@ -7,6 +7,7 @@ local gui_utils   = require("__virtm__.scripts.gui.utils")
 local match       = require("__virtm__.scripts.match")
 local constants   = require("__virtm__.scripts.constants")
 local backend     = require("__virtm__.scripts.backend")
+local searchbar    = require("__virtm__.scripts.gui.searchbar")
 
 local history     = {}
 local function material_icon_list(event)
@@ -393,7 +394,7 @@ function history.update_tab(gui_data, event)
     if #refs.history_route.children == 0 then
       row.visible = false
     end
-    gui_utils.slot_table_update(row.shipment_table, history_data.shipment)
+    gui_utils.slot_table_update(row.shipment_table, history_data.shipment, searchbar.apply_filter)
   end
 
   scroll_pane.scroll_to_top()

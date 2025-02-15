@@ -6,6 +6,7 @@ local match      = require("__virtm__.scripts.match")
 local constants  = require("__virtm__.scripts.constants")
 local backend    = require("__virtm__.scripts.backend")
 local groups_tab    = require("__virtm__.scripts.gui.groups-tab")
+local searchbar    = require("__virtm__.scripts.gui.searchbar")
 
 local stations   = {}
 ---comment
@@ -212,8 +213,8 @@ function stations.update_stations_tab(gui_data, event)
       refs.groups_button.sprite = sprite
       refs.groups_button.tags = flib_table.shallow_merge({ refs.groups_button.tags, { group_id = group_id } })
 
-      gui_utils.slot_table_update(row.stock_table, station_data.stock)
-      gui_utils.slot_table_update(row.in_transit_table, in_transit_data)
+      gui_utils.slot_table_update(row.stock_table, station_data.stock,searchbar.apply_filter)
+      gui_utils.slot_table_update(row.in_transit_table, in_transit_data,searchbar.apply_filter)
     end
   end
   gui_data.gui.stations.badge_text = table_index or 0

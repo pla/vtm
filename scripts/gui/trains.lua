@@ -6,11 +6,11 @@ local constants  = require("__virtm__.scripts.constants")
 local backend    = require("__virtm__.scripts.backend")
 local match      = require("__virtm__.scripts.match")
 local format     = require("__flib__.format")
-
+local searchbar  = require("__virtm__.scripts.gui.searchbar")
 
 local inv_states = constants.inv_train_tates
 
-local trains = {}
+local trains     = {}
 
 local function select_station_from_eventlist(list, last)
   local station = nil
@@ -236,13 +236,13 @@ function trains.update_tab(gui_data, event)
       refs.train_sprite.sprite = train_data.sprite
       refs.train_id.caption = train_data.train.id
       refs.train_id.tooltip = { "vtm.train-open-ui-follow-train", train_data.train.id }
-      refs.train_id.tags = flib_table.shallow_merge({ refs.train_id.tags,{ train_id = train_data.train.id }})
+      refs.train_id.tags = flib_table.shallow_merge({ refs.train_id.tags, { train_id = train_data.train.id } })
       refs.status.caption = status_string
       refs.status.tooltip = { "", inv_states[train_data.train.state], " : ", train_data.train.state }
       refs.since.caption = since
       refs.composition.caption = train_data.composition
 
-      gui_utils.slot_table_update_train(row.cargo_table, backend.read_contents(train_data.train))
+      gui_utils.slot_table_update_train(row.cargo_table, backend.read_contents(train_data.train), searchbar.apply_filter)
     end
   end
   gui_data.gui.trains.badge_text = table_index

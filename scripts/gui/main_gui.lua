@@ -200,7 +200,7 @@ end
 --- @param gui_data GuiData
 --- @param event? EventData|EventData.on_gui_click
 function main_gui.open(gui_data, event)
-  gui_utils.handler = searchbar.apply_filter
+  -- gui_utils.handler = searchbar.apply_filter
   main_gui.dispatch_refresh(gui_data, event)
   gui_data.gui.vtm_window.visible = true
   gui_data.state = "open"

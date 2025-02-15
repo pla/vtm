@@ -6,7 +6,7 @@ local flib_train = require("__flib__.train")
 local constants  = require("__virtm__.scripts.constants")
 
 local utils      = {}
-utils.handler    = nil
+-- utils.handler    = nil
 
 function utils.mouse_button_filter(button_pressed, button_wanted)
   local result = false
@@ -144,8 +144,9 @@ end
 --- Updates a slot table based on the passed criteria.
 --- @param icon_table LuaGuiElement
 --- @param sources SlotTableDef[]
+--- @param handler function
 --- @param max_lines uint?
-function utils.slot_table_update(icon_table, sources, max_lines)
+function utils.slot_table_update(icon_table, sources, handler, max_lines)
   local children = icon_table.children
   local i = 0
   for _, source_data in pairs(sources) do
@@ -154,7 +155,7 @@ function utils.slot_table_update(icon_table, sources, max_lines)
     if not button then
       _, button = flib_gui.add(icon_table, {
         type = "sprite-button",
-        handler = { [defines.events.on_gui_click] = utils.handler },
+        handler = { [defines.events.on_gui_click] = handler },
         { -- show quality icon if available
           type = "sprite",
           name = "quality_sprite",
@@ -262,11 +263,11 @@ function utils.update_sprite_button(button, type, name, amount, quality, color)
   -- button.tags = { filter = "filter", type = type, name = name } --TODO ,quality = quality},
 end
 
-function utils.slot_table_update_train(icon_table, sources)
+function utils.slot_table_update_train(icon_table, sources, handler)
   local slot_table = {}
   utils.contents_to_slot_table(sources, slot_table)
 
-  utils.slot_table_update(icon_table, slot_table)
+  utils.slot_table_update(icon_table, slot_table, handler)
 end
 
 ---Return Zoom level for minimap

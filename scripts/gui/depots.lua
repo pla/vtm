@@ -3,6 +3,7 @@ local constants  = require("__virtm__.scripts.constants")
 local flib_table = require("__flib__.table")
 local flib_gui   = require("__flib__.gui")
 local gui_utils  = require("__virtm__.scripts.gui.utils")
+local searchbar    = require("__virtm__.scripts.gui.searchbar")
 
 local depots     = {}
 
@@ -191,7 +192,7 @@ function depots.update_tab(gui_data, event)
       refs.indicator.children[1].sprite = "flib_indicator_" .. color
       refs.indicator.children[2].caption = limit_text
       refs.depot_type.caption = station_data.type
-      gui_utils.slot_table_update(row.stock_table, station_stock)
+      gui_utils.slot_table_update(row.stock_table, station_stock, searchbar.apply_filter)
     end
   end
   gui_data.gui.depots.badge_text = table_index

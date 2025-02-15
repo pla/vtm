@@ -7,6 +7,7 @@ local constants  = require("__virtm__.scripts.constants")
 local backend    = require("__virtm__.scripts.backend")
 local groups     = require("__virtm__.scripts.gui.groups")
 local flib_box   = require("__flib__.bounding-box")
+local searchbar    = require("__virtm__.scripts.gui.searchbar")
 
 local groups_tab = {}
 
@@ -281,7 +282,7 @@ local function update_gui_group_detail_view(gui_data, scroll_pane, group_list)
     refs.main_station.tags = flib_table.shallow_merge({ refs.main_station.tags, { station_id = group_data.main_station.station.unit_number } })
     refs.editgrp_button.tags = flib_table.shallow_merge({ refs.editgrp_button.tags, { group_id = group_data.group_id } })
 
-    gui_utils.slot_table_update(row.left_side.main_station_frame.member_stock_table, group_data.main_station.stock)
+    gui_utils.slot_table_update(row.left_side.main_station_frame.member_stock_table, group_data.main_station.stock, searchbar.apply_filter)
     local scroll_pane_member = row.list_frame.scroll_pane_member or {}
     local member_children = scroll_pane_member.children or {}
     local member_index = 0
@@ -313,7 +314,7 @@ local function update_gui_group_detail_view(gui_data, scroll_pane, group_list)
       refs.member_name.tooltip = tooltip or { "gui-train.open-in-map" }
       refs.member_name.tags = flib_table.shallow_merge({ refs.member_name.tags, { station_id = station_data.station.unit_number } })
       member.member_stock_table.style.left_padding = 0
-      gui_utils.slot_table_update(member.member_stock_table, station_data.stock)
+      gui_utils.slot_table_update(member.member_stock_table, station_data.stock, searchbar.apply_filter)
     end
     --add resource tags
     for _, tag_data in pairs(group_data.resource_tags or {}) do
@@ -333,7 +334,7 @@ local function update_gui_group_detail_view(gui_data, scroll_pane, group_list)
       tag.member_stock_table.style.left_padding = 0
 
       -- send nothing to clear old entries
-      gui_utils.slot_table_update(tag.member_stock_table, {})
+      gui_utils.slot_table_update(tag.member_stock_table, {}, searchbar.apply_filter)
     end
 
     -- cleanup member scroll pane
