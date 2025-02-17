@@ -578,12 +578,14 @@ end
 
 --TODO create Combinator with all signals from Station items for paired drop interrupt
 local function on_trainstop_build(event)
-  if event.entity.name == "train-stop" or (event.entity.name == "entity-ghost" and event.entity.ghost_name == "train-stop") then
-    if settings.global["vtm-name-new-station"].value and (storage.backer_names[event.entity.backer_name] or event.entity.backer_name == "") then
+  if event.entity.name == "train-stop" then
+    if settings.global["vtm-name-new-station"].value and (storage.backer_names[event.entity.backer_name]) then
       event.entity.backer_name = settings.global["vtm-new-station-name"].value
     end
     local station_data = new_station(event.entity)
     storage.stations[event.entity.unit_number] = station_data
+  elseif event.entity.name == "entity-ghost" and event.entity.ghost_name == "train-stop" and event.entity.backer_name == "" then
+    event.entity.backer_name = settings.global["vtm-new-station-name"].value
   else
     return
   end
