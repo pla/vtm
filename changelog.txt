@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.12
+Date: 2025-04-01
+  Changes:
+    - Minimap zoom fixed after Factorio changes
+    - Removed double gui refresh
+  Info:
+    - Added some information on the FAQ page
+---------------------------------------------------------------------------------------------------
 Version: 0.2.11
 Date: 2025-02-17
   Changes:
