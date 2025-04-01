@@ -250,7 +250,7 @@ function main_gui.open_or_close_gui(gui_data, event)
     gui_data = storage.guis[gui_utils.get_gui_id(event.player_index)]
   end
   if gui_data.state ~= "open" then
-    main_gui.dispatch_refresh(gui_data, event)
+    -- main_gui.dispatch_refresh(gui_data, event)
     main_gui.open(gui_data, event)
   else
     main_gui.hide(gui_data, event)

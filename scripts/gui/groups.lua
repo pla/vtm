@@ -853,6 +853,7 @@ local function on_alt_station_selection(event)
       local i, entity = next(event.entities, nil)
       while i do
         for key, station in pairs(edit.selected_stations) do
+          ---@diagnostic disable-next-line: need-check-nil
           if station.unit_number == entity.unit_number then
             remove = key
             entity = nil

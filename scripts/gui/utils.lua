@@ -280,8 +280,8 @@ function utils.get_zoom_from_area(area)
     local width = flib_box.width(area)
     local height = flib_box.height(area)
     max = math.max(width, height)
-    zoom = (1442 * max ^ -0.7) -- + (storage.zoom or 0)
-
+    -- zoom 2.0 - not anymore
+    -- zoom = (1442 * max ^ -0.7)
     --[[ zoom Factorio 1.1
       zoom=1 - 130 *2 = 260
       zoom1.5 - 86 *2 = 172
@@ -291,23 +291,23 @@ function utils.get_zoom_from_area(area)
     --[[ zoom Factorio 2.0
       zoom=1442*max^-0.7
       ]]
-    -- leave that here in case something chengs again
-    -- if max > 260 then
-    --   -- zoom = 0.5
-    --   zoom = zoom
-    -- elseif max > 172 then
-    --   -- zoom = 1
-    --   zoom = zoom
-    -- elseif max > 130 then
-    --   -- zoom = 1.5
-    --   zoom = zoom
-    -- elseif max > 88 then
-    --   -- zoom = 2
-    --   zoom = zoom
-    -- elseif max <= 88 then
-    --   -- zoom = 3
-    --   zoom = zoom
-    -- end
+    -- zoom 1.1 and 2.0.43>=
+    if max > 260 then
+      zoom = 0.5
+      -- zoom = zoom
+    elseif max > 172 then
+      zoom = 1
+      -- zoom = zoom
+    elseif max > 130 then
+      zoom = 1.5
+      -- zoom = zoom
+    elseif max > 88 then
+      zoom = 2
+      -- zoom = zoom
+    elseif max <= 88 then
+      zoom = 3
+      -- zoom = zoom
+    end
   end
 
   return zoom, max
