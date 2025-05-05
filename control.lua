@@ -57,12 +57,15 @@ local function on_tick(event)
 
   -- station data refresh
   if storage.station_k then
-    storage.station_k = flib_table.for_n_of(
+    _,_,finished = flib_table.for_n_of(
       storage.station_update_table,
-      storage.station_k, 10,
+      nil, 10,
       backend.update_station)
-    if storage.station_k == nil then
-      storage.station_update_table = nil
+      storage.station_k = not finished
+      -- if storage.station_k == nil then
+      if finished == true then
+        storage.station_k = nil
+        storage.station_update_table = nil
       game.print({ "vtm.station-refresh-end" })
     end
   end
