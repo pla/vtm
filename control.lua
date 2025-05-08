@@ -242,5 +242,20 @@ commands.add_command("vtm-del-all-groups", { "vtm.command-help" }, function(even
   storage.groups = {}
   storage.group_set = {}
 
-  player.print(player.name .. " deleted all group data ")
+  player.print(player.name .. " deleted all group data, don't save if that was an accident!")
+end)
+
+commands.add_command("vtm-uncheck-loco-colored-by-stations", { "vtm.command-help" }, function(event)
+  local player = game.get_player(event.player_index)
+  if player == nil or not player.admin then return end
+  for train_id, data  in pairs(storage.trains) do
+    if data and data.train.valid then
+      for _, carriage in pairs(data.train.carriages) do
+        if not carriage.type == "locomotive" then goto continue end
+        carriage.copy_color_from_train_stop = false
+        ::continue::
+      end
+    end
+  end
+  player.print("Unchecked 'Use destination train stop color' on all locomotives ")
 end)
