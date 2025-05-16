@@ -41,6 +41,7 @@
 ---@field composition string Train composition
 ---@field prototype LuaEntityPrototype prototype of the loco
 ---@field sprite SpritePath icon of the loco
+---@field quality LuaQualityPrototype quality of the main loco
 ---@field contents { [string]: ItemWithQualityCounts } Contents of the train
 ---@field events table<EventLog> Train state changed events get logged here for history
 ---@field surface string Surface where the train exits

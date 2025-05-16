@@ -234,6 +234,8 @@ function trains.update_tab(gui_data, event)
       local since = format.time(game.tick - train_data.last_change --[[@as uint]])
       -- Fill with data
       refs.train_sprite.sprite = train_data.sprite
+      --doesn't work with spite, but sprite-button doesn't like the train_id overlay
+      -- refs.train_sprite.quality = train_data.quality 
       refs.train_id.caption = train_data.train.id
       refs.train_id.tooltip = { "vtm.train-open-ui-follow-train", train_data.train.id }
       refs.train_id.tags = flib_table.shallow_merge({ refs.train_id.tags, { train_id = train_data.train.id } })

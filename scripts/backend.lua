@@ -384,6 +384,7 @@ local function new_current_log(train)
     composition = flib_train.get_composition_string(train),
     prototype = loco.prototype,
     sprite = "item/" .. gui_utils.signal_for_entity(loco).name,
+    quality = loco.quality,
     contents = {},
     events = {}
   }
