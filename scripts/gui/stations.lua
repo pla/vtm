@@ -183,14 +183,16 @@ function stations.update_stations_tab(gui_data, event)
       local stock_data, is_circuit_limit = backend.read_station_network(station_data)
       station_data.stock = stock_data
       station_data.stock_tick = game.tick
-      local group_id, sprite
+      local group_id, sprite, tooltip
       if station_data.type == "P" then
         group_id = backend.read_group_id(station_data.station)
       end
       if group_id then
         sprite = "vtm_group_logo"
+        tooltip = { "vtm.stations-open-groups-tooltip" }
       else
         sprite = "utility/expand"
+        tooltip = ""
       end
       local in_transit_data = {}
       if station_data.station.trains_count > 0 then
@@ -205,12 +207,13 @@ function stations.update_stations_tab(gui_data, event)
       refs.stations_sprite.tags = flib_table.shallow_merge({ refs.stations_sprite.tags, { station_id = station_data.station.unit_number } })
       refs.station_name.caption = station_data.station.backer_name
       refs.station_name.tags = flib_table.shallow_merge({ refs.station_name.tags, { station_id = station_data.station.unit_number } })
-      --status: InTransit =blue, open yellow, TODO : open for too long red
+      --status: InTransit =blue, open yellow
       refs.indicator.children[1].sprite = "flib_indicator_" .. color
       refs.indicator.children[2].caption = limit_text
       refs.prio.caption = station_data.station.train_stop_priority
       refs.station_type.caption = station_data.type
       refs.groups_button.sprite = sprite
+      refs.groups_button.tooltip = tooltip
       refs.groups_button.tags = flib_table.shallow_merge({ refs.groups_button.tags, { group_id = group_id } })
 
       gui_utils.slot_table_update(row.stock_table, station_data.stock,searchbar.apply_filter)
