@@ -140,6 +140,11 @@ local function update_gui_group_detail_view(gui_data, scroll_pane, group_list)
   local old_child = ""
   for _, group_data in pairs(group_list) do
     table_index = table_index + 1
+    local new_name = "detail_frame#" .. group_data.group_id
+    -- make sure the current name is not used in another child element
+    if flib_table.find(scroll_pane.children_names,new_name) and children[table_index].name ~= new_name then
+      scroll_pane[new_name].destroy()
+    end
 
     local row = children[table_index]
     local refs = {}
@@ -271,7 +276,7 @@ local function update_gui_group_detail_view(gui_data, scroll_pane, group_list)
     flib_table.sort(group_data.main_station.stock, function(a, b) return a.count < b.count end)
     tooltip = create_stock_tooltip(group_data.main_station.stock)
     -- insert data
-    row.name = "detail_frame#" .. group_data.group_id
+    row.name = new_name
     refs.minimap.position = position
     refs.minimap.zoom = zoom or 1
     refs.minimap.surface_index = group_data.main_station.station.surface_index
