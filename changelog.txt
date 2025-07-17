@@ -1,7 +1,8 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.15
-Date: ????
+Date: 2025-07-17
   Changes:
+    - Added setting to choose the wirecolor on which the station contents will be read
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.14
 Date: 2025-07-17
@@ -29,7 +30,7 @@ Date: 2025-02-17
 Version: 0.2.10
 Date: 2025-02-15
   Changes:
-    - Fixed: losing the on click handler for resource filter in tables(again)
+    - Fixed: loosing the on click handler for resource filter in tables(again)
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.9
 Date: 2025-02-14
@@ -46,7 +47,7 @@ Version: 0.2.7
 Date: 2025-01-27
   Bugfixes:
     - Fixed: skip first station on background refresh
-    - Fixed: losing the on click handler for resource filter in tables
+    - Fixed: loosing the on click handler for resource filter in tables
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.6
 Date: 2025-01-27
