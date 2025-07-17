@@ -180,9 +180,16 @@ function backend.read_station_network(station_data, return_virtual)
   local contents = {} --[[@type SlotTableDef[] ]]
   local set_trains_limit = false -- show if limit is set manual
   local cb = station.get_or_create_control_behavior() --[[@as LuaTrainStopControlBehavior]]
+  local wires = {}
+  if storage.stock_wire_color == "Red" or storage.stock_wire_color == "Both" then
+    table.insert(wires,defines.wire_connector_id.circuit_red)
+  end
+  if storage.stock_wire_color == "Green" or storage.stock_wire_color == "Both" then
+    table.insert(wires,defines.wire_connector_id.circuit_green)
+  end
   set_trains_limit = cb.set_trains_limit
   -- argue against get_merged_signals- loose wire color info
-  for _, wire in pairs({ defines.wire_connector_id.circuit_red, defines.wire_connector_id.circuit_green }) do
+  for _, wire in pairs(wires) do
     local cn = station.get_circuit_network(wire)
     -- cn - signals (type,name),wire_type
     if cn ~= nil and cn.signals ~= nil then

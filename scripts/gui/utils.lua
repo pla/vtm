@@ -453,6 +453,7 @@ function utils.cache_generic_settings()
   storage.pr_from_start            = settings.global["vtm-p-or-r-start"].value
   storage.name_new_station         = settings.global["vtm-name-new-station"].value
   storage.new_station_name         = settings.global["vtm-new-station-name"].value
+  storage.stock_wire_color         = settings.global["vtm-stock-wire-color"].value
 
   storage.backer_names             = {}
   for _, name in pairs(game.backer_names) do

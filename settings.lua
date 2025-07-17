@@ -21,15 +21,6 @@ data:extend({
     order = "a",
   },
   {
-    type = "int-setting",
-    name = "vtm-history-length",
-    setting_type = "runtime-global",
-    minimum_value = 10,
-    maximum_value = 1000,
-    default_value = 20,
-    order = "za",
-  },
-  {
     type = "string-setting",
     name = "vtm-depot-names",
     setting_type = "runtime-global",
@@ -94,11 +85,29 @@ data:extend({
     default_value = 50,
     order = "i",
   },
-  {
+    {
+    type = "int-setting",
+    name = "vtm-history-length",
+    setting_type = "runtime-global",
+    minimum_value = 10,
+    maximum_value = 1000,
+    default_value = 20,
+    order = "j",
+  },
+{
     type = "bool-setting",
     name = "vtm-dismiss-tool",
     setting_type = "runtime-per-user",
     default_value = false,
-    order = "j",
+    order = "k",
   },
+  {
+    type = "string-setting",
+    name = "vtm-stock-wire-color",
+    setting_type = "runtime-global",
+    default_value = "Both",
+    allowed_values = { "Both", "Red", "Green"},
+    allow_blank = false,
+    order = "l",
+	},
 })
