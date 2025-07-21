@@ -143,7 +143,7 @@ local function update_gui_group_detail_view(gui_data, scroll_pane, group_list)
     local new_name = "detail_frame#" .. group_data.group_id
     -- make sure the current name is not used in another child element
     if flib_table.find(scroll_pane.children_names,new_name) and children[table_index].name ~= new_name then
-      scroll_pane[new_name].destroy()
+      scroll_pane[new_name].name = tostring(table_index)
     end
 
     local row = children[table_index]
