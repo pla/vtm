@@ -3,6 +3,7 @@ Version: 0.2.17
 Date: ????
   Changes:
     - Alt-leftclick on any item or liquid icon will open Factoriopedia
+    - Change default from false to true on setting P/R search from start, won't affect existing saves
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.16
 Date: 2025-07-21

@@ -52,7 +52,7 @@ data:extend({
     type = "bool-setting",
     name = "vtm-p-or-r-start",
     setting_type = "runtime-global",
-    default_value = false,
+    default_value = true,
     order = "f",
   },
   {
