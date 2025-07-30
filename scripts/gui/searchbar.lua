@@ -152,7 +152,17 @@ function searchbar.apply_filter(gui_data, event)
     if event.element.tags ~= nil and event.element.tags.filter ~= nil then
       type = event.element.tags.type --[[@as string]]
       name = event.element.tags.name --[[@as string]]
-
+      -- open Factoriopedia when alt clicked
+      if event.alt then
+        if type == "item" then
+        gui_data.player.open_factoriopedia_gui( prototypes.item[name] )
+        elseif type == "fluid" then
+          gui_data.player.open_factoriopedia_gui( prototypes.fluid[name] )
+        else
+          return
+        end
+      end
+      -- set filter
       gui_data.gui.choose_elem_button.elem_value = {
         type = event.element.tags.type --[[@as string]],
         name = event.element.tags.name --[[@as string]],

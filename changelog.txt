@@ -2,6 +2,7 @@
 Version: 0.2.17
 Date: ????
   Changes:
+    - Alt-leftclick on any item or liquid icon will open Factoriopedia
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.16
 Date: 2025-07-21
