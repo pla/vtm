@@ -49,9 +49,20 @@ data:extend {
         flags = { "icon" },
       },
     },
+  },
+  {
+    type = "sprite",
+    name = "vtm_pin_white",
+    layers = {
+      {
+        filename = "__core__/graphics/icons/mip/pin-white.png",
+        position = { 32, 0 },
+        size = 16,
+        flags = { "icon" },
+      },
+    },
   }
 }
-
 
 -- custom input
 data:extend {
