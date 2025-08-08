@@ -206,6 +206,18 @@ styles.vtm_subheader_switch = {
   }
 }
 
+-- pin button
+styles.vtm_list_box_pin = {
+  type = "button_style",
+  parent = "list_box_item",
+  size = 28,
+  maximal_width = 28,
+  horizontally_stretchable = "off",
+  horizontally_squashable = "off",
+  padding = 4,
+  invert_colors_of_picture_when_hovered_or_toggled = true,
+}
+
 -- button
 styles.vtm_list_box_item = {
   type = "button_style",

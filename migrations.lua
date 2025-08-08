@@ -26,7 +26,10 @@ function migrations.generic()
       if storage.settings[player.index] == nil then
         migrations.init_player_data(player)
       end
-
+      -- init pin_groups if not already available
+      if storage.settings[player.index].groups_tab_pinned == nil then
+        storage.settings[player.index].groups_tab_pinned = {}
+      end
       -- recreate gui
       local gui_id = utils.get_gui_id(player.index)
       local gui_data
@@ -49,6 +52,7 @@ function migrations.generic()
 
       -- do the button thing
       main_gui.add_mod_gui_button(player)
+
     end
   end
 end
@@ -81,7 +85,8 @@ function migrations.init_player_data(player)
       gui_refresh = "",
       surface = "All",
       history_switch = "left",
-      group_edit = {} --[[@type GroupEditData[] ]]
+      group_edit = {} --[[@type GroupEditData[] ]],
+      groups_tab_pinned = {}
     }
     if not storage.groups[player.force_index] then
       storage.groups[player.force_index] = {}
