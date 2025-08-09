@@ -475,7 +475,6 @@ function groups_tab.update_tab(gui_data, event)
 		if
 			group_data
 			and (surface == "All" or surface == group_data.surface)
-			and match.filter_group_set(set_name, filters)
 			and group_data.main_station
 			and group_data.main_station.station.valid
 			and group_data.main_station.force_index == player.force_index
