@@ -19,15 +19,15 @@ end
 
 ---@param gui_data GuiData
 ---@param scroll_pane LuaGuiElement
----@param group_list table<uint,string>
-local function update_group_list(gui_data, scroll_pane, group_list)
+---@param group_set_list table<uint,string>
+local function update_group_list(gui_data, scroll_pane, group_set_list)
 	local gui_state = storage.settings[gui_data.player.index]
 	local surface = gui_state.surface or "All"
 	local children = scroll_pane.children
 	local width = constants.gui.groups_tab
 	local style = constants.list_box_button_style
 	local table_index = 0
-	for _, set_name in pairs(group_list) do
+	for _, set_name in pairs(group_set_list) do
 		table_index = table_index + 1
 		--set initial selection
 		if gui_state.selected_group_set == set_name then
@@ -49,6 +49,7 @@ local function update_group_list(gui_data, scroll_pane, group_list)
 					style = constants.list_box_button_style,
 					name = "select_group",
 					handler = { [defines.events.on_gui_click] = groups_tab.select_group },
+					toggled = gui_state.selected_group_set == set_name,
 					-- style_mods = { size = width.icon },
 					-- tooltip = { "vtm.groups-tab-select-group_set" },
 				},
@@ -57,7 +58,7 @@ local function update_group_list(gui_data, scroll_pane, group_list)
 					style = "vtm_list_box_pin",
 					name = "pin_grp",
 					sprite = "vtm_pin_white",
-          toggled = gui_state.groups_tab_pinned[set_name],
+					toggled = gui_state.groups_tab_pinned[set_name],
 					handler = { [defines.events.on_gui_click] = groups_tab.toggle_pin_group },
 					-- style_mods = {
 					-- 	size = 28,
@@ -76,10 +77,11 @@ local function update_group_list(gui_data, scroll_pane, group_list)
 		end
 		row.select_group.tags = flib_table.shallow_merge({ row.select_group.tags, { group_set = set_name } })
 		row.select_group.caption = set_name
+		row.select_group.toggled = gui_state.selected_group_set == set_name
 		row.pin_grp.tags = flib_table.shallow_merge({ row.pin_grp.tags, { group_set = set_name } })
 	end -- end of for loop
 
-	gui_data.gui.groups.badge_text = table_index or 0
+	-- gui_data.gui.groups.badge_text = table_index or 0
 	if table_index > 0 then
 		gui_data.gui.groups_warning.visible = false
 	else
@@ -466,13 +468,13 @@ function groups_tab.update_tab(gui_data, event)
 	---@type table<uint, string>
 	local del_set = {}
 	---@type table<uint, string>
-	local pin_list = {}
+	local pin_set_list = {}
 
 	for set_name, set in pairs(storage.group_set) do
 		---@type GroupData
 		local group_data = get_first_valid_set_member(set_name, set, del_set, player.force_index)
 		-- generate left group list
-		if
+		if -- pinned
 			group_data
 			and (surface == "All" or surface == group_data.surface)
 			and group_data.main_station
@@ -480,8 +482,8 @@ function groups_tab.update_tab(gui_data, event)
 			and group_data.main_station.force_index == player.force_index
 			and pinned[set_name] == true
 		then
-			flib_table.insert(pin_list, set_name)
-		elseif
+			flib_table.insert(pin_set_list, set_name)
+		elseif -- not pinned
 			group_data
 			and (surface == "All" or surface == group_data.surface)
 			and match.filter_group_set(set_name, filters)
@@ -491,12 +493,11 @@ function groups_tab.update_tab(gui_data, event)
 		then
 			flib_table.insert(group_set_list, set_name)
 		end
-		-- current selection
-		if not storage.settings[player.index].selected_group_set then
-			storage.settings[player.index].selected_group_set = set_name
-		end
 		-- select entries for detail view
-		if storage.settings[player.index].selected_group_set == set_name then
+		if
+			storage.settings[player.index].selected_group_set
+			and storage.settings[player.index].selected_group_set == set_name
+		then
 			set_members_for_display(set, player.force_index, group_list)
 		end
 	end
@@ -504,27 +505,38 @@ function groups_tab.update_tab(gui_data, event)
 	for _, set_name in pairs(del_set) do
 		storage.group_set[set_name] = nil
 	end
-	if table_size(group_list) == 0 and table_size(group_set_list) > 0 then
-		--nothing selected, take first set in display
-		local _, set_name = next(group_set_list)
-		storage.settings[player.index].selected_group_set = set_name
-		local set = storage.group_set[set_name]
-		set_members_for_display(set, player.force_index, group_list)
-	end
-
 	--sorting by name
 	flib_table.sort(group_set_list, function(a, b)
 		return a < b
 	end)
 
+	if table_size(group_list) == 0 then
+		if table_size(group_set_list) > 0 then
+			--nothing selected, take first set in display
+			local _, set_name = next(group_set_list)
+			storage.settings[player.index].selected_group_set = set_name
+			local set = storage.group_set[set_name]
+			set_members_for_display(set, player.force_index, group_list)
+    elseif table_size(pin_set_list) > 0 then
+			local _, set_name = next(pin_set_list)
+			storage.settings[player.index].selected_group_set = set_name
+			local set = storage.group_set[set_name]
+			set_members_for_display(set, player.force_index, group_list)
+		end
+	end
+
 	local scroll_left = gui_data.gui.scroll_pane_left or {}
 	local scroll_right = gui_data.gui.scroll_pane_right or {}
-  local pin_flow = gui_data.gui.pin_flow or {}
+	local pin_flow = gui_data.gui.pin_flow or {}
+
+	if storage.settings[gui_data.player.index].current_tab ~= "groups" then
+		gui_data.gui.groups.badge_text = table_size(group_list) or 0
+		return
+	end
 
 	--left side
 	--update pin list
-	-- update_pin_list(gui_data, pin_flow, pin_list)
-	update_group_list(gui_data, pin_flow, pin_list)
+	update_group_list(gui_data, pin_flow, pin_set_list)
 	update_group_list(gui_data, scroll_left, group_set_list)
 
 	--right side
@@ -686,7 +698,8 @@ function groups_tab.toggle_pin_group(gui_data, event)
 	if not set_name or not storage.group_set[set_name] then
 		return
 	end
-	storage.settings[player.index].groups_tab_pinned[set_name] = not storage.settings[player.index].groups_tab_pinned[set_name]
+	storage.settings[player.index].groups_tab_pinned[set_name] =
+		not storage.settings[player.index].groups_tab_pinned[set_name]
 	refresh(gui_data, event)
 end
 

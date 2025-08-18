@@ -142,6 +142,7 @@ end
 function searchbar.apply_filter(gui_data, event)
   local filter_history = gui_data.filter_history
   local name, type
+  local player = gui_data.player
   if event.element.name ~= "search_field" then
     -- do nothing when right click (clears search on text and chooser)
     if gui_utils.mouse_button_filter(event.button, "right") then
@@ -191,8 +192,12 @@ function searchbar.apply_filter(gui_data, event)
     while #filter_history > 10 do
       table.remove(filter_history, 11)
     end
+    -- clear selected group
+		if storage.settings[player.index].selected_group_set then
+			storage.settings[player.index].selected_group_set = nil
+		end
   end
-  refresh(gui_data, event)
+refresh(gui_data, event)
 end
 
 --- @param gui_data GuiData
