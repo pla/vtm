@@ -2,6 +2,7 @@
 Version: 0.2.19
 Date: ????
   Changes:
+    - Fix group display after filter selection
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.18
 Date: 2025-08-10
