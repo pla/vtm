@@ -63,10 +63,10 @@
 ---@field train_front_rail LuaEntity Rail to check if a train is at station, still needed?
 ---@field type "P"|"R"|"D"|"F"|"H"|"ND" Station type Requester, Provider, Hidden, ND for undefined
 ---@field sort_prio uint used to manipulate the sort order of depots
----@field stock SlotTableDef[] 
+---@field stock SlotTableDef[]
 ---@field stock_tick uint
 ---@field in_transit SlotTableDef[] unused for now
----@field registered_stock SlotTableDef[] 
+---@field registered_stock SlotTableDef[]
 
 ---@class GuessPatterns
 ---@field depot table

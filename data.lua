@@ -2,7 +2,7 @@
 local data_util = require("__flib__.data-util")
 require("__virtm__.prototypes.styles")
 
-data:extend {
+data:extend({
   {
     type = "sprite",
     name = "vtm_group_logo",
@@ -61,21 +61,21 @@ data:extend {
         flags = { "icon" },
       },
     },
-  }
-}
+  },
+})
 
 -- custom input
-data:extend {
+data:extend({
   {
-    type = 'custom-input',
-    name = 'vtm-key',
-    key_sequence = 'SHIFT + T',
+    type = "custom-input",
+    name = "vtm-key",
+    key_sequence = "SHIFT + T",
     enabled_while_spectating = false,
   },
   {
-    type = 'custom-input',
-    name = 'vtm-groups-key',
-    key_sequence = 'SHIFT + G',
+    type = "custom-input",
+    name = "vtm-groups-key",
+    key_sequence = "SHIFT + G",
     enabled_while_spectating = false,
   },
   {
@@ -84,37 +84,37 @@ data:extend {
     key_sequence = "",
     linked_game_control = "focus-search",
   },
-}
+})
 
 -- shortcut
-data:extend {
+data:extend({
 
   {
-    type                     = "shortcut",
-    name                     = "vtm-shortcut",
-    icon                     = "__virtm__/graphics/icons/shortcut.png",
-    small_icon               = "__virtm__/graphics/icons/shortcut_white24.png",
-    icon_size                = 32,
-    small_icon_size          = 24,
-    toggleable               = false,
-    action                   = "lua",
+    type = "shortcut",
+    name = "vtm-shortcut",
+    icon = "__virtm__/graphics/icons/shortcut.png",
+    small_icon = "__virtm__/graphics/icons/shortcut_white24.png",
+    icon_size = 32,
+    small_icon_size = 24,
+    toggleable = false,
+    action = "lua",
     associated_control_input = "vtm-key",
   },
   {
-    type                     = "shortcut",
-    name                     = "vtm-groups-shortcut",
-    icon                     = "__virtm__/graphics/icons/shortcutG.png",
-    small_icon               = "__virtm__/graphics/icons/shortcutG.png",
-    icon_size                = 32,
-    small_icon_size          = 24,
-    toggleable               = false,
-    action                   = "lua",
+    type = "shortcut",
+    name = "vtm-groups-shortcut",
+    icon = "__virtm__/graphics/icons/shortcutG.png",
+    small_icon = "__virtm__/graphics/icons/shortcutG.png",
+    icon_size = 32,
+    small_icon_size = 24,
+    toggleable = false,
+    action = "lua",
     associated_control_input = "vtm-groups-key",
   },
-}
+})
 
 -- selection tool
-data:extend {
+data:extend({
 
   {
     type = "selection-tool",
@@ -125,7 +125,7 @@ data:extend {
         icon = "__base__/graphics/icons/train-stop.png",
         icon_size = 32,
         -- tint = { r = 0.5, g = 0, b = 0, a = 0.5 } --red
-      }
+      },
     },
     select = {
       border_color = { r = 0.72, g = 0.45, b = 0.2, a = 1 },
@@ -151,4 +151,4 @@ data:extend {
     -- entity_type_filters = { "train-stop" },
     -- alt_entity_type_filters = { "train-stop" },
   },
-}
+})

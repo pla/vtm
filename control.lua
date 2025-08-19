@@ -1,20 +1,22 @@
 local backend_space
-if script.active_mods["gvv"] then require("__gvv__.gvv")() end
+if script.active_mods["gvv"] then
+  require("__gvv__.gvv")()
+end
 if script.active_mods["virtm_space"] then
   backend_space = require("__virtm_space__.backend_space")
 end
-local flib_table     = require("__flib__.table")
+local flib_table = require("__flib__.table")
 local flib_migration = require("__flib__.migration")
-local constants      = require("__virtm__.scripts.constants")
-local main_gui       = require("__virtm__.scripts.gui.main_gui")
-local backend        = require("__virtm__.scripts.backend")
-local gui_utils      = require("__virtm__.scripts.gui.utils")
-local migrations     = require("__virtm__.migrations")
-local groups         = require("__virtm__.scripts.gui.groups")
+local constants = require("__virtm__.scripts.constants")
+local main_gui = require("__virtm__.scripts.gui.main_gui")
+local backend = require("__virtm__.scripts.backend")
+local gui_utils = require("__virtm__.scripts.gui.utils")
+local migrations = require("__virtm__.migrations")
+local groups = require("__virtm__.scripts.gui.groups")
 
-local handler        = require("__core__.lualib.event_handler")
+local handler = require("__core__.lualib.event_handler")
 
-local control        = {}
+local control = {}
 
 local function init_global_data()
   -- definitions see classdef.lua
@@ -44,7 +46,7 @@ end
 -- flib_migration.handle_on_configuration_changed(migrations.by_version, migrations.generic)
 
 local function on_configuration_changed(event)
-  flib_migration.on_config_changed(event, migrations.by_version , script.mod_name)
+  flib_migration.on_config_changed(event, migrations.by_version, script.mod_name)
   migrations.generic()
 end
 
@@ -57,15 +59,12 @@ local function on_tick(event)
 
   -- station data refresh
   if storage.station_k then
-    _,_,finished = flib_table.for_n_of(
-      storage.station_update_table,
-      nil, 10,
-      backend.update_station)
-      storage.station_k = not finished
-      -- if storage.station_k == nil then
-      if finished == true then
-        storage.station_k = nil
-        storage.station_update_table = nil
+    _, _, finished = flib_table.for_n_of(storage.station_update_table, nil, 10, backend.update_station)
+    storage.station_k = not finished
+    -- if storage.station_k == nil then
+    if finished == true then
+      storage.station_k = nil
+      storage.station_update_table = nil
       game.print({ "vtm.station-refresh-end" })
     end
   end
@@ -77,8 +76,7 @@ local function on_tick(event)
     backend.schedule_station_refresh()
   end
   for player_index, record in pairs(storage.settings) do
-    if record.gui_refresh == "auto" and
-        event.tick % (60 + 3 * player_index) == 0 then
+    if record.gui_refresh == "auto" and event.tick % (60 + 3 * player_index) == 0 then
       script.raise_event(constants.refresh_event, {
         player_index = player_index,
       })
@@ -88,11 +86,11 @@ end
 
 local function on_se_elevator()
   if
-      script.active_mods["space-exploration"]
-      and remote.interfaces["space-exploration"]["get_on_train_teleport_started_event"]
+    script.active_mods["space-exploration"]
+    and remote.interfaces["space-exploration"]["get_on_train_teleport_started_event"]
   then
     script.on_event(
-    ---@diagnostic disable-next-line: param-type-mismatch
+      ---@diagnostic disable-next-line: param-type-mismatch
       remote.call("space-exploration", "get_on_train_teleport_finished_event"),
       --- @param event on_train_teleported
       function(event)
@@ -159,13 +157,14 @@ end
 
 ---@param event EventData.on_runtime_mod_setting_changed
 function on_runtime_mod_setting_changed(event)
-  if flib_table.find({
-        "vtm-requester-names",
-        "vtm-provider-names",
-        "vtm-depot-names",
-        "vtm-refuel-names",
-        "vtm-p-or-r-start",
-      }, event["setting"])
+  if
+    flib_table.find({
+      "vtm-requester-names",
+      "vtm-provider-names",
+      "vtm-depot-names",
+      "vtm-refuel-names",
+      "vtm-p-or-r-start",
+    }, event["setting"])
   then
     backend.load_guess_patterns()
     storage.station_refresh = "all"
@@ -179,7 +178,6 @@ function on_runtime_mod_setting_changed(event)
     end
   end
   if event["setting"] == "vtm-showSpaceTab" then
-
   end
   --refresh cached settings
   gui_utils.cache_generic_settings()
@@ -196,7 +194,6 @@ control.events = {
   [defines.events.on_gui_closed] = on_gui_closed,
 }
 
-
 handler.add_lib(require("__flib__/gui"))
 handler.add_lib(control)
 handler.add_lib(main_gui)
@@ -207,38 +204,46 @@ handler.add_lib(require("__virtm__.scripts.backend"))
 -- COMMANDS
 commands.add_command("vtm-show-undef-stations", { "vtm.command-help" }, function(event)
   local player = game.get_player(event.player_index)
-  if player == nil then return end
+  if player == nil then
+    return
+  end
   local force = player.valid and player.force or 1
   local table_index = 0
   force.print({ "vtm.show-undef-stations" })
   force.print({ "", { "vtm.filter-surface" }, ": ", storage.settings[event.player_index].surface })
 
   for _, station_data in pairs(storage.stations) do
-    if station_data.station.valid and
-        station_data.force_index == player.force.index and
-        station_data.type == "ND" and
-        (
-          station_data.station.surface.name == storage.settings[event.player_index].surface
-          or
-          storage.settings[event.player_index].surface == "All"
-        )
+    if
+      station_data.station.valid
+      and station_data.force_index == player.force.index
+      and station_data.type == "ND"
+      and (
+        station_data.station.surface.name == storage.settings[event.player_index].surface
+        or storage.settings[event.player_index].surface == "All"
+      )
     then
       table_index = table_index + 1
       force.print("[train-stop=" .. station_data.station.unit_number .. "]")
-      if table_index == 10 then return end
+      if table_index == 10 then
+        return
+      end
     end
   end
 end)
 
 commands.add_command("vtm-count-history", { "vtm.command-help" }, function(event)
   local player = game.get_player(event.player_index)
-  if player == nil then return end
+  if player == nil then
+    return
+  end
   player.print("History Records: " .. table_size(storage.history))
 end)
 
 commands.add_command("vtm-del-all-groups", { "vtm.command-help" }, function(event)
   local player = game.get_player(event.player_index)
-  if player == nil or not player.admin then return end
+  if player == nil or not player.admin then
+    return
+  end
   storage.groups = {}
   storage.group_set = {}
 
@@ -247,11 +252,15 @@ end)
 
 commands.add_command("vtm-uncheck-loco-colored-by-stations", { "vtm.command-help" }, function(event)
   local player = game.get_player(event.player_index)
-  if player == nil or not player.admin then return end
-  for train_id, data  in pairs(storage.trains) do
+  if player == nil or not player.admin then
+    return
+  end
+  for train_id, data in pairs(storage.trains) do
     if data and data.train.valid then
       for _, carriage in pairs(data.train.carriages) do
-        if not carriage.type == "locomotive" then goto continue end
+        if not carriage.type == "locomotive" then
+          goto continue
+        end
         carriage.copy_color_from_train_stop = false
         ::continue::
       end

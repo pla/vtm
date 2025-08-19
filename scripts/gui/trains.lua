@@ -1,16 +1,16 @@
 local flib_train = require("__flib__.train")
 local flib_table = require("__flib__.table")
-local flib_gui   = require("__flib__.gui")
-local gui_utils  = require("__virtm__.scripts.gui.utils")
-local constants  = require("__virtm__.scripts.constants")
-local backend    = require("__virtm__.scripts.backend")
-local match      = require("__virtm__.scripts.match")
-local format     = require("__flib__.format")
-local searchbar  = require("__virtm__.scripts.gui.searchbar")
+local flib_gui = require("__flib__.gui")
+local gui_utils = require("__virtm__.scripts.gui.utils")
+local constants = require("__virtm__.scripts.constants")
+local backend = require("__virtm__.scripts.backend")
+local match = require("__virtm__.scripts.match")
+local format = require("__flib__.format")
+local searchbar = require("__virtm__.scripts.gui.searchbar")
 
 local inv_states = constants.inv_train_tates
 
-local trains     = {}
+local trains = {}
 
 local function select_station_from_eventlist(list, last)
   local station = nil
@@ -67,10 +67,11 @@ local function train_status_message(train_data)
   if train.has_path and train.path.valid then
     distance = tostring(math.ceil(train.path.total_distance - train.path.travelled_distance))
   end
-  if state == def_state.on_the_path or
-      state == def_state.arrive_signal or
-      state == def_state.wait_signal or
-      state == def_state.arrive_station
+  if
+    state == def_state.on_the_path
+    or state == def_state.arrive_signal
+    or state == def_state.wait_signal
+    or state == def_state.arrive_station
   then
     if train.path_end_stop ~= nil then
       msg = { desc[train.state], train.path_end_stop.backer_name, distance }
@@ -119,7 +120,6 @@ local function train_status_message(train_data)
     msg = { "", inv_states[train.state], " : ", train.state }
   end
 
-
   return msg
 end
 
@@ -141,9 +141,10 @@ function trains.update_tab(gui_data, event)
     if not train_data.train.valid then
       table.insert(inv_trains, train_id)
     end
-    if train_data.force_index == gui_data.player.force.index and
-        train_data.train.valid and
-        (surface == "All" or surface == train_data.train.carriages[1].surface.name)
+    if
+      train_data.force_index == gui_data.player.force.index
+      and train_data.train.valid
+      and (surface == "All" or surface == train_data.train.carriages[1].surface.name)
     then
       if match.filter_trains(train_data, filters) then
         table.insert(train_datas, train_data)
@@ -155,7 +156,9 @@ function trains.update_tab(gui_data, event)
     storage.trains[train_id] = nil
   end
 
-  table.sort(train_datas, function(a, b) return a.last_change > b.last_change end)
+  table.sort(train_datas, function(a, b)
+    return a.last_change > b.last_change
+  end)
 
   local scroll_pane = gui_data.gui.trains_scrollpane
   local children = scroll_pane.children
@@ -168,10 +171,11 @@ function trains.update_tab(gui_data, event)
 
   for _, train_data in pairs(train_datas) do
     if train_data.train.valid then
-      if table_index >= max_lines and
-          max_lines > 0 and
-          storage.settings[gui_data.player.index].gui_refresh == "auto" and
-          filters.search_field == ""
+      if
+        table_index >= max_lines
+        and max_lines > 0
+        and storage.settings[gui_data.player.index].gui_refresh == "auto"
+        and filters.search_field == ""
       then
         -- max entries
         break
@@ -200,7 +204,7 @@ function trains.update_tab(gui_data, event)
                 type = "label",
                 name = "train_id",
                 style = "vtm_trainid_label",
-                handler = { [defines.events.on_gui_click] = trains.open_train }
+                handler = { [defines.events.on_gui_click] = trains.open_train },
               },
             },
           },
@@ -235,7 +239,7 @@ function trains.update_tab(gui_data, event)
       -- Fill with data
       refs.train_sprite.sprite = train_data.sprite
       --doesn't work with spite, but sprite-button doesn't like the train_id overlay
-      -- refs.train_sprite.quality = train_data.quality 
+      -- refs.train_sprite.quality = train_data.quality
       refs.train_id.caption = train_data.train.id
       refs.train_id.tooltip = { "vtm.train-open-ui-follow-train", train_data.train.id }
       refs.train_id.tags = flib_table.shallow_merge({ refs.train_id.tags, { train_id = train_data.train.id } })
@@ -244,7 +248,11 @@ function trains.update_tab(gui_data, event)
       refs.since.caption = since
       refs.composition.caption = train_data.composition
 
-      gui_utils.slot_table_update_train(row.cargo_table, backend.read_contents(train_data.train), searchbar.apply_filter)
+      gui_utils.slot_table_update_train(
+        row.cargo_table,
+        backend.read_contents(train_data.train),
+        searchbar.apply_filter
+      )
     end
   end
   gui_data.gui.trains.badge_text = table_index
@@ -307,7 +315,7 @@ function trains.build_tab()
             caption = { "vtm.table-header-cargo" },
             style_mods = { width = width.cargo },
           },
-        }
+        },
       },
       { -- scroll pane for the actual traindata, data will be filled in by the update gui function
         type = "scroll-pane",
@@ -334,7 +342,7 @@ function trains.build_tab()
           },
         },
       },
-    }
+    },
   }
 end
 

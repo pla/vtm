@@ -1,18 +1,20 @@
 -- gui/util.lua
-local flib_gui   = require("__flib__.gui")
-local flib_box   = require("__flib__.bounding-box")
+local flib_gui = require("__flib__.gui")
+local flib_box = require("__flib__.bounding-box")
 local flib_table = require("__flib__.table")
 local flib_train = require("__flib__.train")
-local constants  = require("__virtm__.scripts.constants")
+local constants = require("__virtm__.scripts.constants")
 
-local utils      = {}
+local utils = {}
 -- utils.handler    = nil
 
 function utils.mouse_button_filter(button_pressed, button_wanted)
   local result = false
-  if button_pressed ~= nil
-      and defines.mouse_button_type[button_wanted]
-      and button_pressed == defines.mouse_button_type[button_wanted] then
+  if
+    button_pressed ~= nil
+    and defines.mouse_button_type[button_wanted]
+    and button_pressed == defines.mouse_button_type[button_wanted]
+  then
     result = true
   end
 
@@ -39,9 +41,9 @@ function utils.default_list_box(name, item_data, items_num, style, handler)
     style = style,
     name = name,
     style_mods = {
-      minimal_height           = items_num * 28,
-      maximal_height           = items_num * 28,
-      horizontally_stretchable = true
+      minimal_height = items_num * 28,
+      maximal_height = items_num * 28,
+      horizontally_stretchable = true,
     },
     items = item_data,
     handler = handler,
@@ -103,7 +105,9 @@ end
 ---@param master SlotTableDef[]
 ---@param slave SlotTableDef[]
 function utils.merge_slot_tables(master, slave)
-  if table_size(slave) == 0 then return end
+  if table_size(slave) == 0 then
+    return
+  end
   for _, add in pairs(slave) do
     local found = false
     for _, row in pairs(master) do
@@ -137,7 +141,6 @@ function utils.slot_table(widths, style, name)
     },
     column_count = widths[name .. "_columns"],
     -- handler = { [defines.events.on_gui_click] = utils.handler }
-
   }
 end
 
@@ -161,7 +164,7 @@ function utils.slot_table_update(icon_table, sources, handler, max_lines)
           name = "quality_sprite",
           resize_to_sprite = false,
           style = "quality_style",
-        }
+        },
       })
     end
     utils.update_sprite_button(
@@ -173,7 +176,9 @@ function utils.slot_table_update(icon_table, sources, handler, max_lines)
       source_data.color
     )
     -- button.enabled = false
-    if max_lines and i == (icon_table.column_count * max_lines) then break end
+    if max_lines and i == (icon_table.column_count * max_lines) then
+      break
+    end
   end
 
   for i = i + 1, #children do
@@ -243,7 +248,10 @@ function utils.update_sprite_button(button, type, name, amount, quality, color)
     end
     if script.active_mods["quality"] and type == "item" then
       local item_quality = prototypes.quality[quality]
-      if helpers.is_valid_sprite_path(item_quality.type .. "/" .. item_quality.name) and item_quality.name ~= "normal" then
+      if
+        helpers.is_valid_sprite_path(item_quality.type .. "/" .. item_quality.name)
+        and item_quality.name ~= "normal"
+      then
         quali_sprite = item_quality.type .. "/" .. item_quality.name
         button.quality_sprite.sprite = quali_sprite
       end
@@ -274,7 +282,7 @@ end
 ---@param area BoundingBox
 ---@return double, double
 function utils.get_zoom_from_area(area)
-  local max  = 0
+  local max = 0
   local zoom = 1.0
   if area then
     local width = flib_box.width(area)
@@ -294,16 +302,16 @@ function utils.get_zoom_from_area(area)
     -- zoom 1.1 and 2.0.43>=
     if max > 260 then
       zoom = 0.5
-      -- zoom = zoom
+    -- zoom = zoom
     elseif max > 172 then
       zoom = 1
-      -- zoom = zoom
+    -- zoom = zoom
     elseif max > 130 then
       zoom = 1.5
-      -- zoom = zoom
+    -- zoom = zoom
     elseif max > 88 then
       zoom = 2
-      -- zoom = zoom
+    -- zoom = zoom
     elseif max <= 88 then
       zoom = 3
       -- zoom = zoom
@@ -315,8 +323,12 @@ end
 
 function utils.signal_for_entity(entity)
   local empty_signal = { type = "virtual", name = "signal-0" }
-  if not entity then return empty_signal end
-  if not entity.valid then return empty_signal end
+  if not entity then
+    return empty_signal
+  end
+  if not entity.valid then
+    return empty_signal
+  end
   if helpers.is_valid_sprite_path("item/" .. entity.prototype.name) then
     return { type = "item", name = entity.prototype.name }
   end
@@ -324,7 +336,9 @@ function utils.signal_for_entity(entity)
 end
 
 function utils.signal_to_sprite(signal)
-  if not signal then return nil end
+  if not signal then
+    return nil
+  end
   if helpers.is_valid_sprite_path(signal.type .. "/" .. signal.name) then
     return signal.type .. "/" .. signal.name
   end
@@ -421,7 +435,8 @@ function utils.follow_remote_train(player, loco)
     })
   end
 end
-]] --- set a style for the given LuaGuiElement
+]]
+--- set a style for the given LuaGuiElement
 ---
 ---@param element LuaGuiElement
 ---@param style string must be a gui-style name
@@ -439,23 +454,23 @@ end
 
 function utils.cache_generic_settings()
   -- cache relevant mods
-  storage.TCS_active               = script.active_mods["TCS_Icons"] and true or false
-  storage.cybersyn_active          = script.active_mods["cybersyn"] and true or false
-  storage.SE_active                = script.active_mods["space-exploration"] and true or false
-  storage.SA_active                = script.active_mods["space-age"] and true or false
-  storage.showSpaceTab             = script.active_mods["virtm_space"] and storage.SA_active or false
+  storage.TCS_active = script.active_mods["TCS_Icons"] and true or false
+  storage.cybersyn_active = script.active_mods["cybersyn"] and true or false
+  storage.SE_active = script.active_mods["space-exploration"] and true or false
+  storage.SA_active = script.active_mods["space-age"] and true or false
+  storage.showSpaceTab = script.active_mods["virtm_space"] and storage.SA_active or false
 
   storage.surface_selector_visible = settings.global["vtm-force-surface-visible"].value
-  storage.max_hist                 = settings.global["vtm-history-length"].value
-  storage.max_lines                = settings.global["vtm-limit-auto-refresh"].value
-  storage.show_undef_warn          = settings.global["vtm-show-undef-warning"].value
-  storage.dont_read_depot_stock    = settings.global["vtm-dont-read-depot-stock"].value
-  storage.pr_from_start            = settings.global["vtm-p-or-r-start"].value
-  storage.name_new_station         = settings.global["vtm-name-new-station"].value
-  storage.new_station_name         = settings.global["vtm-new-station-name"].value
-  storage.stock_wire_color         = settings.global["vtm-stock-wire-color"].value
+  storage.max_hist = settings.global["vtm-history-length"].value
+  storage.max_lines = settings.global["vtm-limit-auto-refresh"].value
+  storage.show_undef_warn = settings.global["vtm-show-undef-warning"].value
+  storage.dont_read_depot_stock = settings.global["vtm-dont-read-depot-stock"].value
+  storage.pr_from_start = settings.global["vtm-p-or-r-start"].value
+  storage.name_new_station = settings.global["vtm-name-new-station"].value
+  storage.new_station_name = settings.global["vtm-new-station-name"].value
+  storage.stock_wire_color = settings.global["vtm-stock-wire-color"].value
 
-  storage.backer_names             = {}
+  storage.backer_names = {}
   for _, name in pairs(game.backer_names) do
     storage.backer_names[name] = true
   end
@@ -495,7 +510,9 @@ function utils.open_train(gui_data, event)
   end
   if storage.trains[tonumber(train_id)] then
     local train = storage.trains[tonumber(train_id)].train
-    if not train.valid then return end
+    if not train.valid then
+      return
+    end
     local loco = flib_train.get_main_locomotive(train)
     local player = gui_data.player
     if event.shift and loco and loco.valid then
@@ -521,7 +538,9 @@ function utils.open_station(gui_data, event)
 
   if storage.stations[station_id] then
     local station = storage.stations[station_id].station --[[@as LuaEntity]]
-    if not station.valid then return end
+    if not station.valid then
+      return
+    end
     utils.open_entity_gui(event.player_index, station)
   end
 end
@@ -534,14 +553,18 @@ function utils.show_station(gui_data, event)
   if event.element.tags and event.element.tags.station_id then
     station_id = event.element.tags.station_id
     local station = storage.stations[station_id].station --[[@as LuaEntity]]
-    if not station.valid then return end
+    if not station.valid then
+      return
+    end
     position = station.position --[[@as MapPosition]]
     surface = station.surface.name --[[@as string]]
   elseif event.element.tags and event.element.tags.position then
     position = event.element.tags.position --[[@as MapPosition]]
     surface = event.element.tags.surface_name --[[@as string]]
   end
-  if not position or not surface then return end
+  if not position or not surface then
+    return
+  end
   player.set_controller({ type = defines.controllers.remote, position = position, surface = surface })
   player.zoom = 0.5
 end

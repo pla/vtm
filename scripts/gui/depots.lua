@@ -1,11 +1,11 @@
 -- depots.lua
-local constants  = require("__virtm__.scripts.constants")
+local constants = require("__virtm__.scripts.constants")
 local flib_table = require("__flib__.table")
-local flib_gui   = require("__flib__.gui")
-local gui_utils  = require("__virtm__.scripts.gui.utils")
-local searchbar    = require("__virtm__.scripts.gui.searchbar")
+local flib_gui = require("__flib__.gui")
+local gui_utils = require("__virtm__.scripts.gui.utils")
+local searchbar = require("__virtm__.scripts.gui.searchbar")
 
-local depots     = {}
+local depots = {}
 
 local function depot_limit(station_data)
   local limit = station_data.limit
@@ -42,13 +42,14 @@ end
 
 local function read_depot_cargo(station_data)
   local station_stock = {}
-  if not station_data.station.valid then return {} end
+  if not station_data.station.valid then
+    return {}
+  end
   local tm = game.train_manager
   -- local surface = station_data.station.surface
   local depots = tm.get_train_stops({
     force = station_data.station.force,
-    station_name = station_data.station
-        .backer_name
+    station_name = station_data.station.backer_name,
   })
   for _, s in pairs(depots) do
     local stock = {}
@@ -77,27 +78,20 @@ function depots.update_tab(gui_data, event)
   local table_index = 0
 
   for _, station_data in pairs(storage.stations) do
-    if station_data.force_index == player.force.index and
-        (station_data.type == "D" or
-          station_data.type == "F")
-    then
-      if station_data.station.valid and
-          (surface == "All" or surface == station_data.station.surface.name)
-      then
+    if station_data.force_index == player.force.index and (station_data.type == "D" or station_data.type == "F") then
+      if station_data.station.valid and (surface == "All" or surface == station_data.station.surface.name) then
         -- record present
         limit = station_data.station.trains_limit
         if limit == constants.MAX_LIMIT then
           limit = 1
         end
         if depots_compact[station_data.station.backer_name] then
-          depots_compact[station_data.station.backer_name].limit =
-              depots_compact[station_data.station.backer_name].limit + limit
+          depots_compact[station_data.station.backer_name].limit = depots_compact[station_data.station.backer_name].limit
+            + limit
 
-          depots_compact[station_data.station.backer_name].inbound =
-              depots_compact[station_data.station.backer_name].inbound +
-              station_data.station.trains_count
-          flib_table.insert(depots_compact[station_data.station.backer_name].rails,
-            station_data.station.connected_rail)
+          depots_compact[station_data.station.backer_name].inbound = depots_compact[station_data.station.backer_name].inbound
+            + station_data.station.trains_count
+          flib_table.insert(depots_compact[station_data.station.backer_name].rails, station_data.station.connected_rail)
         else
           -- new record
           depots_compact[station_data.station.backer_name] = {
@@ -107,8 +101,8 @@ function depots.update_tab(gui_data, event)
             inbound = station_data.station.trains_count,
             limit = limit,
             sort_prio = station_data.sort_prio,
-            rails = { station_data.station.connected_rail, },
-            stock = {}
+            rails = { station_data.station.connected_rail },
+            stock = {},
           }
         end
       end
@@ -125,9 +119,13 @@ function depots.update_tab(gui_data, event)
   --sorting by name and type
   if storage.TCS_active then
     -- special sort for TCS icons, depots always first
-    table.sort(depots_datas, function(a, b) return a.sort_prio .. a.name < b.sort_prio .. b.name end)
+    table.sort(depots_datas, function(a, b)
+      return a.sort_prio .. a.name < b.sort_prio .. b.name
+    end)
   else
-    table.sort(depots_datas, function(a, b) return a.type .. a.name < b.type .. b.name end)
+    table.sort(depots_datas, function(a, b)
+      return a.type .. a.name < b.type .. b.name
+    end)
   end
   -- finish when not current tab
   if storage.settings[gui_data.player.index].current_tab ~= "depots" then
@@ -153,21 +151,21 @@ function depots.update_tab(gui_data, event)
             style = "vtm_clickable_semibold_label_with_padding",
             style_mods = { width = width.name },
             tooltip = { "vtm.show-station-on-map-tooltip" },
-            handler = { [defines.events.on_gui_click] = depots.show_depot }
+            handler = { [defines.events.on_gui_click] = depots.show_depot },
           },
           {
             type = "flow",
             name = "indicator",
             style = "flib_indicator_flow",
-            style_mods = { width = width.status, },
+            style_mods = { width = width.status },
             { type = "sprite", style = "flib_indicator" },
-            { type = "label",  style = "vtm_semibold_label_with_padding" },
+            { type = "label", style = "vtm_semibold_label_with_padding" },
           },
           {
             type = "label",
             name = "depot_type",
             style = "vtm_semibold_label_with_padding",
-            style_mods = { width = width.type, horizontal_align = "center", },
+            style_mods = { width = width.type, horizontal_align = "center" },
             tooltip = { "vtm.type-depot-tooltip" },
           },
           gui_utils.slot_table(width, nil, "stock"),
@@ -188,7 +186,8 @@ function depots.update_tab(gui_data, event)
       end
       -- insert data
       refs.depot_name.caption = station_data.name
-      refs.depot_name.tags = flib_table.shallow_merge({ refs.depot_name.tags, {station_id = station_data.station.unit_number }})
+      refs.depot_name.tags =
+        flib_table.shallow_merge({ refs.depot_name.tags, { station_id = station_data.station.unit_number } })
       refs.indicator.children[1].sprite = "flib_indicator_" .. color
       refs.indicator.children[2].caption = limit_text
       refs.depot_type.caption = station_data.type

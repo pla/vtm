@@ -85,7 +85,7 @@ data:extend({
     default_value = 50,
     order = "i",
   },
-    {
+  {
     type = "int-setting",
     name = "vtm-history-length",
     setting_type = "runtime-global",
@@ -94,7 +94,7 @@ data:extend({
     default_value = 20,
     order = "j",
   },
-{
+  {
     type = "bool-setting",
     name = "vtm-dismiss-tool",
     setting_type = "runtime-per-user",
@@ -106,8 +106,8 @@ data:extend({
     name = "vtm-stock-wire-color",
     setting_type = "runtime-global",
     default_value = "Both",
-    allowed_values = { "Both", "Red", "Green"},
+    allowed_values = { "Both", "Red", "Green" },
     allow_blank = false,
     order = "l",
-	},
+  },
 })

@@ -1,27 +1,24 @@
-
-local flib_table     = require("__flib__.table")
-
-
+local flib_table = require("__flib__.table")
 
 local constants = {
   inv_platform_states = flib_table.invert(defines.space_platform_state),
   inv_train_tates = flib_table.invert(defines.train_state),
-  gui_content_frame_height       = 700,
-  gui_window_min_width           = 990,
-  MAX_LIMIT                      = 4294967295,
-  refresh_event                  = nil,
-  group_exist_suffix             = "[img=utility/check_mark_green]",
-  button_style_red               = "tool_button_red",
-  button_style_green             = "tool_button_green",
-  list_box_button_style          = "vtm_list_box_item",
+  gui_content_frame_height = 700,
+  gui_window_min_width = 990,
+  MAX_LIMIT = 4294967295,
+  refresh_event = nil,
+  group_exist_suffix = "[img=utility/check_mark_green]",
+  button_style_red = "tool_button_red",
+  button_style_green = "tool_button_green",
+  list_box_button_style = "vtm_list_box_item",
   list_box_button_style_selected = "vtm_list_box_item_selected",
-  blue                           = { 0, 0, 0.5, 0.5 },
+  blue = { 0, 0, 0.5, 0.5 },
 }
 
 constants.hidden_surfaces = {
   ["EE_TESTSURFACE_"] = true, -- Editor Extensions
-  ["BPL_TheLab"] = true,      -- Blueprint Designer Lab
-  ["bpsb-lab"] = true,        -- Blueprint Sandboxes
+  ["BPL_TheLab"] = true, -- Blueprint Designer Lab
+  ["bpsb-lab"] = true, -- Blueprint Sandboxes
 }
 
 constants.gui = {
@@ -114,7 +111,7 @@ constants.interesting_states = {
   [defines.train_state.wait_station] = true,
   [defines.train_state.manual_control_stop] = true,
   [defines.train_state.manual_control] = true,
-  [defines.train_state.destination_full] = true
+  [defines.train_state.destination_full] = true,
 }
 
 constants.state_description = {
@@ -127,20 +124,20 @@ constants.state_description = {
   [defines.train_state.wait_station] = "gui-train-state.waiting-at",
   [defines.train_state.manual_control_stop] = "gui-train-state.manually-stopped",
   [defines.train_state.manual_control] = "gui-train-state.manually-driving",
-  [defines.train_state.destination_full] = "gui-train-state.destination-full"
+  [defines.train_state.destination_full] = "gui-train-state.destination-full",
 }
 
 constants.state_description2 = {
-  { defines.train_state.on_the_path,         { "vtm.train_state-on_the_path" } },
-  { defines.train_state.no_schedule,         { "vtm.train_state-no_schedule" } },
-  { defines.train_state.no_path,             { "vtm.train_state-no_path" } },
-  { defines.train_state.arrive_signal,       { "vtm.train_state-arrive_signal" } },
-  { defines.train_state.wait_signal,         { "vtm.train_state-wait_signal" } },
-  { defines.train_state.arrive_station,      { "vtm.train_state-arrive_station" } },
-  { defines.train_state.wait_station,        { "vtm.train_state-wait_station" } },
+  { defines.train_state.on_the_path, { "vtm.train_state-on_the_path" } },
+  { defines.train_state.no_schedule, { "vtm.train_state-no_schedule" } },
+  { defines.train_state.no_path, { "vtm.train_state-no_path" } },
+  { defines.train_state.arrive_signal, { "vtm.train_state-arrive_signal" } },
+  { defines.train_state.wait_signal, { "vtm.train_state-wait_signal" } },
+  { defines.train_state.arrive_station, { "vtm.train_state-arrive_station" } },
+  { defines.train_state.wait_station, { "vtm.train_state-wait_station" } },
   { defines.train_state.manual_control_stop, { "vtm.train_state-manual_control_stop" } },
-  { defines.train_state.manual_control,      { "vtm.train_state-manual_control" } },
-  { defines.train_state.destination_full,    { "vtm.train_state-destination_full" } },
+  { defines.train_state.manual_control, { "vtm.train_state-manual_control" } },
+  { defines.train_state.destination_full, { "vtm.train_state-destination_full" } },
 }
 
 constants.wire_colors = {
@@ -149,33 +146,33 @@ constants.wire_colors = {
 }
 constants.time_period_items = {
   {
-      time = 60*2,
-      text = "vtm.time-2m"
+    time = 60 * 2,
+    text = "vtm.time-2m",
   },
   {
-      time = 60*15,
-      text = "vtm.time-15m"
+    time = 60 * 15,
+    text = "vtm.time-15m",
   },
   {
-      time = 60*60*1,
-      text = "vtm.time-1h"
+    time = 60 * 60 * 1,
+    text = "vtm.time-1h",
   },
   {
-      time = 60*60*3,
-      text = "vtm.time-3h"
+    time = 60 * 60 * 3,
+    text = "vtm.time-3h",
   },
   {
-      time = 60*60*6,
-      text = "vtm.time-6h"
+    time = 60 * 60 * 6,
+    text = "vtm.time-6h",
   },
   {
-      time = 60*60*12,
-      text = "vtm.time-12h"
+    time = 60 * 60 * 12,
+    text = "vtm.time-12h",
   },
   {
-      time = 60*60*24,
-      text = "vtm.time-24h"
-  }
+    time = 60 * 60 * 24,
+    text = "vtm.time-24h",
+  },
 }
 constants.time_period_default_index = 2
 

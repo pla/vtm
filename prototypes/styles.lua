@@ -2,9 +2,9 @@ local constants = require("__virtm__.scripts.constants")
 local styles = data.raw["gui-style"]["default"]
 
 styles.quality_style = {
-  type = 'image_style',
+  type = "image_style",
   left_padding = 16,
-  size = {32,16}
+  size = { 32, 16 },
 }
 
 styles.vtm_main_content_frame = {
@@ -85,14 +85,14 @@ styles.vtm_deep_frame = {
     type = "horizontal_flow_style",
     vertical_align = "center",
     horizontally_stretchable = "on",
-  }
+  },
 }
 
 -- SCROLL PANE STYLES
 styles.vtm_list_box_scroll_pane = {
   type = "scroll_pane_style",
   parent = "list_box_scroll_pane",
---  graphical_set = styles.list_box_in_shallow_frame_under_subheader_scroll_pane.graphical_set,
+  --  graphical_set = styles.list_box_in_shallow_frame_under_subheader_scroll_pane.graphical_set,
   vertical_flow_style = {
     type = "vertical_flow_style",
     vertical_spacing = 0,
@@ -112,7 +112,6 @@ styles.vtm_groups_list_box_scroll_pane = {
     vertically_stretchable = "on",
   },
 }
-
 
 styles.vtm_table_scroll_pane = {
   type = "scroll_pane_style",
@@ -169,7 +168,7 @@ styles.vtm_trainid_label = {
   font = "default-semibold",
   parent = "label",
   height = 36,
-  minimal_width = 40
+  minimal_width = 40,
 }
 -- minimap
 styles.vtm_minimap_label = {
@@ -197,13 +196,13 @@ styles.vtm_subheader_switch = {
   parent = "switch",
   inactive_label = {
     type = "label_style",
-    parent = "subheader_caption_label"
+    parent = "subheader_caption_label",
   },
   active_label = {
     type = "label_style",
     parent = "subheader_caption_label",
-    font_color = { 0.945098, 0.745098, 0.392157 }
-  }
+    font_color = { 0.945098, 0.745098, 0.392157 },
+  },
 }
 
 -- pin button

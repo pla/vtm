@@ -1,23 +1,28 @@
 -- history.lua
-local util        = require("__core__.lualib.util")
-local flib_gui    = require("__flib__.gui")
-local flib_table  = require("__flib__.table")
+local util = require("__core__.lualib.util")
+local flib_gui = require("__flib__.gui")
+local flib_table = require("__flib__.table")
 local flib_format = require("__flib__.format")
-local gui_utils   = require("__virtm__.scripts.gui.utils")
-local match       = require("__virtm__.scripts.match")
-local constants   = require("__virtm__.scripts.constants")
-local backend     = require("__virtm__.scripts.backend")
-local searchbar    = require("__virtm__.scripts.gui.searchbar")
+local gui_utils = require("__virtm__.scripts.gui.utils")
+local match = require("__virtm__.scripts.match")
+local constants = require("__virtm__.scripts.constants")
+local backend = require("__virtm__.scripts.backend")
+local searchbar = require("__virtm__.scripts.gui.searchbar")
 
-local history     = {}
+local history = {}
 local function material_icon_list(event)
   local result = ""
   local zero = 0
   -- diff only after leaving station
   if event.diff then
     for _, item in pairs(event.diff.items or {}) do
-      result = result ..
-          util.format_number(item.count, true) .. " [item=" .. item.name .. ",quality=" .. item.quality .. "], "
+      result = result
+        .. util.format_number(item.count, true)
+        .. " [item="
+        .. item.name
+        .. ",quality="
+        .. item.quality
+        .. "], "
       zero = zero + item.count
     end
     for name, count in pairs(event.diff.fluids or {}) do
@@ -59,27 +64,47 @@ local function create_history_msg(event, compact)
   elseif event.diff then
     msg = { "vtm.histstory-un-load", cargo }
     -- if compact then skip = is_zero end
-    if compact then skip = true end
+    if compact then
+      skip = true
+    end
   elseif event.se_elevator then
     msg = { "vtm.histstory-se-elevator-leave" }
-    if compact then skip = true end
+    if compact then
+      skip = true
+    end
   elseif event.state == defines.train_state.on_the_path then
     if event.old_tick then
-      msg = { "vtm.histstory-waited", flib_format.time(event.tick - event.old_tick --[[@as uint]]) }
-      if compact then skip = true end
+      msg = {
+        "vtm.histstory-waited",
+        flib_format.time(event.tick - event.old_tick --[[@as uint]]),
+      }
+      if compact then
+        skip = true
+      end
     else
       msg = { "vtm.histstory-done-waiting" }
-      if compact then skip = true end
+      if compact then
+        skip = true
+      end
     end
   elseif event.old_tick then
-    msg = { "vtm.histstory-waited", flib_format.time(event.tick - event.old_tick --[[@as uint]]) }
-    if compact then skip = true end
+    msg = {
+      "vtm.histstory-waited",
+      flib_format.time(event.tick - event.old_tick --[[@as uint]]),
+    }
+    if compact then
+      skip = true
+    end
   elseif event.state == defines.train_state.destination_full then
     msg = { "vtm.histstory-waiting" }
-    if compact then skip = true end
+    if compact then
+      skip = true
+    end
   elseif event.state == defines.train_state.wait_signal then
     msg = { "vtm.histstory-waiting" }
-    if compact then skip = true end
+    if compact then
+      skip = true
+    end
   else
     skip = true
     -- log(serpent.block(event))
@@ -281,10 +306,11 @@ function history.update_tab(gui_data, event)
 
   -- filter
   for _, history_data in pairs(storage.history) do
-    if history_data.force_index == gui_data.player.force.index and
-        (surface == "All" or surface == history_data.surface) and
-        table_size(history_data.events) > 2 and
-        match.filter_history(history_data, filters)
+    if
+      history_data.force_index == gui_data.player.force.index
+      and (surface == "All" or surface == history_data.surface)
+      and table_size(history_data.events) > 2
+      and match.filter_history(history_data, filters)
     then
       table.insert(history_datas, history_data)
     end
@@ -327,9 +353,9 @@ function history.update_tab(gui_data, event)
               type = "label",
               name = "history_train_id",
               style = "vtm_trainid_label",
-              handler = { [defines.events.on_gui_click] = history.open_train }
+              handler = { [defines.events.on_gui_click] = history.open_train },
             },
-          }
+          },
         },
         {
           -- route
@@ -386,7 +412,8 @@ function history.update_tab(gui_data, event)
     refs.history_runtime.caption = runtime
     refs.history_finished.caption = finished
     if history_data.train.valid then
-      refs.history_train_id.tags = flib_table.shallow_merge({ refs.history_train_id.tags, { train_id = history_data.train.id } })
+      refs.history_train_id.tags =
+        flib_table.shallow_merge({ refs.history_train_id.tags, { train_id = history_data.train.id } })
     end
     update_route_flow(refs.history_route, history_data, compact)
     -- Light Running, hide empty row in comact mode (most likely, interrupt disturbs the schedule)

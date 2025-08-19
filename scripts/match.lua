@@ -1,7 +1,6 @@
 -- match.lua
 local match = {}
 
-
 function match.filter_trains(result, filters)
   local matches_station = filters.search_field == ""
   if matches_station then

@@ -1,14 +1,14 @@
 -- stations.lua
-local flib_gui   = require("__flib__.gui")
+local flib_gui = require("__flib__.gui")
 local flib_table = require("__flib__.table")
-local gui_utils  = require("__virtm__.scripts.gui.utils")
-local match      = require("__virtm__.scripts.match")
-local constants  = require("__virtm__.scripts.constants")
-local backend    = require("__virtm__.scripts.backend")
-local groups_tab    = require("__virtm__.scripts.gui.groups-tab")
-local searchbar    = require("__virtm__.scripts.gui.searchbar")
+local gui_utils = require("__virtm__.scripts.gui.utils")
+local match = require("__virtm__.scripts.match")
+local constants = require("__virtm__.scripts.constants")
+local backend = require("__virtm__.scripts.backend")
+local groups_tab = require("__virtm__.scripts.gui.groups-tab")
+local searchbar = require("__virtm__.scripts.gui.searchbar")
 
-local stations   = {}
+local stations = {}
 ---comment
 ---@param station_data StationData
 ---@param is_circuit_limit boolean
@@ -59,19 +59,16 @@ function stations.update_stations_tab(gui_data, event)
     backend.init_stations()
   end
   for _, station_data in pairs(storage.stations) do
-    if station_data.station.valid and
-        (surface == "All" or surface == station_data.station.surface.name)
-    then
+    if station_data.station.valid and (surface == "All" or surface == station_data.station.surface.name) then
       -- only valid stations from here
-      if station_data.force_index == gui_data.player.force.index and
-          (station_data.type == "R" or station_data.type == "P")
+      if
+        station_data.force_index == gui_data.player.force.index
+        and (station_data.type == "R" or station_data.type == "P")
       then
         if match.filter_stations(station_data, filters) then
           table.insert(station_datas, station_data)
         end
-      elseif station_data.force_index == gui_data.player.force.index and
-          station_data.type == "ND"
-      then
+      elseif station_data.force_index == gui_data.player.force.index and station_data.type == "ND" then
         nd_stations = nd_stations + 1
       end
     end
@@ -87,14 +84,17 @@ function stations.update_stations_tab(gui_data, event)
 
   --sorting by name
 
-  table.sort(station_datas, function(a, b) return a.station.backer_name < b.station.backer_name end)
+  table.sort(station_datas, function(a, b)
+    return a.station.backer_name < b.station.backer_name
+  end)
 
   for _, station_data in pairs(station_datas) do
     if station_data.station.valid then
-      if table_index >= max_lines and
-          max_lines > 0 and
-          storage.settings[gui_data.player.index].gui_refresh == "auto" and
-          filters.search_field == ""
+      if
+        table_index >= max_lines
+        and max_lines > 0
+        and storage.settings[gui_data.player.index].gui_refresh == "auto"
+        and filters.search_field == ""
       then
         -- max entries, loop verlasen
         break
@@ -120,7 +120,7 @@ function stations.update_stations_tab(gui_data, event)
             style_mods = { size = width.icon },
             sprite = "utility/side_menu_train_icon",
             tooltip = { "vtm.open-station-gui-tooltip" },
-            handler = { [defines.events.on_gui_click] = stations.open_station }
+            handler = { [defines.events.on_gui_click] = stations.open_station },
           },
           {
             type = "label",
@@ -129,7 +129,7 @@ function stations.update_stations_tab(gui_data, event)
             style_mods = { width = width.name },
             tooltip = { "gui-train.open-in-map" },
             -- tooltip = { "vtm.show-station-on-map-tooltip" },
-            handler = { [defines.events.on_gui_click] = stations.show_station }
+            handler = { [defines.events.on_gui_click] = stations.show_station },
           },
           {
             type = "flow",
@@ -137,7 +137,7 @@ function stations.update_stations_tab(gui_data, event)
             style = "flib_indicator_flow",
             style_mods = { width = width.status, horizontal_align = "left" },
             { type = "sprite", style = "flib_indicator" },
-            { type = "label",  style = "vtm_semibold_label_with_padding" },
+            { type = "label", style = "vtm_semibold_label_with_padding" },
           },
           {
             type = "label",
@@ -157,7 +157,7 @@ function stations.update_stations_tab(gui_data, event)
           {
             type = "empty-widget",
             style = "flib_horizontal_pusher",
-            ignored_by_interaction = true
+            ignored_by_interaction = true,
           },
           {
             type = "frame",
@@ -170,9 +170,9 @@ function stations.update_stations_tab(gui_data, event)
               style_mods = { size = 32 },
               sprite = "utility/expand",
               tooltip = { "vtm.stations-open-groups-tooltip" },
-              handler = { [defines.events.on_gui_click] = stations.show_group_ui }
+              handler = { [defines.events.on_gui_click] = stations.show_group_ui },
             },
-          }
+          },
         }
         refs, row = flib_gui.add(scroll_pane, gui_contents)
       end
@@ -204,9 +204,13 @@ function stations.update_stations_tab(gui_data, event)
       end
       -- Fill with data
       refs.stations_sprite.sprite = station_data.sprite
-      refs.stations_sprite.tags = flib_table.shallow_merge({ refs.stations_sprite.tags, { station_id = station_data.station.unit_number } })
+      refs.stations_sprite.tags = flib_table.shallow_merge({
+        refs.stations_sprite.tags,
+        { station_id = station_data.station.unit_number },
+      })
       refs.station_name.caption = station_data.station.backer_name
-      refs.station_name.tags = flib_table.shallow_merge({ refs.station_name.tags, { station_id = station_data.station.unit_number } })
+      refs.station_name.tags =
+        flib_table.shallow_merge({ refs.station_name.tags, { station_id = station_data.station.unit_number } })
       --status: InTransit =blue, open yellow
       refs.indicator.children[1].sprite = "flib_indicator_" .. color
       refs.indicator.children[2].caption = limit_text
@@ -216,8 +220,8 @@ function stations.update_stations_tab(gui_data, event)
       refs.groups_button.tooltip = tooltip
       refs.groups_button.tags = flib_table.shallow_merge({ refs.groups_button.tags, { group_id = group_id } })
 
-      gui_utils.slot_table_update(row.stock_table, station_data.stock,searchbar.apply_filter)
-      gui_utils.slot_table_update(row.in_transit_table, in_transit_data,searchbar.apply_filter)
+      gui_utils.slot_table_update(row.stock_table, station_data.stock, searchbar.apply_filter)
+      gui_utils.slot_table_update(row.in_transit_table, in_transit_data, searchbar.apply_filter)
     end
   end
   gui_data.gui.stations.badge_text = table_index or 0
@@ -358,6 +362,6 @@ flib_gui.add_handlers(stations, function(event, handler)
   if gui_data then
     handler(gui_data, event)
   end
-end,"stations")
+end, "stations")
 
 return stations

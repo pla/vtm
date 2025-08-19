@@ -1,6 +1,6 @@
 --searchbar.lua
 local constants = require("__virtm__.scripts.constants")
-local flib_gui  = require("__flib__.gui")
+local flib_gui = require("__flib__.gui")
 local gui_utils = require("__virtm__.scripts.gui.utils")
 
 local searchbar = {}
@@ -55,7 +55,7 @@ function searchbar.build_gui(gui_id)
           {
             type = "label",
             style = "vtm_semibold_label_with_padding",
-            caption = { "gui.search" }
+            caption = { "gui.search" },
           },
           {
             type = "textfield",
@@ -65,25 +65,25 @@ function searchbar.build_gui(gui_id)
             tags = { button = "right" },
             handler = {
               [defines.events.on_gui_confirmed] = searchbar.apply_filter,
-              [defines.events.on_gui_click] = searchbar.clear_filter --right button
-            }
+              [defines.events.on_gui_click] = searchbar.clear_filter, --right button
+            },
           },
           {
             type = "label",
             style = "vtm_semibold_label_with_padding",
-            caption = { "gui.select-filter" }
+            caption = { "gui.select-filter" },
           },
           {
             type = "choose-elem-button",
             style = "slot_button_in_shallow_frame",
             name = "choose_elem_button",
-            style_mods = { size = 32, },
+            style_mods = { size = 32 },
             elem_type = "signal",
             tooltip = { "vtm.filter-item-tooltip" },
             tags = { button = "right" },
             handler = {
               [defines.events.on_gui_elem_changed] = searchbar.apply_filter,
-              [defines.events.on_gui_click] = searchbar.clear_filter --right button
+              [defines.events.on_gui_click] = searchbar.clear_filter, --right button
             },
           },
           {
@@ -104,7 +104,7 @@ function searchbar.build_gui(gui_id)
             tags = { button = "left" },
             handler = { [defines.events.on_gui_click] = searchbar.clear_filter },
           },
-        }
+        },
       }, -- end search flow
       {
         type = "empty-widget",
@@ -116,24 +116,24 @@ function searchbar.build_gui(gui_id)
         direction = "horizontal",
         name = "surface_flow",
         visible = false,
-        style_mods = { vertical_align = "center", horizontal_align = "right", },
+        style_mods = { vertical_align = "center", horizontal_align = "right" },
         children = {
           {
             type = "label",
             style = "vtm_semibold_label_with_padding",
-            caption = { "vtm.filter-surface" }
+            caption = { "vtm.filter-surface" },
           },
           {
             type = "drop-down",
             name = "surface_dropdown",
             tooltip = { "vtm.filter-surface-tooltip" },
             handler = {
-              [defines.events.on_gui_selection_state_changed] = searchbar.apply_surface
+              [defines.events.on_gui_selection_state_changed] = searchbar.apply_surface,
             },
           },
-        }
-      } -- end surface flow
-    }
+        },
+      }, -- end surface flow
+    },
   }
 end
 
@@ -156,9 +156,9 @@ function searchbar.apply_filter(gui_data, event)
       -- open Factoriopedia when alt clicked
       if event.alt then
         if type == "item" then
-        gui_data.player.open_factoriopedia_gui( prototypes.item[name] )
+          gui_data.player.open_factoriopedia_gui(prototypes.item[name])
         elseif type == "fluid" then
-          gui_data.player.open_factoriopedia_gui( prototypes.fluid[name] )
+          gui_data.player.open_factoriopedia_gui(prototypes.fluid[name])
         else
           return
         end
@@ -172,7 +172,7 @@ function searchbar.apply_filter(gui_data, event)
       }
     end
     if event.element.name == "prev_filter" then
-      type = gui_data.gui.choose_elem_button.elem_value.type or "item"  --[[@as string]]
+      type = gui_data.gui.choose_elem_button.elem_value.type or "item" --[[@as string]]
       name = gui_data.gui.choose_elem_button.elem_value.name --[[@as string]]
     end
     -- choose elem button was used
@@ -186,18 +186,21 @@ function searchbar.apply_filter(gui_data, event)
       --TODO add quality
     end
     gui_data.gui.search_field.text = "[" .. type .. "=" .. name .. "]"
-    if #filter_history == 0 or (#filter_history > 0 and gui_data.gui.choose_elem_button.elem_value.name ~= filter_history[1].name) then
+    if
+      #filter_history == 0
+      or (#filter_history > 0 and gui_data.gui.choose_elem_button.elem_value.name ~= filter_history[1].name)
+    then
       table.insert(filter_history, 1, gui_data.gui.choose_elem_button.elem_value)
     end
     while #filter_history > 10 do
       table.remove(filter_history, 11)
     end
     -- clear selected group
-		if storage.settings[player.index].selected_group_set then
-			storage.settings[player.index].selected_group_set = nil
-		end
+    if storage.settings[player.index].selected_group_set then
+      storage.settings[player.index].selected_group_set = nil
+    end
   end
-refresh(gui_data, event)
+  refresh(gui_data, event)
 end
 
 --- @param gui_data GuiData
@@ -207,8 +210,11 @@ function searchbar.prev_filter(gui_data, event)
 
   -- check history table
   if #filter_history > 0 then
-    if not gui_data.gui.choose_elem_button.elem_value or
-        gui_data.gui.choose_elem_button.elem_value and gui_data.gui.choose_elem_button.elem_value.name ~= filter_history[1].name then
+    if
+      not gui_data.gui.choose_elem_button.elem_value
+      or gui_data.gui.choose_elem_button.elem_value
+        and gui_data.gui.choose_elem_button.elem_value.name ~= filter_history[1].name
+    then
       -- set first entry to filter if different
       gui_data.gui.choose_elem_button.elem_value = filter_history[1]
       -- remove entry from history
@@ -270,6 +276,5 @@ end)
 
 searchbar.events = {
   ["vtm-linked-focus-search"] = searchbar.linked_focus_search,
-
 }
 return searchbar

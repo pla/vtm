@@ -1,17 +1,17 @@
-local constants  = require("__virtm__.scripts.constants")
-local classdef   = require("__virtm__.scripts.classdef")
-local flib_gui   = require("__flib__.gui")
-local mod_gui    = require("__core__.lualib.mod-gui")
+local constants = require("__virtm__.scripts.constants")
+local classdef = require("__virtm__.scripts.classdef")
+local flib_gui = require("__flib__.gui")
+local mod_gui = require("__core__.lualib.mod-gui")
 
-local searchbar  = require("__virtm__.scripts.gui.searchbar")
-local trains     = require("__virtm__.scripts.gui.trains")
-local stations   = require("__virtm__.scripts.gui.stations")
-local depots     = require("__virtm__.scripts.gui.depots")
-local history    = require("__virtm__.scripts.gui.history")
-local groups     = require("__virtm__.scripts.gui.groups")
+local searchbar = require("__virtm__.scripts.gui.searchbar")
+local trains = require("__virtm__.scripts.gui.trains")
+local stations = require("__virtm__.scripts.gui.stations")
+local depots = require("__virtm__.scripts.gui.depots")
+local history = require("__virtm__.scripts.gui.history")
+local groups = require("__virtm__.scripts.gui.groups")
 local groups_tab = require("__virtm__.scripts.gui.groups-tab")
-local backend    = require("__virtm__.scripts.backend")
-local gui_utils  = require("__virtm__.scripts.gui.utils")
+local backend = require("__virtm__.scripts.backend")
+local gui_utils = require("__virtm__.scripts.gui.utils")
 local space
 if script.active_mods["virtm_space"] then
   space = require("__virtm_space__.space")
@@ -74,12 +74,12 @@ local function header(gui_id)
         type = "label",
         style = "frame_title",
         caption = { "vtm.header" },
-        ignored_by_interaction = true
+        ignored_by_interaction = true,
       },
       {
         type = "empty-widget",
         style = "flib_titlebar_drag_handle",
-        ignored_by_interaction = true
+        ignored_by_interaction = true,
       },
       {
         type = "sprite-button",
@@ -91,7 +91,7 @@ local function header(gui_id)
         -- hovered_sprite = "flib_pin_black",
         -- clicked_sprite = "flib_pin_black",
         handler = { [defines.events.on_gui_click] = main_gui.toggle_pinned },
-        tooltip = { "gui.flib-keep-open" }
+        tooltip = { "gui.flib-keep-open" },
       },
       {
         type = "sprite-button",
@@ -101,7 +101,7 @@ local function header(gui_id)
         sprite = "vtm_refresh_white",
         ref = { "titlebar", "refresh_button" },
         handler = { [defines.events.on_gui_click] = main_gui.refresh },
-        tooltip = { "vtm.refresh" }
+        tooltip = { "vtm.refresh" },
       },
       {
         type = "sprite-button",
@@ -110,9 +110,9 @@ local function header(gui_id)
         mouse_button_filter = { "left" },
         sprite = "utility/close",
         handler = { [defines.events.on_gui_click] = main_gui.hide },
-        tooltip = { "gui.close-instruction" }
+        tooltip = { "gui.close-instruction" },
       },
-    }
+    },
   }
 end
 
@@ -154,8 +154,8 @@ function main_gui.create_gui(player)
             -- history.build_tab(),
           }, -- end tabbed pane
         },
-      }
-    }
+      },
+    },
   }
 
   local refs = flib_gui.add(player.gui.screen, gui_contents)
@@ -175,7 +175,7 @@ function main_gui.create_gui(player)
     state_groups = "closed",
     pinned = false,
     filter_history = {},
-    group_gui = {}
+    group_gui = {},
   }
   storage.guis[gui_id] = gui_data
   local tab_list = {}
@@ -212,7 +212,9 @@ end
 --- @param gui_data GuiData
 --- @param event? EventData|EventData.on_gui_click
 function main_gui.hide(gui_data, event)
-  if gui_data.state == "closed" then return end
+  if gui_data.state == "closed" then
+    return
+  end
   gui_data.gui.vtm_window.visible = false
   gui_data.state = "closed"
   if storage.settings[gui_data.player.index].gui_refresh == "auto" then
@@ -224,10 +226,16 @@ end
 --- @param gui_data GuiData
 --- @param event? EventData|EventData.on_gui_click
 function main_gui.destroy(gui_data, event)
-  if gui_data.gui.window --[[@as LuaGuiElement]] and gui_data.gui.window.tags and gui_data.gui.window.tags["__virtm_handler"] then
+  if
+    gui_data.gui.window --[[@as LuaGuiElement]]
+    and gui_data.gui.window.tags
+    and gui_data.gui.window.tags["__virtm_handler"]
+  then
     gui_data.gui.window.destroy()
   end
-  if gui_data.gui.vtm_window --[[@type LuaGuiElement]] then
+  if
+    gui_data.gui.vtm_window --[[@type LuaGuiElement]]
+  then
     gui_data.gui.vtm_window.destroy()
   end
   storage.guis[gui_data.gui_id] = nil
@@ -280,8 +288,9 @@ end
 --- @param gui_data GuiData
 --- @param event EventData|EventData.on_gui_click
 function main_gui.refresh(gui_data, event)
-  if (event.control and event.button == defines.mouse_button_type.left) or
-      event.button == defines.mouse_button_type.right
+  if
+    (event.control and event.button == defines.mouse_button_type.left)
+    or event.button == defines.mouse_button_type.right
   then
     toggle_auto_refresh(gui_data)
   end
@@ -296,7 +305,9 @@ function main_gui.refresh_event(event)
 end
 
 function main_gui.dispatch_refresh(gui_data, event)
-  if not gui_data then return end
+  if not gui_data then
+    return
+  end
   local current_tab = storage.settings[gui_data.player.index].current_tab
   if not storage.showSpaceTab and current_tab == "space" then
     current_tab = "trains"

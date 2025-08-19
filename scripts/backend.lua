@@ -1,18 +1,15 @@
 local flib_table = require("__flib__.table")
-local constants  = require("__virtm__.scripts.constants")
-local gui_utils  = require("__virtm__.scripts.gui.utils")
-local util       = require("__core__.lualib.util")
+local constants = require("__virtm__.scripts.constants")
+local gui_utils = require("__virtm__.scripts.gui.utils")
+local util = require("__core__.lualib.util")
 local flib_train = require("__flib__.train")
-
 
 local MAX_KEEP = 60 * 60 * 60 * 5 -- ticks * seconds * minutes * hours
 local last_sweep = 0
 
 local backend = {}
 
-function space_init()
-
-end
+function space_init() end
 
 function backend.load_guess_patterns()
   storage.settings["patterns"] = {
@@ -182,10 +179,10 @@ function backend.read_station_network(station_data, return_virtual)
   local cb = station.get_or_create_control_behavior() --[[@as LuaTrainStopControlBehavior]]
   local wires = {}
   if storage.stock_wire_color == "Red" or storage.stock_wire_color == "Both" then
-    table.insert(wires,defines.wire_connector_id.circuit_red)
+    table.insert(wires, defines.wire_connector_id.circuit_red)
   end
   if storage.stock_wire_color == "Green" or storage.stock_wire_color == "Both" then
-    table.insert(wires,defines.wire_connector_id.circuit_green)
+    table.insert(wires, defines.wire_connector_id.circuit_green)
   end
   set_trains_limit = cb.set_trains_limit
   -- argue against get_merged_signals- loose wire color info
@@ -206,7 +203,7 @@ function backend.read_station_network(station_data, return_virtual)
             name = signal_data.signal.name,
             quality = quality,
             count = signal_data.count,
-            color = constants.wire_colors[wire]
+            color = constants.wire_colors[wire],
           })
         end
       end
@@ -222,7 +219,9 @@ end
 function backend.read_group(group_id, read_stock)
   local p_station = storage.stations[group_id].station
   local group_data = storage.groups[p_station.force_index][p_station.unit_number] --[[@as GroupData]]
-  if not group_data then return end
+  if not group_data then
+    return
+  end
 
   if group_data then
     for _, station_data in pairs(group_data.members) do
@@ -277,8 +276,8 @@ function backend.update_station(station)
       station_data.registered_stock = {}
     end
     if station_data.sprite == nil then
-      station_data.sprite = gui_utils.signal_to_sprite(gui_utils.signal_for_entity(station_data.station)) or
-          "item/train-stop"
+      station_data.sprite = gui_utils.signal_to_sprite(gui_utils.signal_for_entity(station_data.station))
+        or "item/train-stop"
     end
   else
     storage.stations[station.unit_number] = new_station(station)
@@ -301,7 +300,9 @@ function backend.update_all_stations(mode)
 end
 
 function backend.schedule_station_refresh()
-  if storage.station_k then return end
+  if storage.station_k then
+    return
+  end
 
   storage.station_update_table = game.train_manager.get_train_stops({})
   if next(storage.station_update_table) then
@@ -314,8 +315,7 @@ function backend.clear_invalid_stations()
   local older_than = game.tick - MAX_KEEP
   local stations = storage.stations
   for key, station_data in pairs(stations) do
-    if station_data.last_changed < older_than and
-        station_data.station.valid == false then
+    if station_data.last_changed < older_than and station_data.station.valid == false then
       stations[key] = nil
     end
   end
@@ -323,7 +323,9 @@ end
 
 local function trim_old_history(older_than)
   local size = table_size(storage.history)
-  if size < 10 or game.tick - last_sweep < 720 then return end
+  if size < 10 or game.tick - last_sweep < 720 then
+    return
+  end
   while storage.history[size].last_change <= older_than do
     table.remove(storage.history, size)
     size = size - 1
@@ -346,7 +348,7 @@ end
 function backend.clear_older(player_index, older_than)
   local force = game.players[player_index].force
   clear_older_force(force, older_than)
-  force.print { "vtm.player-cleared-history", game.players[player_index].name }
+  force.print({ "vtm.player-cleared-history", game.players[player_index].name })
 end
 
 ---Find start of schedule, to finish the current log and start a new one
@@ -361,7 +363,7 @@ local function find_first_stop(schedule)
       if schedule.current == 2 then
         index = schedule.current
       end
-      -- search with TCS signals in mind
+    -- search with TCS signals in mind
     elseif storage.TCS_active then
       local pattern = "[virtual-signal=skip-signal]" -- TODO: this can go away
       for key, record in pairs(schedule.records) do
@@ -382,7 +384,9 @@ end
 ---@return table|nil
 local function new_current_log(train)
   local loco = flib_train.get_main_locomotive(train)
-  if not loco then return end
+  if not loco then
+    return
+  end
   return {
     force_index = loco.force_index,
     train = train,
@@ -393,7 +397,7 @@ local function new_current_log(train)
     sprite = "item/" .. gui_utils.signal_for_entity(loco).name,
     quality = loco.quality,
     contents = {},
-    events = {}
+    events = {},
   }
 end
 
@@ -441,7 +445,6 @@ local function diff_fluids(old_values, new_values)
   end
   return result
 end
-
 
 local function get_train_data(train, train_id)
   if not storage.trains[train_id] then
@@ -509,7 +512,7 @@ end
 function backend.read_contents(train)
   return {
     items = train.get_contents(),
-    fluids = train.get_fluid_contents()
+    fluids = train.get_fluid_contents(),
   }
 end
 
@@ -517,14 +520,18 @@ local function on_train_changed_state(event)
   local train = event.train
   local train_id = train.id
   local train_data = get_train_data(train, train_id)
-  if not train_data then return end -- some SE things, just ignore it
+  if not train_data then
+    return
+  end -- some SE things, just ignore it
   local new_state = train.state
   local interesting_event = constants.interesting_states[event.old_state] or constants.interesting_states[new_state]
   if not interesting_event then
     return
   end
   -- can we finish
-  if train.state == defines.train_state.arrive_station and train.schedule.current == find_first_stop(train.schedule) then
+  if
+    train.state == defines.train_state.arrive_station and train.schedule.current == find_first_stop(train.schedule)
+  then
     finish_current_log(train, train_id, train_data)
     return
   elseif train.state == defines.train_state.arrive_station then
@@ -535,7 +542,7 @@ local function on_train_changed_state(event)
     tick = game.tick,
     old_state = event.old_state,
     state = train.state,
-    position = train.carriages[1].position
+    position = train.carriages[1].position,
   }
 
   if train_data.last_station and event.old_state ~= defines.train_state.wait_station then
@@ -548,7 +555,7 @@ local function on_train_changed_state(event)
     train_data.contents = backend.read_contents(train)
     log.diff = {
       items = item_diff,
-      fluids = fluid_diff
+      fluids = fluid_diff,
     }
     log.station = train_data.last_station
     train_data.last_station = nil
@@ -564,9 +571,7 @@ local function on_train_changed_state(event)
     end
   end
 
-  if event.old_state == defines.train_state.destination_full and
-      train.state == defines.train_state.on_the_path
-  then
+  if event.old_state == defines.train_state.destination_full and train.state == defines.train_state.on_the_path then
     log.old_tick = train_data.last_change
   end
 
@@ -587,12 +592,16 @@ end
 --TODO create Combinator with all signals from Station items for paired drop interrupt
 local function on_trainstop_build(event)
   if event.entity.name == "train-stop" then
-    if settings.global["vtm-name-new-station"].value and (storage.backer_names[event.entity.backer_name]) then
+    if settings.global["vtm-name-new-station"].value and storage.backer_names[event.entity.backer_name] then
       event.entity.backer_name = settings.global["vtm-new-station-name"].value
     end
     local station_data = new_station(event.entity)
     storage.stations[event.entity.unit_number] = station_data
-  elseif event.entity.name == "entity-ghost" and event.entity.ghost_name == "train-stop" and event.entity.backer_name == "" then
+  elseif
+    event.entity.name == "entity-ghost"
+    and event.entity.ghost_name == "train-stop"
+    and event.entity.backer_name == ""
+  then
     event.entity.backer_name = settings.global["vtm-new-station-name"].value
   else
     return
@@ -630,7 +639,7 @@ local function on_train_schedule_changed(event)
   add_log(train_data, {
     tick = game.tick,
     schedule = train.schedule,
-    changed_by = event.player_index
+    changed_by = event.player_index,
   })
 end
 

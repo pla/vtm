@@ -1,7 +1,7 @@
-local main_gui   = require("__virtm__.scripts.gui.main_gui")
-local backend    = require("__virtm__.scripts.backend")
-local utils      = require("__virtm__.scripts.gui.utils")
-local groups     = require("__virtm__.scripts.gui.groups")
+local main_gui = require("__virtm__.scripts.gui.main_gui")
+local backend = require("__virtm__.scripts.backend")
+local utils = require("__virtm__.scripts.gui.utils")
+local groups = require("__virtm__.scripts.gui.groups")
 
 local migrations = {}
 
@@ -52,7 +52,6 @@ function migrations.generic()
 
       -- do the button thing
       main_gui.add_mod_gui_button(player)
-
     end
   end
 end
@@ -86,7 +85,7 @@ function migrations.init_player_data(player)
       surface = "All",
       history_switch = "left",
       group_edit = {} --[[@type GroupEditData[] ]],
-      groups_tab_pinned = {}
+      groups_tab_pinned = {},
     }
     if not storage.groups[player.force_index] then
       storage.groups[player.force_index] = {}
