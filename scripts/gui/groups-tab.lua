@@ -509,10 +509,21 @@ function groups_tab.update_tab(gui_data, event)
       local set = storage.group_set[set_name]
       set_members_for_display(set, player.force_index, group_list)
     elseif table_size(pin_set_list) > 0 then
-      local _, set_name = next(pin_set_list)
-      storage.settings[player.index].selected_group_set = set_name
-      local set = storage.group_set[set_name]
-      set_members_for_display(set, player.force_index, group_list)
+      -- find a pinned set, look for filter first 
+      for _, set_name in pairs(pin_set_list) do
+        if match.filter_group_set(set_name, filters) then
+          storage.settings[player.index].selected_group_set = set_name
+        end
+      end
+      if storage.settings[player.index].selected_group_set then
+        local set = storage.group_set[storage.settings[player.index].selected_group_set]
+        set_members_for_display(set, player.force_index, group_list)
+      else
+        local _, set_name = next(pin_set_list)
+        storage.settings[player.index].selected_group_set = set_name
+        local set = storage.group_set[set_name]
+        set_members_for_display(set, player.force_index, group_list)
+        end
     end
   end
 
