@@ -406,7 +406,7 @@ end
 ---@param force_index uint
 ---@param group_list table<GroupData>
 local function set_members_for_display(set, force_index, group_list)
-  for _, group_id in pairs(set) do
+  for key, group_id in pairs(set) do
     local set_member = storage.groups[force_index][group_id]
     if set_member and set_member.main_station and set_member.main_station.station.valid then
       validate_group(set_member) --check members and tags for validity
@@ -414,7 +414,7 @@ local function set_members_for_display(set, force_index, group_list)
     else
       -- delete invalid group
       storage.groups[force_index][group_id] = nil
-      set[_] = nil
+      set[key] = nil
     end
   end
 end
