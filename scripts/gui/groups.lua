@@ -344,8 +344,9 @@ end
 ---@param surface SurfaceIdentification
 ---@param area BoundingBox
 ---@param ttl uint?
+---@param mode ScriptRenderMode?
 ---@return LuaRenderObject
-local function draw_group_rectangle(color, surface, area, ttl)
+local function draw_group_rectangle(color, surface, area, ttl, mode)
   local id = rendering.draw_rectangle({
     color = color,
     filled = false,
@@ -354,6 +355,7 @@ local function draw_group_rectangle(color, surface, area, ttl)
     left_top = area.left_top,
     right_bottom = area.right_bottom,
     time_to_live = ttl, --600ticks=10sec
+    render_mode = mode or "game",
   })
   return id
 end
@@ -371,8 +373,10 @@ local function show_overlay(gui_id)
       --   left_top = group.area.left_top,
       --   right_bottom = group.area.right_bottom,
       --   time_to_live = 600, --600ticks=10sec
+      --   render_mode = mode or "game",
       -- })
-      local id = draw_group_rectangle(constants.blue, group.surface, group.area)
+      local id = draw_group_rectangle(constants.blue, group.surface, group.area,nil,"game")
+      local id2 = draw_group_rectangle(constants.blue, group.surface, group.area,nil,"chart")
     end
   end
 end
@@ -396,7 +400,7 @@ function groups.toggle_overlay(gui_data, event)
     event.element.style = "flib_selected_tool_button"
     edit.show_overlay = true
     show_overlay(gui_data.gui_id)
-    create_group_tags(gui_data.gui_id)
+    -- create_group_tags(gui_data.gui_id)
   end
 end
 
@@ -555,8 +559,9 @@ local function add_group_overlay(gui_id, group_data, show)
     local surface = player.surface.name
     local position = flib_box.center(group_data.area)
     local text = tostring(group_data.group_id)
-    local id = draw_group_rectangle(constants.blue, group_data.surface, group_data.area)
-    local tag = create_map_tag(force, surface, position, text, player.index)
+    local id = draw_group_rectangle(constants.blue, group_data.surface, group_data.area,nil,"game")
+    local id2 = draw_group_rectangle(constants.blue, group_data.surface, group_data.area,nil,"chart")
+    -- local tag = create_map_tag(force, surface, position, text, player.index)
   end
 end
 
