@@ -277,24 +277,6 @@ local function clear_selected_data(gui_data)
   top_buttons.remove_button.enabled = false
 end
 
-local function remove_group_tags(player)
-  if not storage.group_tags or not player then
-    return
-  end
-  local force = player.force
-  if not storage.group_tags[force.index] then
-    return
-  end
-  -- local surface = player.surface.name
-  -- only one surface, and one user per force can show tags, to keep it simple
-  for _, tag in pairs(storage.group_tags[force.index]) do
-    if tag.valid then
-      tag.destroy()
-    end
-  end
-  storage.group_tags[force.index] = {}
-end
-
 ---create a chart tag
 ---@param force LuaForce
 ---@param surface SurfaceIdentification
@@ -314,29 +296,6 @@ local function create_map_tag(force, surface, position, text, player_index)
     flib_table.insert(storage.group_tags[force.index], tag)
   end
   return tag
-end
-
-local function create_group_tags(gui_id)
-  local vgui = storage.guis[gui_id]
-  local player = vgui.player
-  local force = player.force --[[@as LuaForce]]
-  local surface = player.surface.name
-
-  if not storage.group_tags then
-    storage.group_tags = {}
-  end
-  if not storage.group_tags[force.index] then
-    storage.group_tags[force.index] = {}
-  end
-
-  for group_id, group in pairs(storage.groups[force.index]) do
-    -- if group.main_station and group.main_station.station.valid then
-    if group.surface == surface then
-      local position = flib_box.center(group.area)
-      local tag = create_map_tag(force, surface, position, tostring(group.group_id), player.index)
-    end
-    -- end
-  end
 end
 
 ---draw ovleray rectangle
@@ -359,6 +318,7 @@ local function draw_group_rectangle(color, surface, area, ttl, mode)
   })
   return id
 end
+
 local function show_overlay(gui_id)
   local vgui = storage.guis[gui_id]
   local player = vgui.player
@@ -395,12 +355,10 @@ function groups.toggle_overlay(gui_data, event)
     event.element.style = "tool_button"
     edit.show_overlay = false
     remove_overlay(gui_data.player)
-    remove_group_tags(gui_data.player)
   else
     event.element.style = "flib_selected_tool_button"
     edit.show_overlay = true
     show_overlay(gui_data.gui_id)
-    -- create_group_tags(gui_data.gui_id)
   end
 end
 
@@ -561,7 +519,6 @@ local function add_group_overlay(gui_id, group_data, show)
     local text = tostring(group_data.group_id)
     local id = draw_group_rectangle(constants.blue, group_data.surface, group_data.area,nil,"game")
     local id2 = draw_group_rectangle(constants.blue, group_data.surface, group_data.area,nil,"chart")
-    -- local tag = create_map_tag(force, surface, position, text, player.index)
   end
 end
 
@@ -692,7 +649,6 @@ function groups.close_gui(gui_data, event)
   gui_data.state_groups = "closed"
   edit.show_overlay = false
   remove_overlay(gui_data.player)
-  remove_group_tags(gui_data.player)
   gui_data.player.clear_cursor()
 end
 
@@ -725,7 +681,7 @@ function groups.remove_station_from_list(gui_data, event)
       station = requester[bottom_list.selected_index]
     end
     if not station then -- must be a chart tag then
-      for key, tag in pairs(edit.selected_tags) do
+      for key, tag in pairs(edit.selected_tags or {}) do
         if tag.text == name then
           edit.selected_tags[key] = nil
           break
@@ -746,7 +702,6 @@ function groups.remove_station_from_list(gui_data, event)
   top_buttons.reload_grp_button.enabled = false
   top_list.selected_index = 0
   bottom_list.selected_index = 0
-  -- update_gui(action.gui_id, edit.selected_stations)
   groups.update_gui(gui_data, event)
 end
 
@@ -1002,36 +957,6 @@ function groups.reload_group(gui_data, event)
   local edit = storage.settings[event.player_index].group_edit
   update_gui_from_group(gui_data, edit.selected_group_id)
 end
-
--- ---React on user input
--- ---@param action table
--- ---@param event table
--- local function handle_action(action, event)
---   if action.action == "close-window" then
---     -- groups.close_gui(gui_data, event)
---   elseif action.action == "select_element" then
---     -- on_gui_elem_changed(event)
---   elseif action.action == "select_area" then
---     -- local player = game.get_player(event.player_index)
---     -- if not player then return end
---     -- give_selector(player)
---   elseif action.action == "save" then
---     -- save_groups(action, event)
---     -- todo give better feedback on error
---   elseif action.action == "toggle_mode_button" then
---     -- toggle_tool_mode_button(action, event)
---   elseif action.action == "toggle_overlay" then
---     -- toggle_overlay(action, event)
---   elseif action.action == "remove_station" then
---     -- remove_station_from_list(action, event)
---   elseif action.action == "reload_grp" then
---     -- reload_group(action, event)
---   elseif action.action == "delgrp" then
---     -- delete_group(action, event)
---   elseif action.action == "clear" then
---     -- clear_selected(action, event)
---   end
--- end
 
 --- @param gui_data GuiData
 --- @param event EventData|EventData.on_gui_click
