@@ -1,3 +1,4 @@
+require("scripts.classdef")
 local backend_space
 if script.active_mods["gvv"] then
   require("__gvv__.gvv")()

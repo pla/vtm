@@ -1,4 +1,3 @@
----@meta
 --Alias definitions at the bottom
 
 ---@class GuiData
