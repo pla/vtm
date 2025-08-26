@@ -1,8 +1,10 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.19
-Date: ????
+Date: 2025-08-26
   Changes:
     - Fix group display after filter selection
+    - Minimum Factorio version is now 2.0.56 for render_mode
+    - Use new render_mode to draw group outlines on the map
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.18
 Date: 2025-08-10
