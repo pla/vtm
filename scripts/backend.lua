@@ -402,8 +402,8 @@ local function new_current_log(train)
 end
 
 ---comment
----@param old_values ItemWithQualityCounts[]
----@param new_values ItemWithQualityCounts[]
+---@param old_values ItemWithQualityCounts
+---@param new_values ItemWithQualityCounts
 ---@return table
 local function diff_items(old_values, new_values)
   local result = {}
@@ -590,10 +590,13 @@ local function on_train_changed_state(event)
 end
 
 --TODO create Combinator with all signals from Station items for paired drop interrupt
-local function on_trainstop_build(event)
+
+---Register new train station
+---@param event EventData.on_built_entity
+local function on_trainstop_built(event)
   if event.entity.name == "train-stop" then
     if settings.global["vtm-name-new-station"].value and storage.backer_names[event.entity.backer_name] then
-      event.entity.backer_name = settings.global["vtm-new-station-name"].value
+      event.entity.backer_name = settings.global["vtm-new-station-name"].value --[[@as string]]
     end
     local station_data = new_station(event.entity)
     storage.stations[event.entity.unit_number] = station_data
@@ -602,7 +605,7 @@ local function on_trainstop_build(event)
     and event.entity.ghost_name == "train-stop"
     and event.entity.backer_name == ""
   then
-    event.entity.backer_name = settings.global["vtm-new-station-name"].value
+    event.entity.backer_name = settings.global["vtm-new-station-name"].value --[[@as string]]
   else
     return
   end
@@ -645,10 +648,11 @@ end
 
 backend.events = {
   [defines.events.on_train_changed_state] = on_train_changed_state,
-  [defines.events.script_raised_built] = on_trainstop_build,
-  [defines.events.on_built_entity] = on_trainstop_build,
-  [defines.events.script_raised_revive] = on_trainstop_build,
-  [defines.events.on_robot_built_entity] = on_trainstop_build,
+  [defines.events.script_raised_built] = on_trainstop_built,
+  [defines.events.on_built_entity] = on_trainstop_built,
+  [defines.events.script_raised_revive] = on_trainstop_built,
+  [defines.events.on_robot_built_entity] = on_trainstop_built,
+  [defines.events.on_entity_cloned] = on_trainstop_built,
   [defines.events.on_entity_renamed] = on_trainstop_renamed,
 }
 return backend
