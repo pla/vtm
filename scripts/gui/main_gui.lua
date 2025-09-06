@@ -254,9 +254,18 @@ end
 function main_gui.open_or_close_gui(gui_data, event)
   if event == nil then
     event = gui_data --[[@as EventData.CustomInputEvent]]
-
     gui_data = storage.guis[gui_utils.get_gui_id(event.player_index)]
   end
+  -- check for force change eg. mod blueprint sandboxes
+  local player = game.get_player(event.player_index)
+  if player == nil then
+    return
+  end
+  if util.string_starts_with(player.force.name, "bpsb") then
+    player.print("VTM does not work in a Blueprint Sandbox")
+    return
+  end
+
   if gui_data.state ~= "open" then
     -- main_gui.dispatch_refresh(gui_data, event)
     main_gui.open(gui_data, event)
