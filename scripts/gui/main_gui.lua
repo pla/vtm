@@ -324,7 +324,7 @@ function main_gui.dispatch_refresh(gui_data, event)
   -- refresh all data, the tab badges and then the current tab
   searchbar.update(gui_data)
   trains.update_tab(gui_data, event)
-  stations.update_stations_tab(gui_data, event)
+  stations.update_tab(gui_data, event)
   if storage.showSpaceTab then
     space.update_tab(gui_data, event)
   end
