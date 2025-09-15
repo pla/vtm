@@ -43,9 +43,9 @@ end
 
 --- @param gui_data GuiData
 --- @param event? EventData|EventData.on_gui_click
-function stations.update_stations_tab(gui_data, event)
+function stations.update_tab(gui_data, event)
   local surface = storage.settings[gui_data.player.index].surface or "All"
-  ---@type table<uint,StationData>
+  ---@type StationData[]
   local station_datas = {}
   local nd_stations = 0
   local table_index = 0
@@ -218,7 +218,11 @@ function stations.update_stations_tab(gui_data, event)
       refs.station_type.caption = station_data.type
       refs.groups_button.sprite = sprite
       refs.groups_button.tooltip = tooltip
-      refs.groups_button.tags = flib_table.shallow_merge({ refs.groups_button.tags, { group_id = group_id } })
+      if group_id then
+        refs.groups_button.tags = flib_table.shallow_merge({ refs.groups_button.tags, { group_id = group_id } })
+      else
+        refs.groups_button.tags = {}
+      end
 
       gui_utils.slot_table_update(row.stock_table, station_data.stock, searchbar.apply_filter)
       gui_utils.slot_table_update(row.in_transit_table, in_transit_data, searchbar.apply_filter)
