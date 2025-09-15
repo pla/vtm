@@ -2,10 +2,10 @@
 
 ---@class GuiData
 ---@field gui_id uint
----@field gui table<string,LuaGuiElement>
+---@field gui {[string]: LuaGuiElement}
 ---@field player LuaPlayer
 ---@field state string open or closed state of the main gui
----@field group_gui table<string,LuaGuiElement>
+---@field group_gui {[string]: LuaGuiElement}
 ---@field state_groups string open or closed state of the edit groups gui
 ---@field pinned boolean
 ---@field filter_history table Queue of previous search patterns
