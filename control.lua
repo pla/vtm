@@ -44,20 +44,12 @@ local function init_global_data()
   gui_utils.cache_generic_settings()
 end
 
--- flib_migration.handle_on_configuration_changed(migrations.by_version, migrations.generic)
-
 local function on_configuration_changed(event)
   flib_migration.on_config_changed(event, migrations.by_version, script.mod_name)
   migrations.generic()
 end
 
 local function on_tick(event)
-  -- for _, task in pairs(on_tick_n.retrieve(event.tick) or {}) do
-  --   -- if task == "init_vtm_gui" then
-  --   -- elseif task == "update_trains_tab" then
-  --   -- end
-  -- end
-
   -- station data refresh
   if storage.station_k then
     _, _, finished = flib_table.for_n_of(storage.station_update_table, nil, 10, backend.update_station)
@@ -195,6 +187,7 @@ control.events = {
   [defines.events.on_gui_closed] = on_gui_closed,
 }
 
+---@diagnostic disable-next-line
 handler.add_lib(require("__flib__/gui"))
 handler.add_lib(control)
 handler.add_lib(main_gui)

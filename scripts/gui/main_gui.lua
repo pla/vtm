@@ -1,5 +1,5 @@
 local constants = require("__virtm__.scripts.constants")
-local classdef = require("__virtm__.scripts.classdef")
+---@diagnostic disable-next-line: different-requires
 local flib_gui = require("__flib__.gui")
 local mod_gui = require("__core__.lualib.mod-gui")
 
