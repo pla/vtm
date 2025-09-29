@@ -18,7 +18,7 @@
 ---@field groups_tab_selected uint? selected group id in the groups tab (unused)
 ---@field groups_tab_pinned table<string,boolean> list of pinned group IDs in the groups tab
 ---@field group_edit GroupEditData unit_number as key
----@field selected_group_set string? selected group in groups tab (unused)
+---@field selected_group_set string? selected group in groups tab
 
 ---@class PlatformData
 ---@field index uint platform unique index

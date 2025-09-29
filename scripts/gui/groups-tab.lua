@@ -444,6 +444,20 @@ local function get_first_valid_set_member(set_name, set, del_set, force_index)
   end
   return group_data
 end
+
+---checks if the selected set is still valid
+---@param player_index int player index
+---@return boolean
+local function is_selected_group_set_valid(player_index)
+  if storage.settings[player_index].selected_group_set then
+    local set_name = storage.settings[player_index].selected_group_set
+    if storage.group_set[set_name] ~= nil then
+      return true
+    end
+  end
+  return false
+end
+
 ---update the groups tab, optional preselect a group
 function groups_tab.update_tab(gui_data, event)
   local player = gui_data.player
@@ -495,6 +509,10 @@ function groups_tab.update_tab(gui_data, event)
   -- remove invalid group sets
   for _, set_name in pairs(del_set) do
     storage.group_set[set_name] = nil
+    -- remove selected group set if set is deleted
+    if storage.settings[player.index].selected_group_set == set_name then
+      storage.settings[player.index].selected_group_set = nil
+    end
   end
   --sorting by name
   flib_table.sort(group_set_list, function(a, b)
@@ -509,11 +527,14 @@ function groups_tab.update_tab(gui_data, event)
       local set = storage.group_set[set_name]
       set_members_for_display(set, player.force_index, group_list)
     elseif table_size(pin_set_list) > 0 then
-      -- find a pinned set, look for filter first 
+      -- find a pinned set, look for filter first
       for _, set_name in pairs(pin_set_list) do
         if match.filter_group_set(set_name, filters) then
           storage.settings[player.index].selected_group_set = set_name
         end
+      end
+      if is_selected_group_set_valid(player.index) == false then
+        storage.settings[player.index].selected_group_set = nil
       end
       if storage.settings[player.index].selected_group_set then
         local set = storage.group_set[storage.settings[player.index].selected_group_set]
@@ -523,7 +544,7 @@ function groups_tab.update_tab(gui_data, event)
         storage.settings[player.index].selected_group_set = set_name
         local set = storage.group_set[set_name]
         set_members_for_display(set, player.force_index, group_list)
-        end
+      end
     end
   end
 
