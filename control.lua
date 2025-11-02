@@ -7,7 +7,7 @@ if script.active_mods["virtm_space"] then
   backend_space = require("__virtm_space__.backend_space")
 end
 local flib_table = require("__flib__.table")
-local flib_migration = require("__flib__.migration")
+local flib_migration = require("__virtm__.scripts.migration")
 local constants = require("__virtm__.scripts.constants")
 local main_gui = require("__virtm__.scripts.gui.main_gui")
 local backend = require("__virtm__.scripts.backend")
