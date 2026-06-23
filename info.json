@@ -1,12 +1,12 @@
 {
     "name": "virtm",
-    "version": "0.2.22",
-    "factorio_version": "2.0",
+    "version": "0.3.0",
+    "factorio_version": "2.1",
     "title": "Virtual Train Monitor",
     "author": "EvilPLa",
     "dependencies": [
-      "base >= 2.0.56",
-      "flib >= 0.16.0",
+      "base >= 2.1.0",
+      "flib >= 0.17.0",
       "? TCS_Icons"
     ],
     "description": "GUI to monitor your vanilla train network, inspired by LTN Manager and Trainlog"
