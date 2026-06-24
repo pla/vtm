@@ -91,7 +91,7 @@ function depots.update_tab(gui_data, event)
 
           depots_compact[station_data.station.backer_name].inbound = depots_compact[station_data.station.backer_name].inbound
             + station_data.station.trains_count
-          flib_table.insert(depots_compact[station_data.station.backer_name].rails, station_data.station.connected_rail)
+          table.insert(depots_compact[station_data.station.backer_name].rails, station_data.station.connected_rail)
         else
           -- new record
           depots_compact[station_data.station.backer_name] = {

@@ -7,7 +7,8 @@ if script.active_mods["virtm_space"] then
   backend_space = require("__virtm_space__.backend_space")
 end
 local flib_table = require("__flib__.table")
-local flib_migration = require("__virtm__.scripts.migration")
+local vtm_table = require("__virtm__.scripts.lib.table")
+local flib_migration = require("__virtm__.scripts.lib.migration")
 local constants = require("__virtm__.scripts.constants")
 local main_gui = require("__virtm__.scripts.gui.main_gui")
 local backend = require("__virtm__.scripts.backend")
@@ -52,7 +53,7 @@ end
 local function on_tick(event)
   -- station data refresh
   if storage.station_k then
-    _, _, finished = flib_table.for_n_of(storage.station_update_table, nil, 10, backend.update_station)
+    _, _, finished = vtm_table.for_n_of(storage.station_update_table, nil, 10, backend.update_station)
     storage.station_k = not finished
     -- if storage.station_k == nil then
     if finished == true then

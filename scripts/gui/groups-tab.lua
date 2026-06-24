@@ -300,7 +300,7 @@ local function update_gui_group_detail_view(gui_data, scroll_pane, group_list)
     end
     local tooltip
     gui_utils.merge_slot_tables(group_data.main_station.stock, group_data.main_station.registered_stock)
-    flib_table.sort(group_data.main_station.stock, function(a, b)
+    table.sort(group_data.main_station.stock, function(a, b)
       return a.count < b.count
     end)
     tooltip = create_stock_tooltip(group_data.main_station.stock)
@@ -347,7 +347,7 @@ local function update_gui_group_detail_view(gui_data, scroll_pane, group_list)
       end
       local tooltip
       gui_utils.merge_slot_tables(station_data.stock, station_data.registered_stock)
-      flib_table.sort(station_data.stock, function(a, b)
+      table.sort(station_data.stock, function(a, b)
         return a.count < b.count
       end)
       if table_size(station_data.stock) > 2 then
@@ -410,7 +410,7 @@ local function set_members_for_display(set, force_index, group_list)
     local set_member = storage.groups[force_index][group_id]
     if set_member and set_member.main_station and set_member.main_station.station.valid then
       validate_group(set_member) --check members and tags for validity
-      flib_table.insert(group_list, set_member)
+      table.insert(group_list, set_member)
     else
       -- delete invalid group
       storage.groups[force_index][group_id] = nil
@@ -440,7 +440,7 @@ local function get_first_valid_set_member(set_name, set, del_set, force_index)
     end
   end
   if table_size(set) == 0 then
-    flib_table.insert(del_set, set_name)
+    table.insert(del_set, set_name)
   end
   return group_data
 end
@@ -487,7 +487,7 @@ function groups_tab.update_tab(gui_data, event)
       and group_data.main_station.force_index == player.force_index
       and pinned[set_name] == true
     then
-      flib_table.insert(pin_set_list, set_name)
+      table.insert(pin_set_list, set_name)
     elseif -- not pinned
       group_data
       and (surface == "All" or surface == group_data.surface)
@@ -496,7 +496,7 @@ function groups_tab.update_tab(gui_data, event)
       and group_data.main_station.station.valid
       and group_data.main_station.force_index == player.force_index
     then
-      flib_table.insert(group_set_list, set_name)
+      table.insert(group_set_list, set_name)
     end
     -- select entries for detail view
     if
@@ -515,7 +515,7 @@ function groups_tab.update_tab(gui_data, event)
     end
   end
   --sorting by name
-  flib_table.sort(group_set_list, function(a, b)
+  table.sort(group_set_list, function(a, b)
     return a < b
   end)
 

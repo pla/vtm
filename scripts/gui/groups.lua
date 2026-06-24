@@ -224,9 +224,9 @@ local function split_stations(stations)
   local requester = {}
   for _, station in pairs(stations or {}) do
     if storage.stations[station.unit_number].type == "P" then
-      flib_table.insert(provider, station)
+      table.insert(provider, station)
     elseif storage.stations[station.unit_number].type == "R" then
-      flib_table.insert(requester, station)
+      table.insert(requester, station)
     end
   end
   return provider, requester
@@ -293,7 +293,7 @@ local function create_map_tag(force, surface, position, text, player_index)
     last_user = player_index,
   })
   if tag and tag.valid then
-    flib_table.insert(storage.group_tags[force.index], tag)
+    table.insert(storage.group_tags[force.index], tag)
   end
   return tag
 end
@@ -391,15 +391,15 @@ function groups.update_gui(gui_data, event)
     if storage.groups[station.force_index][station.unit_number] then
       name = name .. constants.group_exist_suffix
     end
-    flib_table.insert(top_names, name)
+    table.insert(top_names, name)
   end
   for _, station in pairs(requester) do
     bottom_index = bottom_index + 1
-    flib_table.insert(bottom_names, station.backer_name)
+    table.insert(bottom_names, station.backer_name)
   end
   for _, tag in pairs(tag_list or {}) do
     bottom_index = bottom_index + 1
-    flib_table.insert(bottom_names, tag.text)
+    table.insert(bottom_names, tag.text)
   end
 
   top_list.items = #top_names > 0 and top_names or {}
@@ -433,11 +433,11 @@ local function update_gui_from_group(gui_data, group_id)
       edit.selected_group_id = group_data.group_id
       edit.selected_stations = {}
       edit.selected_tags = {}
-      flib_table.insert(stations, group_data.main_station.station)
+      table.insert(stations, group_data.main_station.station)
       edit.group_area = group_data.area
       for _, station_data in pairs(group_data.members) do
         if station_data.station.valid then
-          flib_table.insert(stations, station_data.station)
+          table.insert(stations, station_data.station)
         end
       end
       merge_station_list(edit.selected_stations, stations)
@@ -480,7 +480,7 @@ local function register_group_set(name, group_id)
       return
     end
   end
-  flib_table.insert(storage.group_set[name], group_id)
+  table.insert(storage.group_set[name], group_id)
 end
 
 ---Validate group members and tags
@@ -550,7 +550,7 @@ function groups.save_groups(gui_data, event)
   local group_members = {}
 
   for _, r_station in pairs(requester) do
-    flib_table.insert(group_members, backend.get_or_create_station_data(r_station))
+    table.insert(group_members, backend.get_or_create_station_data(r_station))
   end
   for _, p_station in pairs(provider) do
     ---@type GroupData
@@ -719,7 +719,7 @@ local function remove_group_from_set(station)
       remove = key
     end
   end
-  flib_table.remove(set, remove)
+  table.remove(set, remove)
   if table_size(set) == 0 then
     storage.group_set[station.backer_name] = nil
   end
@@ -783,7 +783,7 @@ local function extract_train_stops(event)
   local stations = {}
   for _, entity in pairs(event.entities) do
     if entity.type == "train-stop" and entity.name ~= "se-space-elevator" then
-      flib_table.insert(stations, entity)
+      table.insert(stations, entity)
     end
   end
   if next(stations) then

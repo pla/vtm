@@ -1,4 +1,5 @@
 local flib_table = require("__flib__.table")
+local vtm_table = require("__virtm__.scripts.lib.table")
 local constants = require("__virtm__.scripts.constants")
 local gui_utils = require("__virtm__.scripts.gui.utils")
 local util = require("__core__.lualib.util")
@@ -455,7 +456,7 @@ local function get_train_data(train, train_id)
 end
 
 function backend.get_logs(force)
-  return flib_table.filter(storage.trains, function(train_data)
+  return vtm_table.filter(storage.trains, function(train_data)
     return train_data.force_index == force.index
   end)
 end

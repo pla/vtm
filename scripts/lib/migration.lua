@@ -1,5 +1,4 @@
 
---- @diagnostic disable
 
 --- Mod migration and version comparison functions.
 --- NOTICE: This module is deprecated and should not be used. Use `helpers.compare_versions` and Lua migration files instead.
